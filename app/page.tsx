@@ -22,8 +22,15 @@ export default function Home() {
           </button>
         </Link>
 
-        <div className="mt-8 text-sm text-gray-400">
-          Atendimento humanizado • Fácil • Rápido
+        {/* ⭐ Prova social */}
+        <div className="mt-8 text-sm text-gray-500">
+          ⭐ Mais de 100 pacientes atendidos com excelência
+        </div>
+
+        {/* 💬 Depoimento */}
+        <div className="mt-6 bg-gray-50 p-4 rounded-lg text-sm text-gray-600 italic">
+          “Atendimento excelente! Muito rápido e organizado.”
+          <br /> — Maria Souza
         </div>
 
       </div>
