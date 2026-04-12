@@ -19,45 +19,63 @@ export default function Agendamento() {
     setLoading(true);
 
     try {
-      const { data: existente } = await supabase
-        .from("agendamentos")
-        .select("*")
-        .eq("data", data);
+      // 🔐 pegar usuário logado
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
 
-      if (existente && existente.length > 0) {
-        alert("Já existe um agendamento para essa data!");
+      if (userError || !userData.user) {
+        alert("Você precisa estar logado");
         setLoading(false);
         return;
       }
 
+      const user = userData.user;
+
+      // 💾 salvar no banco
       const { error } = await supabase.from("agendamentos").insert([
-        { nome, email, telefone, data },
+        {
+          nome,
+          email,
+          telefone,
+          data,
+          user_id: user.id,
+        },
       ]);
 
       if (error) throw error;
 
+      // 📧 enviar email
       await fetch("/api/email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ nome, email, telefone, data }),
+        body: JSON.stringify({
+          nome,
+          email,
+          telefone,
+          data,
+        }),
       });
 
+      // 📲 WhatsApp automático
       const mensagem = `Novo agendamento:
 Nome: ${nome}
 Email: ${email}
 Telefone: ${telefone}
 Data: ${data}`;
 
-      const numero = "5511999999999";
+      const numero = "5511999999999"; // 🔥 TROCA PELO SEU
 
-      const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+      const url = `https://wa.me/${numero}?text=${encodeURIComponent(
+        mensagem
+      )}`;
 
       window.open(url, "_blank");
 
       alert("Agendamento confirmado!");
 
+      // limpar campos
       setNome("");
       setEmail("");
       setTelefone("");
