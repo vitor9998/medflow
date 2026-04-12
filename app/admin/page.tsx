@@ -67,7 +67,6 @@ export default function AdminPage() {
     return "text-yellow-400"
   }
 
-  // EVENTOS COM DATA + HORA
   const eventos = agendamentos.map((item) => ({
     title: `${item.nome} - ${item.hora}`,
     start: new Date(`${item.data}T${item.hora}`),
@@ -75,7 +74,6 @@ export default function AdminPage() {
     status: item.status,
   }))
 
-  // CORES DO CALENDÁRIO
   const eventStyleGetter = (event: any) => {
     let backgroundColor = "#facc15"
 
@@ -106,7 +104,7 @@ export default function AdminPage() {
 
         <button
           onClick={logout}
-          className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600"
+          className="bg-red-500 px-4 py-2 rounded-lg"
         >
           Sair
         </button>
@@ -124,31 +122,49 @@ export default function AdminPage() {
         />
       </div>
 
-      {/* LISTA COM AÇÕES */}
+      {/* LISTA */}
       <div className="space-y-4">
 
         {agendamentos.map((item) => (
           <div
             key={item.id}
-            className="bg-white/5 backdrop-blur-xl border border-white/10 p-5 rounded-2xl flex justify-between items-center"
+            className="bg-white/5 p-5 rounded-xl"
           >
-            <div>
-              <p className="font-semibold text-lg">{item.nome}</p>
-              <p className="text-sm text-gray-400">{item.email}</p>
-              <p className="text-sm">📅 {item.data}</p>
-              <p className="text-sm">⏰ {item.hora}</p>
+            <p className="font-semibold text-lg">{item.nome}</p>
+            <p className="text-sm text-gray-400">{item.email}</p>
 
-              <p className={`mt-2 font-semibold ${corStatusTexto(item.status)}`}>
-                {item.status}
-              </p>
-            </div>
+            <p className="text-sm mt-1">
+              📅 {item.data} - ⏰ {item.hora}
+            </p>
 
-            <div className="flex gap-2">
+            <p className={`mt-2 ${corStatusTexto(item.status)}`}>
+              {item.status}
+            </p>
+
+            {/* 🤖 SINTOMAS */}
+            {item.sintomas && (
+              <div className="mt-3 p-3 bg-white/5 rounded">
+                <p className="text-sm text-gray-400">Sintomas:</p>
+                <p>{item.sintomas}</p>
+              </div>
+            )}
+
+            {/* 🤖 RESUMO */}
+            {item.resumo && (
+              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded">
+                <p className="text-sm text-blue-400">
+                  Resumo IA:
+                </p>
+                <p>{item.resumo}</p>
+              </div>
+            )}
+
+            <div className="flex gap-2 mt-4">
               <button
                 onClick={() =>
                   atualizarStatus(item.id, "confirmado")
                 }
-                className="bg-green-500 hover:bg-green-600 px-3 py-2 rounded-lg text-sm"
+                className="bg-green-500 px-3 py-2 rounded"
               >
                 Confirmar
               </button>
@@ -157,7 +173,7 @@ export default function AdminPage() {
                 onClick={() =>
                   atualizarStatus(item.id, "cancelado")
                 }
-                className="bg-red-500 hover:bg-red-600 px-3 py-2 rounded-lg text-sm"
+                className="bg-red-500 px-3 py-2 rounded"
               >
                 Cancelar
               </button>

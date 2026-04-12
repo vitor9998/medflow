@@ -9,6 +9,7 @@ export default function AgendamentoPage() {
   const [telefone, setTelefone] = useState("")
   const [data, setData] = useState("")
   const [hora, setHora] = useState("")
+  const [sintomas, setSintomas] = useState("")
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([])
 
   const gerarHorarios = () => {
@@ -34,14 +35,11 @@ export default function AgendamentoPage() {
     setHorariosDisponiveis(livres)
   }
 
-  // 🔥 BLOQUEAR DOMINGO
-const isDomingo = (dataSelecionada: string) => {
-  const [ano, mes, dia] = dataSelecionada.split("-").map(Number)
-
-  const dataLocal = new Date(ano, mes - 1, dia) // 🔥 força data local
-
-  return dataLocal.getDay() === 0
-}
+  const isDomingo = (dataSelecionada: string) => {
+    const [ano, mes, dia] = dataSelecionada.split("-").map(Number)
+    const dataLocal = new Date(ano, mes - 1, dia)
+    return dataLocal.getDay() === 0
+  }
 
   useEffect(() => {
     if (data) {
@@ -57,6 +55,11 @@ const isDomingo = (dataSelecionada: string) => {
     }
   }, [data])
 
+  // 🤖 IA SIMPLES (MVP)
+  const gerarResumo = (texto: string) => {
+    return `Paciente relata: ${texto}`
+  }
+
   const salvar = async () => {
     if (!nome || !email || !telefone || !data || !hora) {
       alert("Preencha todos os campos!")
@@ -67,6 +70,8 @@ const isDomingo = (dataSelecionada: string) => {
       data: { user },
     } = await supabase.auth.getUser()
 
+    const resumo = gerarResumo(sintomas)
+
     const { error } = await supabase.from("agendamentos").insert([
       {
         nome,
@@ -74,6 +79,8 @@ const isDomingo = (dataSelecionada: string) => {
         telefone,
         data,
         hora,
+        sintomas,
+        resumo,
         user_id: user?.id,
         status: "pendente",
       },
@@ -82,12 +89,13 @@ const isDomingo = (dataSelecionada: string) => {
     if (error) {
       alert("Erro ao salvar")
     } else {
-      alert("Agendamento criado!")
+      alert("Agendamento criado com pré-consulta!")
       setNome("")
       setEmail("")
       setTelefone("")
       setData("")
       setHora("")
+      setSintomas("")
       setHorariosDisponiveis([])
     }
   }
@@ -154,6 +162,14 @@ const isDomingo = (dataSelecionada: string) => {
             </div>
           </div>
         )}
+
+        {/* 🤖 PRÉ-CONSULTA */}
+        <textarea
+          placeholder="Descreva seus sintomas..."
+          value={sintomas}
+          onChange={(e) => setSintomas(e.target.value)}
+          className="w-full mb-4 p-3 rounded bg-white/10"
+        />
 
         <button
           onClick={salvar}
