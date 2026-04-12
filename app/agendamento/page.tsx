@@ -19,7 +19,6 @@ export default function Agendamento() {
     setLoading(true);
 
     try {
-      // 🔍 Verifica se já existe agendamento na data
       const { data: existente } = await supabase
         .from("agendamentos")
         .select("*")
@@ -31,40 +30,27 @@ export default function Agendamento() {
         return;
       }
 
-      // 💾 Salva no banco
       const { error } = await supabase.from("agendamentos").insert([
-        {
-          nome,
-          email,
-          telefone,
-          data,
-        },
+        { nome, email, telefone, data },
       ]);
 
       if (error) throw error;
 
-      // 📧 Envia email
       await fetch("/api/email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          nome,
-          email,
-          telefone,
-          data,
-        }),
+        body: JSON.stringify({ nome, email, telefone, data }),
       });
 
-      // 📲 WhatsApp automático
       const mensagem = `Novo agendamento:
 Nome: ${nome}
 Email: ${email}
 Telefone: ${telefone}
 Data: ${data}`;
 
-      const numero = "5511948157490"; // ⚠️ coloca seu número aqui
+      const numero = "5511999999999";
 
       const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
 
@@ -72,12 +58,10 @@ Data: ${data}`;
 
       alert("Agendamento confirmado!");
 
-      // limpar campos
       setNome("");
       setEmail("");
       setTelefone("");
       setData("");
-
     } catch (err) {
       console.error(err);
       alert("Erro ao salvar agendamento");
@@ -87,50 +71,48 @@ Data: ${data}`;
   };
 
   return (
-    <main style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Agendar Consulta</h1>
+    <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+      <div className="bg-white w-full max-w-md p-8 rounded-2xl shadow-lg">
+        <h1 className="text-2xl font-bold mb-6 text-center">
+          Agendar Consulta
+        </h1>
 
-      <input
-        placeholder="Nome"
-        value={nome}
-        onChange={(e) => setNome(e.target.value)}
-        style={{ display: "block", marginBottom: "10px", padding: "8px" }}
-      />
+        <input
+          className="w-full mb-3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Nome"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+        />
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{ display: "block", marginBottom: "10px", padding: "8px" }}
-      />
+        <input
+          className="w-full mb-3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-      <input
-        placeholder="Telefone"
-        value={telefone}
-        onChange={(e) => setTelefone(e.target.value)}
-        style={{ display: "block", marginBottom: "10px", padding: "8px" }}
-      />
+        <input
+          className="w-full mb-3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Telefone"
+          value={telefone}
+          onChange={(e) => setTelefone(e.target.value)}
+        />
 
-      <input
-        type="date"
-        value={data}
-        onChange={(e) => setData(e.target.value)}
-        style={{ display: "block", marginBottom: "10px", padding: "8px" }}
-      />
+        <input
+          type="date"
+          className="w-full mb-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={data}
+          onChange={(e) => setData(e.target.value)}
+        />
 
-      <button
-        onClick={salvar}
-        disabled={loading}
-        style={{
-          padding: "10px 20px",
-          background: "#0070f3",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        {loading ? "Salvando..." : "Confirmar Agendamento"}
-      </button>
+        <button
+          onClick={salvar}
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+        >
+          {loading ? "Salvando..." : "Confirmar Agendamento"}
+        </button>
+      </div>
     </main>
   );
 }
