@@ -1,4 +1,5 @@
 import "./globals.css";
+import Navbar from "../components/Navbar";
 
 export default function RootLayout({
   children,
@@ -7,26 +8,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-br">
-      <body>
+      <body className="bg-gray-100">
+
+        <Navbar />
 
         {children}
 
-        {/* 📲 BOTÃO WHATSAPP FIXO */}
+        {/* WhatsApp fixo */}
         <a
           href="https://wa.me/5511999999999"
           target="_blank"
-          style={{
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-            backgroundColor: "#25D366",
-            color: "white",
-            padding: "12px 16px",
-            borderRadius: "50px",
-            textDecoration: "none",
-            fontWeight: "bold",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
-          }}
+          className="fixed bottom-5 right-5 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg"
         >
           WhatsApp
         </a>
