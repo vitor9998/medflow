@@ -14,6 +14,10 @@ type Agendamento = {
 export default function Admin() {
   const [dados, setDados] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [logado, setLogado] = useState(false);
+  const [senha, setSenha] = useState("");
+
+  const senhaCorreta = "123456"; // depois podemos melhorar
 
   const buscar = async () => {
     const { data, error } = await supabase
@@ -29,8 +33,37 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    buscar();
-  }, []);
+    if (logado) {
+      buscar();
+    }
+  }, [logado]);
+
+  if (!logado) {
+    return (
+      <main style={{ padding: "40px" }}>
+        <h1>Login Admin</h1>
+
+        <input
+          type="password"
+          placeholder="Senha"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+        />
+
+        <br /><br />
+
+        <button onClick={() => {
+          if (senha === senhaCorreta) {
+            setLogado(true);
+          } else {
+            alert("Senha errada");
+          }
+        }}>
+          Entrar
+        </button>
+      </main>
+    );
+  }
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial" }}>
@@ -38,18 +71,9 @@ export default function Admin() {
 
       {loading && <p>Carregando...</p>}
 
-      {!loading && dados.length === 0 && <p>Nenhum agendamento</p>}
-
       {!loading &&
         dados.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "10px",
-              marginBottom: "10px",
-            }}
-          >
+          <div key={item.id} style={{ border: "1px solid #ccc", marginBottom: 10, padding: 10 }}>
             <p><b>Nome:</b> {item.nome}</p>
             <p><b>Email:</b> {item.email}</p>
             <p><b>Telefone:</b> {item.telefone}</p>
