@@ -1,26 +1,71 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabaseClient"
-import { User, Mail, Phone, Calendar } from "lucide-react"
 
 export default function AgendamentoPage() {
   const [nome, setNome] = useState("")
   const [email, setEmail] = useState("")
   const [telefone, setTelefone] = useState("")
   const [data, setData] = useState("")
+  const [hora, setHora] = useState("")
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([])
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault()
+  const gerarHorarios = () => {
+    const horarios = []
+    for (let h = 8; h < 18; h++) {
+      const horaFormatada = h.toString().padStart(2, "0") + ":00"
+      horarios.push(horaFormatada)
+    }
+    return horarios
+  }
+
+  const buscarDisponiveis = async (dataSelecionada: string) => {
+    const { data: ocupados } = await supabase
+      .from("agendamentos")
+      .select("hora")
+      .eq("data", dataSelecionada)
+
+    const todos = gerarHorarios()
+    const ocupadosLista = ocupados?.map((item) => item.hora) || []
+
+    const livres = todos.filter((h) => !ocupadosLista.includes(h))
+
+    setHorariosDisponiveis(livres)
+  }
+
+  // 🔥 BLOQUEAR DOMINGO
+const isDomingo = (dataSelecionada: string) => {
+  const [ano, mes, dia] = dataSelecionada.split("-").map(Number)
+
+  const dataLocal = new Date(ano, mes - 1, dia) // 🔥 força data local
+
+  return dataLocal.getDay() === 0
+}
+
+  useEffect(() => {
+    if (data) {
+      if (isDomingo(data)) {
+        alert("Não atendemos aos domingos!")
+        setData("")
+        setHora("")
+        setHorariosDisponiveis([])
+        return
+      }
+
+      buscarDisponiveis(data)
+    }
+  }, [data])
+
+  const salvar = async () => {
+    if (!nome || !email || !telefone || !data || !hora) {
+      alert("Preencha todos os campos!")
+      return
+    }
 
     const {
       data: { user },
     } = await supabase.auth.getUser()
-
-    if (!user) {
-      alert("Você precisa estar logado")
-      return
-    }
 
     const { error } = await supabase.from("agendamentos").insert([
       {
@@ -28,87 +73,96 @@ export default function AgendamentoPage() {
         email,
         telefone,
         data,
-        user_id: user.id,
+        hora,
+        user_id: user?.id,
+        status: "pendente",
       },
     ])
 
     if (error) {
       alert("Erro ao salvar")
-      console.log(error)
     } else {
-      alert("Agendamento realizado!")
+      alert("Agendamento criado!")
       setNome("")
       setEmail("")
       setTelefone("")
       setData("")
+      setHora("")
+      setHorariosDisponiveis([])
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617]">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl w-full max-w-md space-y-5"
-      >
-        <h1 className="text-2xl font-bold text-center text-white mb-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white">
+      <div className="bg-white/5 p-8 rounded-2xl w-full max-w-md">
+
+        <h1 className="text-2xl font-bold mb-6">
           Agendar Consulta
         </h1>
 
-        {/* Nome */}
-        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3">
-          <User className="text-gray-400 mr-2" size={18} />
-          <input
-            type="text"
-            placeholder="Nome"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            className="bg-transparent outline-none w-full text-white placeholder-gray-400"
-          />
-        </div>
+        <input
+          placeholder="Nome"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          className="w-full mb-3 p-3 rounded bg-white/10"
+        />
 
-        {/* Email */}
-        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3">
-          <Mail className="text-gray-400 mr-2" size={18} />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="bg-transparent outline-none w-full text-white placeholder-gray-400"
-          />
-        </div>
+        <input
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full mb-3 p-3 rounded bg-white/10"
+        />
 
-        {/* Telefone */}
-        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3">
-          <Phone className="text-gray-400 mr-2" size={18} />
-          <input
-            type="text"
-            placeholder="Telefone"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-            className="bg-transparent outline-none w-full text-white placeholder-gray-400"
-          />
-        </div>
+        <input
+          placeholder="Telefone"
+          value={telefone}
+          onChange={(e) => setTelefone(e.target.value)}
+          className="w-full mb-3 p-3 rounded bg-white/10"
+        />
 
-        {/* Data */}
-        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3">
-          <Calendar className="text-gray-400 mr-2" size={18} />
-          <input
-            type="date"
-            value={data}
-            onChange={(e) => setData(e.target.value)}
-            className="bg-transparent outline-none w-full text-white"
-          />
-        </div>
+        <input
+          type="date"
+          value={data}
+          onChange={(e) => {
+            setData(e.target.value)
+            setHora("")
+          }}
+          className="w-full mb-3 p-3 rounded bg-white/10"
+        />
 
-        {/* Botão */}
+        {data && (
+          <div className="mb-4">
+            <p className="mb-2 text-sm text-gray-400">
+              Horários disponíveis:
+            </p>
+
+            <div className="grid grid-cols-3 gap-2">
+              {horariosDisponiveis.map((h) => (
+                <button
+                  key={h}
+                  onClick={() => setHora(h)}
+                  className={`p-2 rounded ${
+                    hora === h
+                      ? "bg-blue-500"
+                      : "bg-white/10 hover:bg-white/20"
+                  }`}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
-          type="submit"
-          className="w-full py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90 transition shadow-lg"
+          onClick={salvar}
+          className="w-full bg-blue-500 py-3 rounded-lg"
         >
-          Confirmar Agendamento
+          Confirmar
         </button>
-      </form>
+
+      </div>
     </div>
   )
 }
