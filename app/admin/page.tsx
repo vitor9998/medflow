@@ -2,185 +2,160 @@
 
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
-import { useRouter } from "next/navigation"
-import {
-  Calendar,
-  dateFnsLocalizer,
-} from "react-big-calendar"
-import "react-big-calendar/lib/css/react-big-calendar.css"
 
-import format from "date-fns/format"
-import parse from "date-fns/parse"
-import startOfWeek from "date-fns/startOfWeek"
-import getDay from "date-fns/getDay"
-import ptBR from "date-fns/locale/pt-BR"
-
-const locales = {
-  "pt-BR": ptBR,
-}
-
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-})
+import FullCalendar from "@fullcalendar/react"
+import dayGridPlugin from "@fullcalendar/daygrid"
+import timeGridPlugin from "@fullcalendar/timegrid"
 
 export default function AdminPage() {
-  const [agendamentos, setAgendamentos] = useState<any[]>([])
-  const router = useRouter()
+  const [consultas, setConsultas] = useState<any[]>([])
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
-    const { data } = await supabase
+  async function fetchConsultas() {
+    const { data, error } = await supabase
       .from("agendamentos")
       .select("*")
+      .order("data", { ascending: true })
 
-    setAgendamentos(data || [])
+    if (error) {
+      console.log("Erro ao buscar:", error)
+      return
+    }
+
+    setConsultas(data || [])
   }
 
-  const atualizarStatus = async (id: string, status: string) => {
-    await supabase
+  async function atualizarStatus(id: number, status: string) {
+    const { error } = await supabase
       .from("agendamentos")
       .update({ status })
       .eq("id", id)
 
-    setAgendamentos((prev) =>
+    if (error) {
+      alert("Erro ao atualizar status")
+      console.log(error)
+      return
+    }
+
+    // Atualiza na tela sem reload
+    setConsultas((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, status } : item
       )
     )
   }
 
-  const logout = async () => {
-    await supabase.auth.signOut()
-    router.push("/login")
-  }
+  useEffect(() => {
+    fetchConsultas()
+  }, [])
 
-  const corStatusTexto = (status: string) => {
-    if (status === "confirmado") return "text-green-400"
-    if (status === "cancelado") return "text-red-400"
-    return "text-yellow-400"
-  }
-
-  const eventos = agendamentos.map((item) => ({
-    title: `${item.nome} - ${item.hora}`,
-    start: new Date(`${item.data}T${item.hora}`),
-    end: new Date(`${item.data}T${item.hora}`),
-    status: item.status,
+  // 🎨 EVENTOS COM COR (STATUS)
+  const eventos = consultas.map((c) => ({
+    title: `${c.nome} - ${c.hora}`,
+    date: `${c.data}T${c.hora}`,
+    backgroundColor:
+      c.status === "confirmado"
+        ? "#22c55e"
+        : c.status === "cancelado"
+        ? "#ef4444"
+        : "#facc15",
+    borderColor: "transparent",
   }))
-
-  const eventStyleGetter = (event: any) => {
-    let backgroundColor = "#facc15"
-
-    if (event.status === "confirmado") {
-      backgroundColor = "#22c55e"
-    }
-
-    if (event.status === "cancelado") {
-      backgroundColor = "#ef4444"
-    }
-
-    return {
-      style: {
-        backgroundColor,
-        borderRadius: "6px",
-        color: "white",
-        border: "none",
-      },
-    }
-  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-6">
+      <h1 className="text-3xl font-bold mb-6">Agenda</h1>
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Agenda</h1>
-
-        <button
-          onClick={logout}
-          className="bg-red-500 px-4 py-2 rounded-lg"
-        >
-          Sair
-        </button>
-      </div>
-
-      {/* CALENDÁRIO */}
-      <div className="bg-white rounded-xl p-4 text-black h-[60vh] mb-6">
-        <Calendar
-          localizer={localizer}
+      {/* 📅 CALENDÁRIO */}
+      <div className="bg-white rounded-xl p-4 text-black mb-8">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
+          }}
           events={eventos}
-          startAccessor="start"
-          endAccessor="end"
-          eventPropGetter={eventStyleGetter}
-          style={{ height: "100%" }}
+          height="auto"
         />
       </div>
 
-      {/* LISTA */}
-      <div className="space-y-4">
-
-        {agendamentos.map((item) => (
+      {/* 📋 LISTA */}
+      <div className="space-y-6">
+        {consultas.map((c) => (
           <div
-            key={item.id}
-            className="bg-white/5 p-5 rounded-xl"
+            key={c.id}
+            className="bg-white/5 border border-white/10 p-6 rounded-xl backdrop-blur-lg"
           >
-            <p className="font-semibold text-lg">{item.nome}</p>
-            <p className="text-sm text-gray-400">{item.email}</p>
+            <h2 className="text-lg font-semibold">{c.nome}</h2>
+            <p className="text-gray-300">{c.email}</p>
 
-            <p className="text-sm mt-1">
-              📅 {item.data} - ⏰ {item.hora}
+            <p className="text-sm mt-2">
+              📅 {c.data} ⏰ {c.hora}
             </p>
 
-            <p className={`mt-2 ${corStatusTexto(item.status)}`}>
-              {item.status}
+            {/* PRIORIDADE */}
+            <p
+              className={`mt-2 font-bold ${
+                c.prioridade === "urgente"
+                  ? "text-red-400"
+                  : c.prioridade === "moderado"
+                  ? "text-yellow-400"
+                  : "text-green-400"
+              }`}
+            >
+              {c.prioridade?.toUpperCase()}
             </p>
 
-            {/* 🤖 SINTOMAS */}
-            {item.sintomas && (
-              <div className="mt-3 p-3 bg-white/5 rounded">
-                <p className="text-sm text-gray-400">Sintomas:</p>
-                <p>{item.sintomas}</p>
-              </div>
-            )}
+            {/* ✅ STATUS BADGE PREMIUM */}
+            <p
+              className={`mt-2 px-3 py-1 rounded-full text-sm w-fit font-semibold ${
+                c.status === "confirmado"
+                  ? "bg-green-500/20 text-green-400"
+                  : c.status === "cancelado"
+                  ? "bg-red-500/20 text-red-400"
+                  : "bg-yellow-500/20 text-yellow-400"
+              }`}
+            >
+              {c.status}
+            </p>
 
-            {/* 🤖 RESUMO */}
-            {item.resumo && (
-              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded">
-                <p className="text-sm text-blue-400">
+            {/* 🤖 RESUMO IA */}
+            {c.resumo && (
+              <div className="mt-4 bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+                <p className="text-blue-400 text-sm font-semibold">
                   Resumo IA:
                 </p>
-                <p>{item.resumo}</p>
+                <p className="text-sm mt-1">{c.resumo}</p>
               </div>
             )}
 
-            <div className="flex gap-2 mt-4">
+            {/* SINTOMAS */}
+            {c.sintomas && (
+              <div className="mt-3 bg-white/5 p-4 rounded-lg text-sm text-gray-300">
+                <strong>Sintomas:</strong>
+                <p className="mt-1">{c.sintomas}</p>
+              </div>
+            )}
+
+            {/* BOTÕES */}
+            <div className="mt-4 flex gap-2">
               <button
-                onClick={() =>
-                  atualizarStatus(item.id, "confirmado")
-                }
-                className="bg-green-500 px-3 py-2 rounded"
+                onClick={() => atualizarStatus(c.id, "confirmado")}
+                className="bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 transition"
               >
                 Confirmar
               </button>
 
               <button
-                onClick={() =>
-                  atualizarStatus(item.id, "cancelado")
-                }
-                className="bg-red-500 px-3 py-2 rounded"
+                onClick={() => atualizarStatus(c.id, "cancelado")}
+                className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
               >
                 Cancelar
               </button>
             </div>
           </div>
         ))}
-
       </div>
     </div>
   )

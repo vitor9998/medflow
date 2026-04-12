@@ -1,7 +1,31 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
+import { User, Mail, Phone, Calendar } from "lucide-react"
+
+function calcularPrioridade(sintomas: string) {
+  const texto = sintomas.toLowerCase()
+
+  if (
+    texto.includes("febre") ||
+    texto.includes("dor forte") ||
+    texto.includes("falta de ar") ||
+    texto.includes("pressão no peito")
+  ) {
+    return "urgente"
+  }
+
+  if (
+    texto.includes("dor") ||
+    texto.includes("cansaço") ||
+    texto.includes("tontura")
+  ) {
+    return "moderado"
+  }
+
+  return "leve"
+}
 
 export default function AgendamentoPage() {
   const [nome, setNome] = useState("")
@@ -10,67 +34,13 @@ export default function AgendamentoPage() {
   const [data, setData] = useState("")
   const [hora, setHora] = useState("")
   const [sintomas, setSintomas] = useState("")
-  const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const gerarHorarios = () => {
-    const horarios = []
-    for (let h = 8; h < 18; h++) {
-      const horaFormatada = h.toString().padStart(2, "0") + ":00"
-      horarios.push(horaFormatada)
-    }
-    return horarios
-  }
+  async function salvar(e: any) {
+    e.preventDefault()
+    setLoading(true)
 
-  const buscarDisponiveis = async (dataSelecionada: string) => {
-    const { data: ocupados } = await supabase
-      .from("agendamentos")
-      .select("hora")
-      .eq("data", dataSelecionada)
-
-    const todos = gerarHorarios()
-    const ocupadosLista = ocupados?.map((item) => item.hora) || []
-
-    const livres = todos.filter((h) => !ocupadosLista.includes(h))
-
-    setHorariosDisponiveis(livres)
-  }
-
-  const isDomingo = (dataSelecionada: string) => {
-    const [ano, mes, dia] = dataSelecionada.split("-").map(Number)
-    const dataLocal = new Date(ano, mes - 1, dia)
-    return dataLocal.getDay() === 0
-  }
-
-  useEffect(() => {
-    if (data) {
-      if (isDomingo(data)) {
-        alert("Não atendemos aos domingos!")
-        setData("")
-        setHora("")
-        setHorariosDisponiveis([])
-        return
-      }
-
-      buscarDisponiveis(data)
-    }
-  }, [data])
-
-  // 🤖 IA SIMPLES (MVP)
-  const gerarResumo = (texto: string) => {
-    return `Paciente relata: ${texto}`
-  }
-
-  const salvar = async () => {
-    if (!nome || !email || !telefone || !data || !hora) {
-      alert("Preencha todos os campos!")
-      return
-    }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    const resumo = gerarResumo(sintomas)
+    const prioridade = calcularPrioridade(sintomas)
 
     const { error } = await supabase.from("agendamentos").insert([
       {
@@ -80,105 +50,101 @@ export default function AgendamentoPage() {
         data,
         hora,
         sintomas,
-        resumo,
-        user_id: user?.id,
         status: "pendente",
+        prioridade,
       },
     ])
 
     if (error) {
       alert("Erro ao salvar")
     } else {
-      alert("Agendamento criado com pré-consulta!")
+      alert("Consulta agendada com sucesso!")
       setNome("")
       setEmail("")
       setTelefone("")
       setData("")
       setHora("")
       setSintomas("")
-      setHorariosDisponiveis([])
     }
+
+    setLoading(false)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white">
-      <div className="bg-white/5 p-8 rounded-2xl w-full max-w-md">
-
-        <h1 className="text-2xl font-bold mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617]">
+      <form
+        onSubmit={salvar}
+        className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-lg w-[400px] space-y-4 border border-white/20"
+      >
+        <h1 className="text-white text-2xl font-bold text-center">
           Agendar Consulta
         </h1>
 
-        <input
-          placeholder="Nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          className="w-full mb-3 p-3 rounded bg-white/10"
-        />
+        <div className="flex items-center gap-2 bg-white/10 p-3 rounded-lg">
+          <User className="text-white" size={18} />
+          <input
+            placeholder="Nome"
+            className="bg-transparent outline-none text-white w-full"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            required
+          />
+        </div>
 
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-3 p-3 rounded bg-white/10"
-        />
+        <div className="flex items-center gap-2 bg-white/10 p-3 rounded-lg">
+          <Mail className="text-white" size={18} />
+          <input
+            placeholder="Email"
+            className="bg-transparent outline-none text-white w-full"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
 
-        <input
-          placeholder="Telefone"
-          value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
-          className="w-full mb-3 p-3 rounded bg-white/10"
-        />
+        <div className="flex items-center gap-2 bg-white/10 p-3 rounded-lg">
+          <Phone className="text-white" size={18} />
+          <input
+            placeholder="Telefone"
+            className="bg-transparent outline-none text-white w-full"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+            required
+          />
+        </div>
 
         <input
           type="date"
+          className="w-full p-3 rounded-lg bg-white/10 text-white"
           value={data}
-          onChange={(e) => {
-            setData(e.target.value)
-            setHora("")
-          }}
-          className="w-full mb-3 p-3 rounded bg-white/10"
+          onChange={(e) => setData(e.target.value)}
+          required
         />
 
-        {data && (
-          <div className="mb-4">
-            <p className="mb-2 text-sm text-gray-400">
-              Horários disponíveis:
-            </p>
+        <input
+          type="time"
+          className="w-full p-3 rounded-lg bg-white/10 text-white"
+          value={hora}
+          onChange={(e) => setHora(e.target.value)}
+          required
+        />
 
-            <div className="grid grid-cols-3 gap-2">
-              {horariosDisponiveis.map((h) => (
-                <button
-                  key={h}
-                  onClick={() => setHora(h)}
-                  className={`p-2 rounded ${
-                    hora === h
-                      ? "bg-blue-500"
-                      : "bg-white/10 hover:bg-white/20"
-                  }`}
-                >
-                  {h}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 🤖 PRÉ-CONSULTA */}
         <textarea
           placeholder="Descreva seus sintomas..."
+          className="w-full p-3 rounded-lg bg-white/10 text-white"
           value={sintomas}
           onChange={(e) => setSintomas(e.target.value)}
-          className="w-full mb-4 p-3 rounded bg-white/10"
+          required
         />
 
         <button
-          onClick={salvar}
-          className="w-full bg-blue-500 py-3 rounded-lg"
+          type="submit"
+          disabled={loading}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
         >
-          Confirmar
+          {loading ? "Salvando..." : "Confirmar Agendamento"}
         </button>
-
-      </div>
+      </form>
     </div>
   )
 }
