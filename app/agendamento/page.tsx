@@ -1,136 +1,114 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
+import { User, Mail, Phone, Calendar } from "lucide-react"
 
-export default function Agendamento() {
-  const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [data, setData] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function AgendamentoPage() {
+  const [nome, setNome] = useState("")
+  const [email, setEmail] = useState("")
+  const [telefone, setTelefone] = useState("")
+  const [data, setData] = useState("")
 
-  const salvar = async () => {
-    if (!nome || !email || !telefone || !data) {
-      alert("Preencha todos os campos!");
-      return;
+  const handleSubmit = async (e: any) => {
+    e.preventDefault()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      alert("Você precisa estar logado")
+      return
     }
 
-    setLoading(true);
+    const { error } = await supabase.from("agendamentos").insert([
+      {
+        nome,
+        email,
+        telefone,
+        data,
+        user_id: user.id,
+      },
+    ])
 
-    try {
-      // 🔐 pegar usuário logado
-      const { data: userData, error: userError } =
-        await supabase.auth.getUser();
-
-      if (userError || !userData.user) {
-        alert("Você precisa estar logado");
-        setLoading(false);
-        return;
-      }
-
-      const user = userData.user;
-
-      // 💾 salvar no banco
-      const { error } = await supabase.from("agendamentos").insert([
-        {
-          nome,
-          email,
-          telefone,
-          data,
-          user_id: user.id,
-        },
-      ]);
-
-      if (error) throw error;
-
-      // 📧 enviar email
-      await fetch("/api/email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nome,
-          email,
-          telefone,
-          data,
-        }),
-      });
-
-      // 📲 WhatsApp automático
-      const mensagem = `Novo agendamento:
-Nome: ${nome}
-Email: ${email}
-Telefone: ${telefone}
-Data: ${data}`;
-
-      const numero = "5511999999999"; // 🔥 TROCA PELO SEU
-
-      const url = `https://wa.me/${numero}?text=${encodeURIComponent(
-        mensagem
-      )}`;
-
-      window.open(url, "_blank");
-
-      alert("Agendamento confirmado!");
-
-      // limpar campos
-      setNome("");
-      setEmail("");
-      setTelefone("");
-      setData("");
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar agendamento");
+    if (error) {
+      alert("Erro ao salvar")
+      console.log(error)
+    } else {
+      alert("Agendamento realizado!")
+      setNome("")
+      setEmail("")
+      setTelefone("")
+      setData("")
     }
-
-    setLoading(false);
-  };
+  }
 
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="bg-white w-full max-w-md p-8 rounded-2xl shadow-lg">
-        <h1 className="text-2xl font-bold mb-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617]">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl w-full max-w-md space-y-5"
+      >
+        <h1 className="text-2xl font-bold text-center text-white mb-4">
           Agendar Consulta
         </h1>
 
-        <input
-          className="w-full mb-3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
+        {/* Nome */}
+        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3">
+          <User className="text-gray-400 mr-2" size={18} />
+          <input
+            type="text"
+            placeholder="Nome"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="bg-transparent outline-none w-full text-white placeholder-gray-400"
+          />
+        </div>
 
-        <input
-          className="w-full mb-3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        {/* Email */}
+        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3">
+          <Mail className="text-gray-400 mr-2" size={18} />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="bg-transparent outline-none w-full text-white placeholder-gray-400"
+          />
+        </div>
 
-        <input
-          className="w-full mb-3 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Telefone"
-          value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
-        />
+        {/* Telefone */}
+        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3">
+          <Phone className="text-gray-400 mr-2" size={18} />
+          <input
+            type="text"
+            placeholder="Telefone"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+            className="bg-transparent outline-none w-full text-white placeholder-gray-400"
+          />
+        </div>
 
-        <input
-          type="date"
-          className="w-full mb-4 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={data}
-          onChange={(e) => setData(e.target.value)}
-        />
+        {/* Data */}
+        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3">
+          <Calendar className="text-gray-400 mr-2" size={18} />
+          <input
+            type="date"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            className="bg-transparent outline-none w-full text-white"
+          />
+        </div>
 
+        {/* Botão */}
         <button
-          onClick={salvar}
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          type="submit"
+          className="w-full py-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90 transition shadow-lg"
         >
-          {loading ? "Salvando..." : "Confirmar Agendamento"}
+          Confirmar Agendamento
         </button>
-      </div>
-    </main>
-  );
+      </form>
+    </div>
+  )
 }
