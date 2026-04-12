@@ -13,7 +13,6 @@ export default function Home() {
 
         <p className="text-gray-600 mb-6">
           Atendimento clínico geral com foco na sua saúde e bem-estar.
-          Agende sua consulta de forma rápida e simples.
         </p>
 
         <Link href="/agendamento">
@@ -22,15 +21,17 @@ export default function Home() {
           </button>
         </Link>
 
-        {/* ⭐ Prova social */}
-        <div className="mt-8 text-sm text-gray-500">
-          ⭐ Mais de 100 pacientes atendidos com excelência
+        {/* 📍 ENDEREÇO */}
+        <div className="mt-8 text-sm text-gray-600">
+          📍 Rua Exemplo, 123 - São Paulo
         </div>
 
-        {/* 💬 Depoimento */}
-        <div className="mt-6 bg-gray-50 p-4 rounded-lg text-sm text-gray-600 italic">
-          “Atendimento excelente! Muito rápido e organizado.”
-          <br /> — Maria Souza
+        {/* 🗺️ MAPA */}
+        <div className="mt-4">
+          <iframe
+            src="https://www.google.com/maps?q=São+Paulo&output=embed"
+            className="w-full h-40 rounded-lg"
+          ></iframe>
         </div>
 
       </div>
