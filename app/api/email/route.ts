@@ -1,13 +1,12 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: Request) {
-  const body = await req.json();
-
-  const { nome, email, telefone, data } = body;
-
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY || "");
+
+    const body = await req.json();
+    const { nome, email, telefone, data } = body;
+
     await resend.emails.send({
       from: 'onboarding@resend.dev',
       to: 'vitor9998@gmail.com',
@@ -22,7 +21,9 @@ export async function POST(req: Request) {
     });
 
     return Response.json({ success: true });
+
   } catch (error) {
-    return Response.json({ error });
+    console.error(error);
+    return Response.json({ error: "Erro ao enviar email" });
   }
 }
