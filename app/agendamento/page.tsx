@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 export default function Agendamento() {
   const [nome, setNome] = useState("");
@@ -18,19 +18,24 @@ export default function Agendamento() {
 
     setLoading(true);
 
-    const { error } = await supabase.from("agendamentos").insert([
-      {
-        nome,
-        email,
-        telefone,
-        data,
-      },
-    ]);
+    try {
+      const { error } = await supabase.from("agendamentos").insert([
+        {
+          nome,
+          email,
+          telefone,
+          data,
+        },
+      ]);
 
-    if (!error) {
+      if (error) throw error;
+
       // ENVIA EMAIL
       await fetch("/api/email", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           nome,
           email,
@@ -38,20 +43,21 @@ export default function Agendamento() {
           data,
         }),
       });
-    }
 
-    setLoading(false);
-
-    if (error) {
-      alert("Erro ao salvar");
-      console.log(error);
-    } else {
       alert("Agendamento confirmado!");
+
+      // limpa campos
       setNome("");
       setEmail("");
       setTelefone("");
       setData("");
+
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao salvar agendamento");
     }
+
+    setLoading(false);
   };
 
   return (
