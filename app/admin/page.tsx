@@ -1,41 +1,61 @@
-import { createClient } from '@supabase/supabase-js'
+"use client";
 
-const supabase = createClient(
-  'https://lhfnaatckhqtkckvcbuq.supabase.co',
-  'sb_publishable_sYj9hsY-HuRtyU-DwEoTGA_DAUkc4qA'
-)
+import { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabase";
 
-export default async function Admin() {
-  const { data } = await supabase
-    .from('agendamentos')
-    .select('*')
-    .order('id', { ascending: false })
+type Agendamento = {
+  id: number;
+  nome: string;
+  email: string;
+  telefone: string;
+  data: string;
+};
+
+export default function Admin() {
+  const [dados, setDados] = useState<Agendamento[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const buscar = async () => {
+    const { data, error } = await supabase
+      .from("agendamentos")
+      .select("*")
+      .order("id", { ascending: false });
+
+    if (!error && data) {
+      setDados(data);
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    buscar();
+  }, []);
 
   return (
     <main style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Painel de Agendamentos</h1>
+      <h1>Painel Admin</h1>
 
-      <table border={1} cellPadding={10} style={{ marginTop: "20px" }}>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Telefone</th>
-            <th>Data</th>
-          </tr>
-        </thead>
+      {loading && <p>Carregando...</p>}
 
-        <tbody>
-          {data?.map((item) => (
-            <tr key={item.id}>
-              <td>{item.nome}</td>
-              <td>{item.email}</td>
-              <td>{item.telefone}</td>
-              <td>{item.data}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {!loading && dados.length === 0 && <p>Nenhum agendamento</p>}
+
+      {!loading &&
+        dados.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              border: "1px solid #ccc",
+              padding: "10px",
+              marginBottom: "10px",
+            }}
+          >
+            <p><b>Nome:</b> {item.nome}</p>
+            <p><b>Email:</b> {item.email}</p>
+            <p><b>Telefone:</b> {item.telefone}</p>
+            <p><b>Data:</b> {item.data}</p>
+          </div>
+        ))}
     </main>
   );
 }
