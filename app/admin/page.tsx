@@ -1,48 +1,116 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
+import { useRouter } from "next/navigation"
 
-export default function Admin() {
-  const [agendamentos, setAgendamentos] = useState<any[]>([]);
-  const router = useRouter();
+export default function AdminPage() {
+  const [agendamentos, setAgendamentos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    const carregar = async () => {
-      const { data: userData } = await supabase.auth.getUser();
+    checkUser()
+    fetchData()
+  }, [])
 
-      const user = userData.user;
+  const checkUser = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-      if (!user) {
-        router.push("/login");
-        return;
-      }
+    if (!user) {
+      router.push("/login")
+    }
+  }
 
-      // 🔥 busca só os dados do usuário
-      const { data } = await supabase
-        .from("agendamentos")
-        .select("*")
-        .eq("user_id", user.id);
+  const fetchData = async () => {
+    const { data } = await supabase
+      .from("agendamentos")
+      .select("*")
+      .order("created_at", { ascending: false })
 
-      setAgendamentos(data || []);
-    };
+    setAgendamentos(data || [])
+    setLoading(false)
+  }
 
-    carregar();
-  }, []);
+  const deletar = async (id: string) => {
+    await supabase.from("agendamentos").delete().eq("id", id)
+    fetchData()
+  }
+
+  const logout = async () => {
+    await supabase.auth.signOut()
+    router.push("/login")
+  }
 
   return (
-    <main className="p-10">
-      <h1 className="text-2xl font-bold mb-4">Seus Agendamentos</h1>
+    <div className="min-h-screen bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#1e293b] text-white p-8">
 
-      {agendamentos.map((item) => (
-        <div key={item.id} className="border p-4 mb-2 rounded">
-          <p><strong>Nome:</strong> {item.nome}</p>
-          <p><strong>Email:</strong> {item.email}</p>
-          <p><strong>Telefone:</strong> {item.telefone}</p>
-          <p><strong>Data:</strong> {item.data}</p>
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+
+        <button
+          onClick={logout}
+          className="bg-red-500 px-4 py-2 rounded-lg"
+        >
+          Sair
+        </button>
+      </div>
+
+      {/* CARDS */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+
+        <div className="bg-white/5 p-6 rounded-2xl">
+          <p className="text-gray-400">Total</p>
+          <h2 className="text-2xl font-bold">
+            {agendamentos.length}
+          </h2>
         </div>
-      ))}
-    </main>
-  );
+
+        <div className="bg-white/5 p-6 rounded-2xl">
+          <p className="text-gray-400">Hoje</p>
+          <h2 className="text-2xl font-bold">
+            {
+              agendamentos.filter((a) => {
+                const hoje = new Date().toISOString().split("T")[0]
+                return a.data === hoje
+              }).length
+            }
+          </h2>
+        </div>
+
+      </div>
+
+      {/* LISTA */}
+      {loading ? (
+        <p>Carregando...</p>
+      ) : (
+        <div className="space-y-4">
+
+          {agendamentos.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white/5 p-5 rounded-2xl flex justify-between items-center"
+            >
+              <div>
+                <p className="font-semibold text-lg">{item.nome}</p>
+                <p className="text-sm text-gray-400">{item.email}</p>
+                <p className="text-sm">📅 {item.data}</p>
+              </div>
+
+              <button
+                onClick={() => deletar(item.id)}
+                className="bg-red-500 px-4 py-2 rounded-lg"
+              >
+                Excluir
+              </button>
+            </div>
+          ))}
+
+        </div>
+      )}
+    </div>
+  )
 }
