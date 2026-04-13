@@ -19,15 +19,25 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: senha,
     });
 
     if (error) {
       alert("Email ou senha inválidos");
-    } else {
-      router.push("/admin");
+    } else if (data.user) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      if (prof?.role === "patient") {
+        router.push("/portal");
+      } else {
+        router.push("/admin");
+      }
     }
 
     setLoading(false);
@@ -79,10 +89,10 @@ export default function LoginPage() {
         >
           <div className="mb-10 text-center md:text-left">
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Acessar Painel
+              Acesse sua Conta
             </h1>
             <p className="text-slate-500">
-              Digite suas credenciais corporativas abaixo.
+              Digite seu email e senha de acesso abaixo.
             </p>
           </div>
 

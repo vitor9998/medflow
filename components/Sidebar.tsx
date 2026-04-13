@@ -10,13 +10,14 @@ import {
   Settings, 
   Menu, 
   X,
-  LogOut
+  LogOut,
+  ShieldAlert
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { MedsysLogo } from "@/components/Logo";
 import { supabase } from "@/lib/supabaseClient";
 
-export function Sidebar() {
+export function Sidebar({ role }: { role?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -40,6 +41,10 @@ export function Sidebar() {
     { href: "/admin/comunicacao", label: "Comunicação", icon: MessageCircle },
     { href: "/admin/config", label: "Configurações", icon: Settings },
   ];
+
+  if (role === "superadmin") {
+    links.push({ href: "/admin/master", label: "Painel Full Master", icon: ShieldAlert });
+  }
 
   const closeSidebar = () => setIsOpen(false);
 

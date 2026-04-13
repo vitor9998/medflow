@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [accountType, setAccountType] = useState<"doctor" | "patient">("patient");
   const [especialidade, setEspecialidade] = useState("");
   const [telefone, setTelefone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -54,21 +55,29 @@ export default function SignupPage() {
           {
             id: data.user.id,
             nome,
-            slug,
-            especialidade,
+            slug: accountType === "doctor" ? slug : null,
+            especialidade: accountType === "doctor" ? especialidade : null,
             telefone,
+            role: accountType,
+            status: accountType === "patient" ? "active" : "pending"
           },
         ]);
 
       if (profileError) {
         console.log("Erro no Profile:", profileError);
-        // Pode ser um erro de slug duplicado no DB
         setErrorMsg(`Não foi possível criar o perfil médico. Tente alterar o nome fornecido. Erro Banco: ${profileError.message || ""}`);
       } else {
-        setSuccessMsg("Conta e estrutura médica criadas com sucesso! Redirecionando...");
-        setTimeout(() => {
-           router.push("/admin");
-        }, 1500);
+        if (accountType === "doctor") {
+          setSuccessMsg("Perfil registrado com sucesso! Direcionando para análise de aprovação...");
+          setTimeout(() => {
+             router.push("/admin");
+          }, 2000);
+        } else {
+          setSuccessMsg("Conta criada com sucesso! Direcionando para seu Portal B2C...");
+          setTimeout(() => {
+             router.push("/portal");
+          }, 1500);
+        }
       }
     }
 
@@ -121,11 +130,29 @@ export default function SignupPage() {
         >
           <div className="mb-6 text-center md:text-left">
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Criar Conta Médica
+              Criar Conta {accountType === "doctor" ? "Médico" : "Paciente"}
             </h1>
             <p className="text-slate-500">
-              Configure seu perfil e abra sua agenda agora.
+              {accountType === "doctor" ? "Configure seu perfil e abra sua agenda agora." : "Gerencie todas as suas consultas em um só lugar."}
             </p>
+          </div>
+
+          {/* TOGGLE MÚLTIPLO */}
+          <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
+             <button
+               type="button"
+               onClick={() => setAccountType("patient")}
+               className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${accountType === "patient" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+             >
+               Sou Paciente
+             </button>
+             <button
+               type="button"
+               onClick={() => setAccountType("doctor")}
+               className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${accountType === "doctor" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+             >
+               Sou Médico
+             </button>
           </div>
 
           {errorMsg && (
@@ -146,7 +173,7 @@ export default function SignupPage() {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Nome Completo</label>
               <input
-                placeholder="Dr(a). Seu Nome"
+                placeholder={accountType === "doctor" ? "Dr(a). Seu Nome" : "Seu nome completo"}
                 className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
@@ -155,16 +182,18 @@ export default function SignupPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="w-full">
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Especialidade</label>
-                <input
-                  placeholder="Cardiologia"
-                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
-                  value={especialidade}
-                  onChange={(e) => setEspecialidade(e.target.value)}
-                  required
-                />
-              </div>
+              {accountType === "doctor" && (
+                <div className="w-full">
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Especialidade</label>
+                  <input
+                    placeholder="Cardiologia"
+                    className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                    value={especialidade}
+                    onChange={(e) => setEspecialidade(e.target.value)}
+                    required={accountType === "doctor"}
+                  />
+                </div>
+              )}
               <div className="w-full">
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Telefone / WhatsApp</label>
                 <input
@@ -177,10 +206,10 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Email Profissional</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Email {accountType === "doctor" && "Profissional"}</label>
               <input
                 type="email"
-                placeholder="doutor@clinica.com"
+                placeholder={accountType === "doctor" ? "doutor@clinica.com" : "seuemail@exemplo.com"}
                 className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { MedsysLogo } from "@/components/Logo";
@@ -34,6 +34,7 @@ function calcularPrioridade(sintomas: string) {
 export default function AgendamentoPage() {
   const params = useParams();
   const slug = params.medico as string;
+  const router = useRouter();
 
   const [medico, setMedico] = useState<any>(null);
 
@@ -44,9 +45,33 @@ export default function AgendamentoPage() {
   const [hora, setHora] = useState("");
   const [sintomas, setSintomas] = useState("");
   const [loading, setLoading] = useState(false);
+  const [agendamentosOcupados, setAgendamentosOcupados] = useState<any[]>([]);
+  const [pacienteId, setPacienteId] = useState<string | null>(null);
 
   // 🔥 buscar médico pelo slug
   useEffect(() => {
+    async function initSession() {
+       const { data: { user } } = await supabase.auth.getUser();
+       if (user) {
+         setPacienteId(user.id);
+         setEmail(user.email || "");
+         
+         const { data: prof } = await supabase
+           .from("profiles")
+           .select("nome, telefone")
+           .eq("id", user.id)
+           .single();
+           
+         if (prof) {
+            setNome(prof.nome || "");
+            setTelefone(prof.telefone || "");
+         }
+       } else {
+         // Usuário tentou acessar a url pública sem conta. Chuta pro signup
+         window.location.href = "/signup";
+       }
+    }
+    initSession();
     async function buscarMedico() {
       if (!slug) return;
 
@@ -62,10 +87,45 @@ export default function AgendamentoPage() {
       }
 
       setMedico(data);
+
+      // 🔥 Buscar blocos de agenda já ocupados
+      const { data: agenda, error: agendaErr } = await supabase
+        .from("agendamentos")
+        .select("data, hora, status")
+        .eq("user_id", data.id)
+        .neq("status", "cancelado");
+      
+      if (!agendaErr && agenda) {
+        setAgendamentosOcupados(agenda);
+      }
     }
 
     buscarMedico();
   }, [slug]);
+
+  // 🔥 GERADOR DE SLOTS (09h00 as 18h00)
+  const generateSlots = () => {
+    const slots = [];
+    for (let i = 8; i <= 18; i++) {
+      slots.push(`${i.toString().padStart(2, "0")}:00`);
+      slots.push(`${i.toString().padStart(2, "0")}:30`);
+    }
+    return slots;
+  };
+
+  const getDaySlots = () => {
+    if (!data) return [];
+    
+    // Normalizar horarios do db pra "HH:mm" caso venham com segundos "HH:mm:ss"
+    const occupiedTimes = agendamentosOcupados
+      .filter((a) => a.data === data)
+      .map((a) => a.hora.substring(0, 5));
+
+    return generateSlots().map((slot) => ({
+      time: slot,
+      isOccupied: occupiedTimes.includes(slot),
+    }));
+  };
 
   async function salvar(e: any) {
     e.preventDefault();
@@ -88,13 +148,13 @@ export default function AgendamentoPage() {
         hora,
         sintomas,
         status: "pendente",
-        prioridade,
-        user_id: medico.id, // 🔥 VINCULA AO MÉDICO CERTO
+        user_id: medico.id, 
+        patient_id: pacienteId 
       },
     ]);
 
     if (error) {
-      alert("Erro ao salvar");
+      alert(`Erro do Banco de Dados: ${error.message} \n\nDetalhes: ${JSON.stringify(error)}`);
       console.log(error);
     } else {
       alert("Consulta agendada com sucesso!");
@@ -104,17 +164,18 @@ export default function AgendamentoPage() {
       setData("");
       setHora("");
       setSintomas("");
+      router.push("/portal");
     }
 
     setLoading(false);
   }
 
-  // 🔥 LOADING
-  if (!medico) {
+  // 🔥 LOADING & AUTHENTICATION GUARD
+  if (!medico || !pacienteId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 flex-col gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-        <p className="font-medium animate-pulse">Estabelecendo conexão segura...</p>
+        <p className="font-medium animate-pulse">{!pacienteId ? "Verificando Credenciais do Paciente..." : "Estabelecendo conexão segura..."}</p>
       </div>
     );
   }
@@ -125,7 +186,7 @@ export default function AgendamentoPage() {
       {/* NAVBAR SIMPLES B2C */}
       <nav className="w-full bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-           <Link href="/agendamento" className="flex items-center gap-1.5 sm:gap-2 text-slate-500 hover:text-slate-900 font-semibold transition-colors text-sm sm:text-base">
+           <Link href="/portal" className="flex items-center gap-1.5 sm:gap-2 text-slate-500 hover:text-slate-900 font-semibold transition-colors text-sm sm:text-base">
              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Voltar
            </Link>
            <Link href="/" className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 flex items-center gap-2">
@@ -170,11 +231,12 @@ export default function AgendamentoPage() {
                 <User className="w-4 h-4 text-emerald-600" /> Paciente
               </label>
               <input
-                placeholder="Seu nome completo"
-                className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all font-medium"
+                placeholder={pacienteId ? "Preenchido automaticamente" : "Seu nome completo"}
+                className={`w-full px-4 py-3.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all font-medium ${pacienteId ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50'}`}
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 required
+                readOnly={!!pacienteId}
               />
             </div>
 
@@ -185,11 +247,12 @@ export default function AgendamentoPage() {
                 </label>
                 <input
                   type="email"
-                  placeholder="voce@email.com"
-                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all font-medium"
+                  placeholder={pacienteId ? "Preenchido automaticamente" : "voce@email.com"}
+                  className={`w-full px-4 py-3.5 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all font-medium ${pacienteId ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-slate-50'}`}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  readOnly={!!pacienteId}
                 />
               </div>
               <div className="w-full">
@@ -221,15 +284,36 @@ export default function AgendamentoPage() {
               </div>
               <div className="w-full">
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-1.5 ml-1">
-                  <Clock className="w-4 h-4 text-emerald-600" /> Previsão de Horário
+                  <Clock className="w-4 h-4 text-emerald-600" /> Horários Disponíveis
                 </label>
-                <input
-                  type="time"
-                  className="w-full px-4 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-medium h-12"
-                  value={hora}
-                  onChange={(e) => setHora(e.target.value)}
-                  required
-                />
+                {data ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 overflow-y-auto max-h-[140px] pr-1 pb-1">
+                    {getDaySlots().map((slot) => (
+                      <button
+                        type="button"
+                        key={slot.time}
+                        disabled={slot.isOccupied}
+                        onClick={() => setHora(slot.time)}
+                        className={`py-2 px-1 rounded-xl text-sm font-bold transition-all border
+                          ${slot.isOccupied 
+                            ? "bg-slate-100 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed line-through" 
+                            : hora === slot.time 
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/30" 
+                            : "bg-white text-slate-700 border-slate-200 hover:border-emerald-500 hover:text-emerald-700"
+                          }
+                        `}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex bg-white/50 border border-slate-200 border-dashed rounded-xl h-12 items-center justify-center text-slate-400 text-sm font-medium">
+                    Escolha uma data primeiro.
+                  </div>
+                )}
+                {/* Fallback hidden input to ensure required validation passes if they click a button */}
+                <input type="hidden" required value={hora} />
               </div>
             </div>
 

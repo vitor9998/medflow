@@ -9,6 +9,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
+import { MessageCircle } from "lucide-react";
 
 export default function AgendaPage() {
   const router = useRouter();
@@ -76,6 +77,15 @@ export default function AgendaPage() {
     );
     setSelecionada(null); // Fecha o modal
   }
+
+  const enviarWhatsApp = (consulta: any) => {
+    const dataBr = consulta.data.split('-').reverse().join('/');
+    const msg = `Olá, ${consulta.nome}! Tudo bem? Apenas passando para lembrar e confirmar o seu agendamento médico no dia *${dataBr}* às *${consulta.hora}*. Podemos confirmar sua presença?`;
+    const foneLimpo = consulta.telefone ? consulta.telefone.replace(/\D/g, '') : '';
+    const prefixo = foneLimpo.length <= 11 ? '55' : ''; // Brasil default fallback
+    const url = `https://wa.me/${prefixo}${foneLimpo}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+  };
 
   const eventos = consultas.map((c) => ({
     id: String(c.id),
@@ -160,12 +170,12 @@ export default function AgendaPage() {
             
             <div className="grid grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-xl border border-gray-800">
               <div>
-                <p className="text-sm text-slate-400 font-medium">Data</p>
-                <p className="font-semibold text-white">{selecionada.data.split('-').reverse().join('/')}</p>
+                <p className="text-sm text-slate-400 font-medium">Data e Horário</p>
+                <p className="font-semibold text-white">{selecionada.data.split('-').reverse().join('/')} às {selecionada.hora}</p>
               </div>
               <div>
-                <p className="text-sm text-slate-400 font-medium">Horário</p>
-                <p className="font-semibold text-white">{selecionada.hora}</p>
+                <p className="text-sm text-slate-400 font-medium">WhatsApp</p>
+                <p className="font-semibold text-white">{selecionada.telefone || "Não informado"}</p>
               </div>
             </div>
 
@@ -182,15 +192,23 @@ export default function AgendaPage() {
 
             <div className="pt-4 mt-2 flex flex-col gap-3 border-t border-gray-800">
               <button
-                onClick={() => atualizarStatus(selecionada.id, "confirmado")}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl transition-colors"
+                onClick={() => enviarWhatsApp(selecionada)}
+                className="w-full flex justify-center items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold py-2.5 rounded-xl transition-colors shadow-lg shadow-[#25D366]/20"
               >
-                Confirmar Consulta
+                <MessageCircle className="w-5 h-5" />
+                Lembrete via WhatsApp
+              </button>
+
+              <button
+                onClick={() => atualizarStatus(selecionada.id, "confirmado")}
+                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-semibold py-2.5 rounded-xl transition-colors"
+              >
+                Confirmar no Sistema
               </button>
               
               <button
                 onClick={() => atualizarStatus(selecionada.id, "cancelado")}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-red-400 font-semibold py-2.5 rounded-xl transition-colors"
+                className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-red-500 font-semibold py-2.5 rounded-xl transition-colors"
               >
                 Cancelar Agendamento
               </button>
