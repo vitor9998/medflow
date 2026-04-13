@@ -21,6 +21,18 @@ export function Sidebar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Impede o scroll de fundo (bleed) quando o menu mobile está aberto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   const links = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/agenda", label: "Agenda", icon: CalendarDays },
@@ -63,7 +75,7 @@ export function Sidebar() {
       <aside className={`
         fixed text-white inset-y-0 left-0 z-50 w-64 bg-[#020617] md:bg-transparent md:border-r border-gray-800/60
         transform transition-transform duration-200 ease-in-out md:static md:translate-x-0
-        flex flex-col p-4
+        flex flex-col p-4 overflow-y-auto overscroll-contain
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
          <div className="hidden md:flex items-center gap-3 mb-10 px-2 mt-2 font-bold text-xl tracking-tight text-white">
