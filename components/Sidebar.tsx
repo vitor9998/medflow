@@ -12,7 +12,7 @@ import {
   X,
   LogOut
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MedsysLogo } from "@/components/Logo";
 import { supabase } from "@/lib/supabaseClient";
 
