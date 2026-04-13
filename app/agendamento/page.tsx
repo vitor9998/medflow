@@ -1,163 +1,91 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { supabase } from "@/lib/supabaseClient"
-import { User, Mail, Phone, Calendar } from "lucide-react"
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import Link from "next/link";
 
-function calcularPrioridade(sintomas: string) {
-  const texto = sintomas.toLowerCase()
+export default function Page() {
+  const [medicos, setMedicos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (
-    texto.includes("febre") ||
-    texto.includes("dor forte") ||
-    texto.includes("falta de ar") ||
-    texto.includes("pressão no peito")
-  ) {
-    return "urgente"
-  }
+  useEffect(() => {
+    async function load() {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, nome, especialidade, slug")
+        .not("slug", "is", null);
 
-  if (
-    texto.includes("dor") ||
-    texto.includes("cansaço") ||
-    texto.includes("tontura")
-  ) {
-    return "moderado"
-  }
+      if (error) {
+        console.log("Erro ao buscar médicos:", error);
+        return;
+      }
 
-  return "leve"
-}
+      setMedicos(data || []);
+      setLoading(false);
+    }
 
-export default function AgendamentoPage() {
-  const [nome, setNome] = useState("")
-  const [email, setEmail] = useState("")
-  const [telefone, setTelefone] = useState("")
-  const [data, setData] = useState("")
-  const [hora, setHora] = useState("")
-  const [sintomas, setSintomas] = useState("")
-  const [loading, setLoading] = useState(false)
+    load();
+  }, []);
 
-  async function salvar(e: any) {
-  e.preventDefault()
-  setLoading(true)
-
-  const prioridade = calcularPrioridade(sintomas)
-
-  // 🔥 PEGA USUÁRIO LOGADO
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    alert("Você precisa estar logado")
-    setLoading(false)
-    return
-  }
-
-  // 🔥 SALVA COM USER_ID
-  const { error } = await supabase.from("agendamentos").insert([
-    {
-      nome,
-      email,
-      telefone,
-      data,
-      hora,
-      sintomas,
-      status: "pendente",
-      prioridade,
-      user_id: user.id, // 🔥 ISSO AQUI É O MULTI-TENANT
-    },
-  ])
-
-  if (error) {
-    alert("Erro ao salvar")
-    console.log(error)
-  } else {
-    alert("Consulta agendada com sucesso!")
-    setNome("")
-    setEmail("")
-    setTelefone("")
-    setData("")
-    setHora("")
-    setSintomas("")
-  }
-
-  setLoading(false)
-}
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617]">
-      <form
-        onSubmit={salvar}
-        className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl shadow-lg w-[400px] space-y-4 border border-white/20"
-      >
-        <h1 className="text-white text-2xl font-bold text-center">
-          Agendar Consulta
-        </h1>
+    <div className="min-h-screen bg-[#020617] text-white px-6 py-12">
 
-        <div className="flex items-center gap-2 bg-white/10 p-3 rounded-lg">
-          <User className="text-white" size={18} />
-          <input
-            placeholder="Nome"
-            className="bg-transparent outline-none text-white w-full"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            required
-          />
-        </div>
+      {/* TÍTULO */}
+      <h1 className="text-4xl font-bold text-center mb-12">
+        Escolha um médico
+      </h1>
 
-        <div className="flex items-center gap-2 bg-white/10 p-3 rounded-lg">
-          <Mail className="text-white" size={18} />
-          <input
-            placeholder="Email"
-            className="bg-transparent outline-none text-white w-full"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+      {/* LOADING */}
+      {loading && (
+        <p className="text-center text-gray-400">
+          Carregando médicos...
+        </p>
+      )}
 
-        <div className="flex items-center gap-2 bg-white/10 p-3 rounded-lg">
-          <Phone className="text-white" size={18} />
-          <input
-            placeholder="Telefone"
-            className="bg-transparent outline-none text-white w-full"
-            value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-            required
-          />
-        </div>
+      {/* LISTA */}
+      <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
 
-        <input
-          type="date"
-          className="w-full p-3 rounded-lg bg-white/10 text-white"
-          value={data}
-          onChange={(e) => setData(e.target.value)}
-          required
-        />
+        {medicos.map((m) => (
+          <div
+            key={m.id}
+            className="bg-[#0B1120] border border-gray-800 p-6 rounded-2xl hover:border-green-500 transition duration-300"
+          >
+            {/* HEADER */}
+            <div className="flex items-center gap-4 mb-6">
+              {/* Avatar fake */}
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-black font-bold">
+                {m.nome?.charAt(0)?.toUpperCase() || "M"}
+              </div>
 
-        <input
-          type="time"
-          className="w-full p-3 rounded-lg bg-white/10 text-white"
-          value={hora}
-          onChange={(e) => setHora(e.target.value)}
-          required
-        />
+              <div>
+                <h2 className="text-lg font-semibold">
+                  {m.nome}
+                </h2>
+                <p className="text-sm text-gray-400">
+                  {m.especialidade}
+                </p>
+              </div>
+            </div>
 
-        <textarea
-          placeholder="Descreva seus sintomas..."
-          className="w-full p-3 rounded-lg bg-white/10 text-white"
-          value={sintomas}
-          onChange={(e) => setSintomas(e.target.value)}
-          required
-        />
+            {/* BOTÃO */}
+            <Link
+              href={`/agendamento/${m.slug}`}
+              className="block bg-green-500 hover:bg-green-600 text-center py-2 rounded-lg font-semibold transition"
+            >
+              Agendar consulta
+            </Link>
+          </div>
+        ))}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
-        >
-          {loading ? "Salvando..." : "Confirmar Agendamento"}
-        </button>
-      </form>
+      </div>
+
+      {/* CASO NÃO TENHA MÉDICOS */}
+      {!loading && medicos.length === 0 && (
+        <p className="text-center text-gray-500 mt-10">
+          Nenhum médico disponível
+        </p>
+      )}
+
     </div>
-  )
+  );
 }
