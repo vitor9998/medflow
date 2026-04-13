@@ -349,8 +349,6 @@ export default function AgendaPage() {
            --fc-button-hover-border-color: #475569;
            --fc-button-active-bg-color: #334155;
            --fc-button-active-border-color: #475569;
-           --fc-event-bg-color: #10b981;
-           --fc-event-border-color: #10b981;
            --fc-today-bg-color: rgba(16, 185, 129, 0.05);
            --fc-page-bg-color: #020617;
            --fc-neutral-bg-color: #0f172a;
