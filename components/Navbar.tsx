@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Stethoscope, Calendar } from "lucide-react";
+import { MedsysLogo } from "@/components/Logo";
 
 export default function Navbar() {
   const [user, setUser] = useState<any>(null);
@@ -12,8 +13,6 @@ export default function Navbar() {
   const router = useRouter();
 
   useEffect(() => {
-    getUser();
-
     // 🔥 Listener de autenticação
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
@@ -39,25 +38,7 @@ export default function Navbar() {
     };
   }, []);
 
-  // 🔎 Buscar usuário atual
-  async function getUser() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    setUser(user);
-
-    if (user) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("nome")
-        .eq("id", user.id)
-        .single();
-
-      setNome(data?.nome || "");
-    }
-  }
-
+  // getUser removido pois o onAuthStateChange já dispara imediatamente ao montar.
   // 🚪 Logout
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -70,8 +51,8 @@ export default function Navbar() {
     <nav className="w-full bg-[#020617] border-b border-gray-800 px-6 py-4 flex justify-between items-center">
 
       {/* LOGO */}
-      <h1 className="font-bold text-lg text-white">
-        Clínica Saúde+
+      <h1 className="font-bold text-lg text-white flex items-center gap-2">
+        <MedsysLogo className="h-6 w-auto" /> Medsys
       </h1>
 
       {/* MENU */}

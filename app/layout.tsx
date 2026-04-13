@@ -1,5 +1,4 @@
 import "./globals.css";
-import Navbar from "@/components/Navbar";
 
 export const metadata = {
   title: "Clínica Saúde+",
@@ -14,9 +13,6 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body className="bg-[#020617] text-white">
-
-        {/* NAVBAR GLOBAL */}
-        <Navbar />
 
         {/* CONTEÚDO DAS PÁGINAS */}
         <main className="min-h-screen">
