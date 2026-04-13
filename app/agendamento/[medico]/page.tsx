@@ -120,44 +120,48 @@ export default function AgendamentoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-24 overflow-x-hidden selection:bg-emerald-200">
       
       {/* NAVBAR SIMPLES B2C */}
-      <nav className="w-full bg-white border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-6 h-20 flex items-center justify-between">
-           <Link href="/agendamento" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-medium transition-colors">
-             <ArrowLeft className="w-5 h-5" /> Voltar
+      <nav className="w-full bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
+           <Link href="/agendamento" className="flex items-center gap-1.5 sm:gap-2 text-slate-500 hover:text-slate-900 font-semibold transition-colors text-sm sm:text-base">
+             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Voltar
            </Link>
-           <Link href="/" className="font-bold text-xl tracking-tight text-slate-900 flex items-center gap-2">
-             <MedsysLogo className="h-8 w-auto text-emerald-600" /> Medsys
+           <Link href="/" className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 flex items-center gap-2">
+             <MedsysLogo className="h-6 sm:h-8 w-auto text-emerald-600 drop-shadow-sm" /> Medsys
            </Link>
         </div>
       </nav>
 
       {/* HEADER DO MÉDICO */}
-      <div className="w-full bg-[#020617] text-white pt-16 pb-32">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-           <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/10 border border-emerald-500/30">
-             <Hospital className="w-10 h-10" />
+      <div className="w-full bg-[#020617] text-white pt-10 pb-32 sm:pt-16 sm:pb-40 px-6 relative">
+        {/* Efeitos de Luz de Fundo */}
+        <div className="absolute top-0 right-0 p-24 opacity-20 blur-3xl rounded-full bg-emerald-500"></div>
+        <div className="absolute bottom-0 left-0 p-32 opacity-10 blur-3xl rounded-full bg-teal-800"></div>
+
+        <div className="max-w-2xl mx-auto text-center relative z-10 w-full flex flex-col items-center">
+           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-xl shadow-emerald-500/10 border border-emerald-500/30">
+             <Hospital className="w-8 h-8 sm:w-10 sm:h-10" />
            </div>
-           <h1 className="text-3xl sm:text-4xl font-extrabold mb-3">
+           <h1 className="text-2xl sm:text-4xl font-extrabold mb-2 px-2 leading-tight">
              {medico.nome}
            </h1>
-           <p className="text-slate-400 text-lg uppercase tracking-wider font-semibold">
+           <p className="text-emerald-400 text-sm sm:text-lg uppercase tracking-widest font-bold">
              {medico.especialidade || "Clínico Geral"}
            </p>
         </div>
       </div>
 
       {/* FORMULÁRIO SOBREPOSTO */}
-      <div className="max-w-2xl mx-auto px-6 -mt-20 relative z-10">
+      <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 -mt-20 sm:-mt-28 relative z-10">
         <form
           onSubmit={salvar}
-          className="bg-white p-6 sm:p-10 rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col gap-6"
+          className="bg-white p-5 sm:p-10 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 shadow-2xl shadow-slate-200/50 flex flex-col gap-6"
         >
-          <div className="border-b border-slate-100 pb-6 mb-2">
-            <h2 className="text-xl font-bold text-slate-900 mb-1">Dados da Consulta</h2>
-            <p className="text-slate-500 text-sm">Preencha com atenção. Estas informações formarão seu prontuário prévio.</p>
+          <div className="border-b border-slate-100 pb-5 sm:pb-6 mb-1 sm:mb-2 text-center sm:text-left">
+            <h2 className="text-xl font-extrabold text-slate-900 mb-1.5">Dados da Consulta</h2>
+            <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">Preencha com atenção. Estas informações formarão seu prontuário prévio.</p>
           </div>
 
           <div className="space-y-5">
@@ -235,7 +239,7 @@ export default function AgendamentoPage() {
               </label>
               <textarea
                 placeholder="Descreva brevemente seus sintomas, quando começaram e a área da dor."
-                className="w-full px-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all min-h-[120px] font-medium resize-y"
+                className="w-full px-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all min-h-[100px] sm:min-h-[120px] font-medium resize-y text-sm sm:text-base leading-relaxed"
                 value={sintomas}
                 onChange={(e) => setSintomas(e.target.value)}
                 required
@@ -246,12 +250,12 @@ export default function AgendamentoPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-xl font-extrabold text-lg mt-4 shadow-xl shadow-emerald-600/20 hover:-translate-y-0.5 transition-all"
+            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-4 sm:py-5 rounded-xl font-extrabold text-base sm:text-lg mt-4 shadow-lg shadow-emerald-600/20 hover:-translate-y-0.5 transition-all active:scale-[0.98]"
           >
-            {loading ? <><Loader2 className="w-6 h-6 animate-spin" /> Processando Fila Médica...</> : "Concluir Solicitação de Agenda"}
+            {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Verificando Fila...</> : "Confirmar Agendamento"}
           </button>
           
-          <p className="text-center text-xs text-slate-400 mt-2 font-medium">Ao clicar em concluir, as diretrizes da clínica sobre tratamento de dados e uso do Medsys AI são asseguradas.</p>
+          <p className="text-center text-[10px] sm:text-xs text-slate-400 mt-2 font-medium px-4">Ao confirmar, as diretrizes da clínica sobre tratamento de dados e uso do Medsys AI são asseguradas.</p>
 
         </form>
       </div>
