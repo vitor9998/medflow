@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   LayoutDashboard, 
   CalendarDays, 
@@ -10,13 +10,15 @@ import {
   Settings, 
   Menu, 
   X,
-  Activity
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
 import { MedsysLogo } from "@/components/Logo";
+import { supabase } from "@/lib/supabaseClient";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
   const links = [
@@ -28,6 +30,11 @@ export function Sidebar() {
   ];
 
   const closeSidebar = () => setIsOpen(false);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   return (
     <>
@@ -86,7 +93,15 @@ export function Sidebar() {
                 </Link>
               )
            })}
-         </nav>
+         <div className="mt-auto pt-6 pb-2 border-t border-gray-800/60 flex flex-col">
+           <button 
+             onClick={handleLogout}
+             className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors text-slate-400 hover:text-red-400 hover:bg-red-500/10 w-full text-left"
+           >
+             <LogOut className="w-5 h-5" />
+             Sair da Conta
+           </button>
+         </div>
       </aside>
     </>
   );
