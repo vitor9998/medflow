@@ -93,17 +93,15 @@
     padding: 0.5rem 0.7rem !important;
     font-size: 0.75rem !important;
   }
-  /* Obriga a agenda a rolar se espremer demais */
+  /* Obriga a agenda a rolar em TODOS os views (Mês, Semana, Dia) */
   .fc-view-harness {
     overflow-x: auto !important;
+    overflow-y: hidden !important;
   }
-  .fc-timegrid-body {
-    min-width: 600px !important;
+  .fc-scrollgrid {
+    min-width: 700px !important;
   }
-  .fc-daygrid-body {
-    min-width: 600px !important;
-  }
-  .fc-scrollgrid-sync-table {
-    min-width: 600px !important;
+  .fc-timegrid-body, .fc-daygrid-body, .fc-scrollgrid-sync-table {
+    min-width: 700px !important;
   }
 }
