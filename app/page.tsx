@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Calendar, Clock, Star, ShieldCheck, Stethoscope } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Star, ShieldCheck, Stethoscope, Menu, X } from "lucide-react";
 import { MedsysLogo } from "@/components/Logo";
+import { useState } from "react";
 
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-emerald-200 overflow-x-hidden flex flex-col items-center">
       
@@ -25,10 +27,29 @@ export default function Home() {
                Para Clínicas
              </Link>
            </div>
-           <Link href="/login" className="text-sm font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap">
-             Acessar Conta
-           </Link>
+           
+           <div className="flex items-center gap-3">
+             <Link href="/login" className="hidden md:flex text-sm font-semibold text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap">
+               Acessar Conta
+             </Link>
+             <Link href="/login" className="md:hidden text-sm font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg">
+               Entrar
+             </Link>
+             <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-slate-600 p-1">
+               {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+             </button>
+           </div>
         </div>
+
+        {/* Mobile Dropdown */}
+        {menuOpen && (
+          <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-slate-200 shadow-xl flex flex-col p-6 gap-6 z-50">
+             <a onClick={() => setMenuOpen(false)} href="#beneficios" className="text-slate-700 font-medium text-lg">Benefícios</a>
+             <a onClick={() => setMenuOpen(false)} href="#como-funciona" className="text-slate-700 font-medium text-lg">Como Funciona</a>
+             <Link onClick={() => setMenuOpen(false)} href="/pricing" className="text-slate-700 font-medium text-lg">Planos</Link>
+             <Link onClick={() => setMenuOpen(false)} href="/para-medicos" className="text-emerald-600 font-bold text-lg">Para Clínicas</Link>
+          </div>
+        )}
       </nav>
 
       {/* HERO SECTION */}
