@@ -1,0 +1,92 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { 
+  LayoutDashboard, 
+  CalendarDays, 
+  Users, 
+  MessageCircle, 
+  Settings, 
+  Menu, 
+  X,
+  Activity
+} from "lucide-react";
+import { useState } from "react";
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const links = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/agenda", label: "Agenda", icon: CalendarDays },
+    { href: "/admin/pacientes", label: "Pacientes", icon: Users },
+    { href: "/admin/comunicacao", label: "Comunicação", icon: MessageCircle },
+    { href: "/admin/config", label: "Configurações", icon: Settings },
+  ];
+
+  const closeSidebar = () => setIsOpen(false);
+
+  return (
+    <>
+      {/* Mobile Topbar & Hamburger */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-[#0B1120] border-b border-gray-800 shrink-0">
+        <div className="flex items-center gap-2 text-white font-bold text-lg">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500 shadow-md shadow-emerald-500/20 flex items-center justify-center">
+             <Activity className="text-slate-950 w-5 h-5" />
+          </div>
+          MedFlow
+        </div>
+        <button onClick={() => setIsOpen(!isOpen)} className="text-gray-300 hover:text-white">
+          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Backdrop for Mobile */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          onClick={closeSidebar}
+        />
+      )}
+
+      {/* Sidebar Content */}
+      <aside className={`
+        fixed text-white inset-y-0 left-0 z-50 w-64 bg-[#020617] md:bg-transparent md:border-r border-gray-800/60
+        transform transition-transform duration-200 ease-in-out md:static md:translate-x-0
+        flex flex-col p-4
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
+         <div className="hidden md:flex items-center gap-3 mb-10 px-2 mt-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500 shadow-md shadow-emerald-500/20 flex items-center justify-center">
+              <Activity className="text-slate-950 w-5 h-5" />
+            </div>
+            <span className="font-bold text-xl tracking-tight">MedFlow</span>
+         </div>
+
+         <nav className="flex flex-col gap-1.5 mt-4 md:mt-0">
+           {links.map((link) => {
+              const isActive = pathname === link.href;
+              const Icon = link.icon;
+              return (
+                <Link 
+                  key={link.href} 
+                  href={link.href}
+                  onClick={closeSidebar}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
+                    isActive 
+                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10" 
+                      : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/50"
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {link.label}
+                </Link>
+              )
+           })}
+         </nav>
+      </aside>
+    </>
+  );
+}
