@@ -1,108 +1,129 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { supabase } from "@/lib/supabaseClient"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const router = useRouter();
 
-  useEffect(() => {
-    checkUser()
-  }, [])
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const checkUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+  // 🔐 LOGIN
+  async function handleLogin(e: any) {
+    e.preventDefault();
 
-    if (user) {
-      await handleRedirect(user.id)
-    }
-  }
-
-  const handleRedirect = async (userId: string) => {
-    // busca perfil
-    let { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single()
-
-    // se não existir, cria como patient
-    if (!profile) {
-      const { data: userData } = await supabase.auth.getUser()
-
-      await supabase.from("profiles").insert([
-        {
-          id: userId,
-          email: userData.user?.email,
-          role: "patient",
-        },
-      ])
-
-      router.push("/agendamento")
-      return
+    if (!email || !senha) {
+      alert("Preencha email e senha");
+      return;
     }
 
-    // se for admin
-    if (profile.role === "admin") {
-      router.push("/admin")
-    } else {
-      router.push("/agendamento")
-    }
-  }
+    setLoading(true);
 
-  const handleLogin = async () => {
-    if (!email) {
-      alert("Digite seu email")
-      return
-    }
-
-    setLoading(true)
-
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: "http://localhost:3000/login",
-      },
-    })
-
-    setLoading(false)
+      password: senha,
+    });
 
     if (error) {
-      alert("Erro ao enviar email")
-    } else {
-      alert("Email enviado! Verifique sua caixa 📩")
+      alert(error.message);
+      setLoading(false);
+      return;
     }
+
+    // 👉 verifica se já tem profile
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user?.id)
+      .single();
+
+    if (profile) {
+      router.push("/admin");
+    } else {
+      router.push("/onboarding");
+    }
+
+    setLoading(false);
+  }
+
+  // 🆕 REGISTRO
+  async function handleRegister() {
+    if (!email || !senha) {
+      alert("Preencha email e senha");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: senha,
+    });
+
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/onboarding");
+    setLoading(false);
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#1e293b]">
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl w-full max-w-md">
+    <main className="min-h-screen bg-[#020617] flex items-center justify-center px-6">
 
-        <h1 className="text-3xl font-bold text-white text-center mb-6">
-          Bem-vindo 👋
+      <div className="bg-[#0B1120] border border-gray-800 rounded-2xl p-8 w-full max-w-md shadow-xl">
+
+        <h1 className="text-2xl font-bold mb-6 text-center text-white">
+          Entrar na plataforma
         </h1>
 
-        <input
-          type="email"
-          placeholder="Seu email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-4 px-4 py-3 rounded-xl bg-white/10 text-white"
-        />
+        <form onSubmit={handleLogin} className="space-y-4">
+
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full px-4 py-3 rounded-lg bg-[#020617] border border-gray-700 text-white focus:outline-none focus:border-green-500"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Senha"
+            className="w-full px-4 py-3 rounded-lg bg-[#020617] border border-gray-700 text-white focus:outline-none focus:border-green-500"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-green-500 hover:bg-green-600 py-3 rounded-lg font-semibold transition disabled:opacity-50"
+          >
+            {loading ? "Carregando..." : "Entrar"}
+          </button>
+
+        </form>
 
         <button
-          onClick={handleLogin}
+          onClick={handleRegister}
           disabled={loading}
-          className="w-full py-3 rounded-xl text-white bg-gradient-to-r from-blue-500 to-indigo-600"
+          className="w-full border border-gray-600 py-3 rounded-lg mt-4 hover:bg-gray-800 transition disabled:opacity-50"
         >
-          {loading ? "Enviando..." : "Entrar"}
+          {loading ? "Carregando..." : "Criar conta"}
         </button>
+
       </div>
-    </div>
-  )
+
+    </main>
+  );
 }

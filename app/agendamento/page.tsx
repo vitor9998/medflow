@@ -37,39 +37,52 @@ export default function AgendamentoPage() {
   const [loading, setLoading] = useState(false)
 
   async function salvar(e: any) {
-    e.preventDefault()
-    setLoading(true)
+  e.preventDefault()
+  setLoading(true)
 
-    const prioridade = calcularPrioridade(sintomas)
+  const prioridade = calcularPrioridade(sintomas)
 
-    const { error } = await supabase.from("agendamentos").insert([
-      {
-        nome,
-        email,
-        telefone,
-        data,
-        hora,
-        sintomas,
-        status: "pendente",
-        prioridade,
-      },
-    ])
+  // 🔥 PEGA USUÁRIO LOGADO
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-    if (error) {
-      alert("Erro ao salvar")
-    } else {
-      alert("Consulta agendada com sucesso!")
-      setNome("")
-      setEmail("")
-      setTelefone("")
-      setData("")
-      setHora("")
-      setSintomas("")
-    }
-
+  if (!user) {
+    alert("Você precisa estar logado")
     setLoading(false)
+    return
   }
 
+  // 🔥 SALVA COM USER_ID
+  const { error } = await supabase.from("agendamentos").insert([
+    {
+      nome,
+      email,
+      telefone,
+      data,
+      hora,
+      sintomas,
+      status: "pendente",
+      prioridade,
+      user_id: user.id, // 🔥 ISSO AQUI É O MULTI-TENANT
+    },
+  ])
+
+  if (error) {
+    alert("Erro ao salvar")
+    console.log(error)
+  } else {
+    alert("Consulta agendada com sucesso!")
+    setNome("")
+    setEmail("")
+    setTelefone("")
+    setData("")
+    setHora("")
+    setSintomas("")
+  }
+
+  setLoading(false)
+}
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617]">
       <form

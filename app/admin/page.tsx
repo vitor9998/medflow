@@ -1,52 +1,81 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabaseClient"
+import Dashboard from "@/components/Dashboard";
 
-import FullCalendar from "@fullcalendar/react"
-import dayGridPlugin from "@fullcalendar/daygrid"
-import timeGridPlugin from "@fullcalendar/timegrid"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
 
 export default function AdminPage() {
-  const [consultas, setConsultas] = useState<any[]>([])
-  const [selecionada, setSelecionada] = useState<any>(null)
-  const [isMobile, setIsMobile] = useState(false)
+  const router = useRouter();
 
+  const [consultas, setConsultas] = useState<any[]>([]);
+  const [selecionada, setSelecionada] = useState<any>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 🔒 PROTEÇÃO + LOAD
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768)
-    fetchConsultas()
-  }, [])
+    async function init() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      setIsMobile(window.innerWidth < 768);
+      fetchConsultas();
+    }
+
+    init();
+  }, []);
 
   async function fetchConsultas() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
     const { data, error } = await supabase
       .from("agendamentos")
       .select("*")
-      .order("data", { ascending: true })
+      .eq("user_id", user.id)
+      .order("data", { ascending: true });
 
     if (error) {
-      console.log("Erro ao buscar:", error)
-      return
+      console.log("Erro ao buscar:", error);
+      return;
     }
 
-    setConsultas(data || [])
+    setConsultas(data || []);
   }
 
   async function atualizarStatus(id: number, status: string) {
     const { error } = await supabase
       .from("agendamentos")
       .update({ status })
-      .eq("id", id)
+      .eq("id", id);
 
     if (error) {
-      alert("Erro ao atualizar status")
-      return
+      alert("Erro ao atualizar status");
+      return;
     }
 
     setConsultas((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, status } : item
       )
-    )
+    );
   }
 
   const eventos = consultas.map((c) => ({
@@ -60,10 +89,13 @@ export default function AdminPage() {
         ? "#ef4444"
         : "#facc15",
     borderColor: "transparent",
-  }))
+  }));
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-4 md:p-8">
+
+      {/* 🔥 DASHBOARD (NOVO) */}
+      <Dashboard />
 
       {/* HEADER */}
       <div className="mb-8">
@@ -94,8 +126,8 @@ export default function AdminPage() {
             eventClick={(info) => {
               const consulta = consultas.find(
                 (c) => String(c.id) === info.event.id
-              )
-              setSelecionada(consulta)
+              );
+              setSelecionada(consulta);
             }}
           />
         </div>
@@ -115,7 +147,6 @@ export default function AdminPage() {
               📅 {c.data} ⏰ {c.hora}
             </p>
 
-            {/* PRIORIDADE */}
             <p
               className={`mt-2 font-semibold ${
                 c.prioridade === "urgente"
@@ -128,7 +159,6 @@ export default function AdminPage() {
               {c.prioridade?.toUpperCase()}
             </p>
 
-            {/* STATUS */}
             <span
               className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${
                 c.status === "confirmado"
@@ -141,7 +171,6 @@ export default function AdminPage() {
               {c.status}
             </span>
 
-            {/* RESUMO */}
             {c.resumo && (
               <div className="mt-4 bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl">
                 <p className="text-blue-400 text-sm font-semibold">
@@ -151,7 +180,6 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* SINTOMAS */}
             {c.sintomas && (
               <div className="mt-3 bg-white/5 p-4 rounded-xl text-sm text-gray-300">
                 <strong>Sintomas:</strong>
@@ -159,18 +187,17 @@ export default function AdminPage() {
               </div>
             )}
 
-            {/* BOTÕES */}
             <div className="mt-5 flex flex-col md:flex-row gap-2">
               <button
                 onClick={() => atualizarStatus(c.id, "confirmado")}
-                className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition"
+                className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg"
               >
                 Confirmar
               </button>
 
               <button
                 onClick={() => atualizarStatus(c.id, "cancelado")}
-                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition"
+                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
               >
                 Cancelar
               </button>
@@ -181,18 +208,17 @@ export default function AdminPage() {
 Data: ${c.data} às ${c.hora}.`
                 )}`}
                 target="_blank"
-                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-center transition"
+                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-center"
               >
                 WhatsApp
               </a>
 
               <a
                 href={`https://wa.me/55${c.telefone}?text=${encodeURIComponent(
-                  `Olá ${c.nome}, lembrando da sua consulta amanhã às ${c.hora}.
-Qualquer dúvida estamos à disposição.`
+                  `Olá ${c.nome}, lembrando da sua consulta amanhã às ${c.hora}.`
                 )}`}
                 target="_blank"
-                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-center transition"
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-center"
               >
                 Lembrete
               </a>
@@ -204,11 +230,11 @@ Qualquer dúvida estamos à disposição.`
       {/* MODAL */}
       {selecionada && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
           onClick={() => setSelecionada(null)}
         >
           <div
-            className="bg-[#0B1120] border border-gray-800 p-6 rounded-2xl w-[90%] max-w-md shadow-2xl"
+            className="bg-[#0B1120] p-6 rounded-2xl w-[90%] max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl font-bold mb-2">
@@ -217,72 +243,30 @@ Qualquer dúvida estamos à disposição.`
 
             <p className="text-gray-400">{selecionada.email}</p>
 
-            <p className="mt-3 text-gray-300">
+            <p className="mt-3">
               📅 {selecionada.data} ⏰ {selecionada.hora}
             </p>
-
-            <p className="mt-2">
-              Prioridade: {selecionada.prioridade}
-            </p>
-
-            <p className="mt-2">
-              Status: {selecionada.status}
-            </p>
-
-            {selecionada.sintomas && (
-              <div className="mt-3 text-sm text-gray-300">
-                {selecionada.sintomas}
-              </div>
-            )}
-
-            {selecionada.resumo && (
-              <div className="mt-3 text-sm text-blue-400">
-                {selecionada.resumo}
-              </div>
-            )}
 
             <div className="mt-5 flex flex-col gap-2">
               <button
                 onClick={() => {
-                  atualizarStatus(selecionada.id, "confirmado")
-                  setSelecionada(null)
+                  atualizarStatus(selecionada.id, "confirmado");
+                  setSelecionada(null);
                 }}
-                className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg"
+                className="bg-green-500 px-4 py-2 rounded-lg"
               >
                 Confirmar
               </button>
 
               <button
                 onClick={() => {
-                  atualizarStatus(selecionada.id, "cancelado")
-                  setSelecionada(null)
+                  atualizarStatus(selecionada.id, "cancelado");
+                  setSelecionada(null);
                 }}
-                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
+                className="bg-red-500 px-4 py-2 rounded-lg"
               >
                 Cancelar
               </button>
-
-              <a
-                href={`https://wa.me/55${selecionada.telefone}?text=${encodeURIComponent(
-                  `Olá ${selecionada.nome}, sua consulta está ${selecionada.status}.
-Data: ${selecionada.data} às ${selecionada.hora}.`
-                )}`}
-                target="_blank"
-                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-center"
-              >
-                WhatsApp
-              </a>
-
-              <a
-                href={`https://wa.me/55${selecionada.telefone}?text=${encodeURIComponent(
-                  `Olá ${selecionada.nome}, lembrando da sua consulta amanhã às ${selecionada.hora}.
-Qualquer dúvida estamos à disposição.`
-                )}`}
-                target="_blank"
-                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-center"
-              >
-                Lembrete
-              </a>
             </div>
 
             <button
@@ -295,5 +279,5 @@ Qualquer dúvida estamos à disposição.`
         </div>
       )}
     </div>
-  )
+  );
 }

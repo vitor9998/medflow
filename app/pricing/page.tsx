@@ -31,7 +31,7 @@ export default function PricingPage() {
           </ul>
 
           <Link
-            href="/admin"
+            href="/login"
             className="block w-full text-center bg-gray-700 py-3 rounded-xl"
           >
             Começar
@@ -61,7 +61,7 @@ export default function PricingPage() {
           </ul>
 
           <Link
-            href="/admin"
+            href="/login"
             className="block w-full text-center bg-green-500 hover:bg-green-600 py-3 rounded-xl font-semibold"
           >
             Começar agora
@@ -83,7 +83,7 @@ export default function PricingPage() {
           </ul>
 
           <Link
-            href="/admin"
+            href="/login"
             className="block w-full text-center bg-gray-700 py-3 rounded-xl"
           >
             Começar
@@ -99,7 +99,7 @@ export default function PricingPage() {
         </p>
 
         <Link
-          href="/admin"
+          href="/login"
           className="bg-green-500 hover:bg-green-600 px-8 py-4 rounded-xl font-semibold"
         >
           Criar conta grátis
