@@ -150,7 +150,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="absolute -bottom-6 -right-2 bg-emerald-600 text-white p-5 sm:p-6 rounded-2xl shadow-xl shadow-emerald-500/30 max-w-[260px] sm:max-w-xs rotate-3 border border-emerald-500 hidden xl:block">
+              <div className="relative mt-8 mx-auto sm:absolute sm:-bottom-6 sm:-right-2 bg-emerald-600 text-white p-5 sm:p-6 rounded-2xl shadow-xl shadow-emerald-500/30 max-w-sm sm:max-w-[260px] md:max-w-xs rotate-0 sm:rotate-3 border border-emerald-500 z-10">
                 <Star className="text-yellow-400 fill-yellow-400 w-5 h-5 mb-2" />
                 <p className="font-medium text-[13px] sm:text-sm">"Eu vivia esquecendo o horário das consultas até utilizar essa maravilha online."</p>
                 <p className="text-emerald-100 text-xs mt-3">- Ricardo Gonçalves.</p>
