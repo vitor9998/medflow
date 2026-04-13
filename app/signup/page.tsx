@@ -16,10 +16,14 @@ export default function SignupPage() {
   const [especialidade, setEspecialidade] = useState("");
   const [telefone, setTelefone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   async function handleSignup(e: any) {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
 
     // 🔐 cria usuário
     const { data, error } = await supabase.auth.signUp({
@@ -28,15 +32,20 @@ export default function SignupPage() {
     });
 
     if (error) {
-      alert("Erro ao criar conta");
+      if (error.message.includes("User already registered")) {
+         setErrorMsg("Esse email já possui uma conta cadastrada. Tente fazer o login.");
+      } else {
+         setErrorMsg(`Falha na autenticação: ${error.message}`);
+      }
       setLoading(false);
       return;
     }
 
     if (data.user) {
-      const slug = nome
-        .toLowerCase()
-        .replace(/\s+/g, "-");
+      // Cria um slug 100% único adicionando 4 dígitos aleatórios pra não travar testes
+      const baseSlug = nome.toLowerCase().replace(/\s+/g, "-");
+      const randomDigit = Math.floor(1000 + Math.random() * 9000);
+      const slug = `${baseSlug}-${randomDigit}`;
 
       // 🔥 cria profile completo
       const { error: profileError } = await supabase
@@ -52,11 +61,14 @@ export default function SignupPage() {
         ]);
 
       if (profileError) {
-        console.log(profileError);
-        alert("Erro ao criar perfil");
+        console.log("Erro no Profile:", profileError);
+        // Pode ser um erro de slug duplicado no DB
+        setErrorMsg(`Não foi possível criar o perfil médico. Tente alterar o nome fornecido. Erro Banco: ${profileError.message || ""}`);
       } else {
-        alert("Conta criada com sucesso!");
-        router.push("/admin");
+        setSuccessMsg("Conta e estrutura médica criadas com sucesso! Redirecionando...");
+        setTimeout(() => {
+           router.push("/admin");
+        }, 1500);
       }
     }
 
@@ -107,7 +119,7 @@ export default function SignupPage() {
           onSubmit={handleSignup}
           className="w-full max-w-md flex flex-col pt-4 pb-10"
         >
-          <div className="mb-8 text-center md:text-left">
+          <div className="mb-6 text-center md:text-left">
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
               Criar Conta Médica
             </h1>
@@ -115,6 +127,20 @@ export default function SignupPage() {
               Configure seu perfil e abra sua agenda agora.
             </p>
           </div>
+
+          {errorMsg && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-semibold mb-6 flex items-start gap-2 shadow-sm">
+               <span className="shrink-0 mt-0.5">⚠️</span>
+               <p>{errorMsg}</p>
+            </div>
+          )}
+          
+          {successMsg && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm font-semibold mb-6 flex items-start gap-2 shadow-sm">
+               <span className="shrink-0 mt-0.5">✅</span>
+               <p>{successMsg}</p>
+            </div>
+          )}
 
           <div className="space-y-4">
             <div>
