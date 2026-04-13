@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { MedsysLogo } from "@/components/Logo";
+import { ArrowLeft, Loader2, Users } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -61,65 +64,137 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white">
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 font-sans text-slate-900 selection:bg-emerald-200">
+      
+      {/* LADO ESQUERDO: Ilustração / Info */}
+      <div className="hidden md:flex flex-col w-1/2 md:w-[40%] lg:w-1/2 bg-[#020617] text-white p-12 justify-between relative overflow-hidden">
+         <div className="absolute top-0 right-0 p-32 opacity-15 blur-3xl rounded-full bg-teal-500"></div>
+         <div className="absolute bottom-0 left-0 p-40 opacity-20 blur-3xl rounded-full bg-emerald-800"></div>
 
-      <form
-        onSubmit={handleSignup}
-        className="bg-[#0B1120] p-8 rounded-2xl border border-gray-800 w-[400px] space-y-4"
-      >
-        <h1 className="text-xl font-bold text-center">
-          Criar conta médica
-        </h1>
+         <div className="relative z-10 flex items-center gap-2 font-bold text-2xl tracking-tight">
+            <MedsysLogo className="h-8 w-auto" /> Medsys
+         </div>
 
-        <input
-          placeholder="Nome completo"
-          className="w-full p-3 rounded bg-[#020617] border border-gray-700"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          required
-        />
+         <div className="relative z-10 max-w-md">
+            <Users className="w-12 h-12 text-teal-400 mb-6" />
+            <h2 className="text-4xl font-extrabold mb-4">Mais consultas. Menos tarefas.</h2>
+            <p className="text-slate-400 text-lg leading-relaxed">
+              Dê as boas-vindas ao ecossistema que automatiza confirmações, simplifica o prontuário e conecta o paciente diretamente a você.
+            </p>
+         </div>
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-3 rounded bg-[#020617] border border-gray-700"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+         <div className="relative z-10 flex items-center gap-4 text-sm text-slate-500 font-medium">
+            © {new Date().getFullYear()} Medsys. Todos os direitos reservados.
+         </div>
+      </div>
 
-        <input
-          type="password"
-          placeholder="Senha"
-          className="w-full p-3 rounded bg-[#020617] border border-gray-700"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          required
-        />
+      {/* LADO DIREITO: Formulário de Inscrição */}
+      <div className="flex flex-col w-full md:w-[60%] lg:w-1/2 min-h-screen justify-center items-center p-6 md:p-12 relative bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.02)] overflow-y-auto">
+        
+        <Link href="/" className="absolute top-6 left-6 md:hidden flex items-center gap-2 text-slate-500 font-medium hover:text-slate-900 transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Voltar
+        </Link>
+        <Link href="/" className="absolute top-8 right-8 hidden md:flex items-center gap-2 text-slate-500 font-medium hover:text-slate-900 transition-colors text-sm">
+          Acessar página inicial <ArrowLeft className="w-4 h-4 rotate-180" />
+        </Link>
 
-        <input
-          placeholder="Especialidade"
-          className="w-full p-3 rounded bg-[#020617] border border-gray-700"
-          value={especialidade}
-          onChange={(e) => setEspecialidade(e.target.value)}
-          required
-        />
+        {/* Logo visível no mobile */}
+        <div className="md:hidden flex items-center gap-2 font-bold text-2xl tracking-tight mb-8 mt-12">
+            <MedsysLogo className="h-8 w-auto drop-shadow-sm" /> Medsys
+        </div>
 
-        <input
-          placeholder="Telefone (opcional)"
-          className="w-full p-3 rounded bg-[#020617] border border-gray-700"
-          value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
-        />
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-green-500 hover:bg-green-600 py-3 rounded-lg font-semibold"
+        <form
+          onSubmit={handleSignup}
+          className="w-full max-w-md flex flex-col pt-4 pb-10"
         >
-          {loading ? "Criando..." : "Criar conta"}
-        </button>
-      </form>
+          <div className="mb-8 text-center md:text-left">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+              Criar Conta Médica
+            </h1>
+            <p className="text-slate-500">
+              Configure seu perfil e abra sua agenda agora.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Nome Completo</label>
+              <input
+                placeholder="Dr(a). Seu Nome"
+                className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="w-full">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Especialidade</label>
+                <input
+                  placeholder="Cardiologia"
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                  value={especialidade}
+                  onChange={(e) => setEspecialidade(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="w-full">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Telefone / WhatsApp</label>
+                <input
+                  placeholder="(xx) xxxxx-xxxx"
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                  value={telefone}
+                  onChange={(e) => setTelefone(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Email Profissional</label>
+              <input
+                type="email"
+                placeholder="doutor@clinica.com"
+                className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Criar Senha</label>
+              <input
+                type="password"
+                placeholder="Mínimo de 8 caracteres"
+                className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm font-sans"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold mt-8 mb-6 shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+          >
+            {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Verificando...</> : "Finalizar Cadastro"}
+          </button>
+
+          <p className="text-center text-sm font-medium text-slate-500 border-t border-slate-100 pt-6">
+            Já possui uma estrutura ativa?{" "}
+            <Link
+              href="/login"
+              className="text-emerald-600 font-bold hover:text-emerald-700 hover:underline"
+            >
+              Fazer login
+            </Link>
+          </p>
+        </form>
+
+      </div>
     </div>
   );
 }
