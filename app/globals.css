@@ -75,20 +75,35 @@
 /* 🔥 Correções extremas para celular */
 @media (max-width: 640px) {
   .fc-header-toolbar {
-    flex-wrap: wrap;
-    justify-content: center !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 12px !important;
   }
   .fc-toolbar-chunk {
     display: flex;
     justify-content: center;
     width: 100%;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0 !important;
   }
   .fc-toolbar-title {
     font-size: 1.1rem !important;
+    text-align: center;
   }
   .fc-button {
-    padding: 0.4rem 0.6rem !important;
+    padding: 0.5rem 0.7rem !important;
     font-size: 0.75rem !important;
+  }
+  /* Obriga a agenda a rolar se espremer demais */
+  .fc-view-harness {
+    overflow-x: auto !important;
+  }
+  .fc-timegrid-body {
+    min-width: 600px !important;
+  }
+  .fc-daygrid-body {
+    min-width: 600px !important;
+  }
+  .fc-scrollgrid-sync-table {
+    min-width: 600px !important;
   }
 }
