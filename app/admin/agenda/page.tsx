@@ -113,11 +113,9 @@ export default function AgendaPage() {
               plugins={[dayGridPlugin, timeGridPlugin]}
               initialView="timeGridWeek" // Default, alterado no useEffect
               headerToolbar={{
-                left: "prev,next",
+                left: "prev,next today",
                 center: "title",
-                right: isMobile
-                  ? "today"
-                  : "dayGridMonth,timeGridWeek,timeGridDay",
+                right: "dayGridMonth,timeGridWeek,timeGridDay",
               }}
               windowResizeDelay={100}
             events={eventos}
