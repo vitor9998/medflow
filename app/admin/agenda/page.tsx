@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Modal } from "@/components/Modal";
@@ -16,6 +16,7 @@ export default function AgendaPage() {
   const [selecionada, setSelecionada] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const calendarRef = useRef<any>(null);
 
   useEffect(() => {
     async function init() {
@@ -28,7 +29,14 @@ export default function AgendaPage() {
         return;
       }
 
-      setIsMobile(window.innerWidth < 768);
+      const currentIsMobile = window.innerWidth < 768;
+      setIsMobile(currentIsMobile);
+      
+      // Força a atualização do calendário se ele já montou
+      if (calendarRef.current) {
+        calendarRef.current.getApi().changeView(currentIsMobile ? "timeGridDay" : "timeGridWeek");
+      }
+
       fetchConsultas(user.id);
     }
     init();
@@ -101,8 +109,9 @@ export default function AgendaPage() {
         <div className="bg-[#020617] rounded-xl p-1 sm:p-4 flex-1 overflow-x-auto overflow-y-hidden text-slate-300 w-full relative agenda-calendar-wrapper">
           <div className="min-w-full h-full">
             <FullCalendar
+              ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin]}
-              initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
+              initialView="timeGridWeek" // Default, alterado no useEffect
               headerToolbar={{
                 left: "prev,next",
                 center: "title",
