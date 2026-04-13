@@ -93,6 +93,8 @@ export function Sidebar() {
                 </Link>
               )
            })}
+         </nav>
+         
          <div className="mt-auto pt-6 pb-2 border-t border-gray-800/60 flex flex-col">
            <button 
              onClick={handleLogout}
