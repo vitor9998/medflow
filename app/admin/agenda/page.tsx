@@ -90,37 +90,40 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 flex flex-col h-full max-w-7xl mx-auto w-full">
+    <div className="p-4 sm:p-6 md:p-10 flex flex-col h-full max-w-7xl mx-auto w-full overflow-hidden">
       
-      <div className="mb-6 shrink-0">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Agenda</h1>
-        <p className="text-slate-400 mt-1">Gerencie os agendamentos e horários.</p>
+      <div className="mb-4 sm:mb-6 shrink-0 mt-2 sm:mt-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Agenda</h1>
+        <p className="text-slate-400 mt-1 text-sm sm:text-base">Gerencie os agendamentos e horários da clínica.</p>
       </div>
 
-      <div className="bg-[#0B1120] border border-gray-800 rounded-2xl p-4 shadow-sm flex-1 flex flex-col min-h-0">
-        <div className="bg-[#020617] rounded-xl p-2 md:p-4 flex-1 overflow-auto text-slate-300 agenda-calendar-wrapper">
-          <FullCalendar
-            plugins={[dayGridPlugin, timeGridPlugin]}
-            initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
-            headerToolbar={{
-              left: "prev,next",
-              center: "title",
-              right: isMobile
-                ? ""
-                : "dayGridMonth,timeGridWeek,timeGridDay",
-            }}
+      <div className="bg-[#0B1120] border border-gray-800 rounded-2xl p-2 sm:p-4 shadow-sm flex-1 flex flex-col min-h-0 w-full">
+        <div className="bg-[#020617] rounded-xl p-1 sm:p-4 flex-1 overflow-x-auto overflow-y-hidden text-slate-300 w-full relative agenda-calendar-wrapper">
+          <div className="min-w-full h-full">
+            <FullCalendar
+              plugins={[dayGridPlugin, timeGridPlugin]}
+              initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
+              headerToolbar={{
+                left: "prev,next",
+                center: "title",
+                right: isMobile
+                  ? "today"
+                  : "dayGridMonth,timeGridWeek,timeGridDay",
+              }}
+              windowResizeDelay={100}
             events={eventos}
             height="100%"
             slotMinTime="08:00:00"
             slotMaxTime="18:00:00"
             allDaySlot={false}
-            eventClick={(info) => {
-              const consulta = consultas.find(
-                (c) => String(c.id) === info.event.id
-              );
-              setSelecionada(consulta);
-            }}
-          />
+              eventClick={(info) => {
+                const consulta = consultas.find(
+                  (c) => String(c.id) === info.event.id
+                );
+                setSelecionada(consulta);
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -197,10 +200,28 @@ export default function AgendaPage() {
            --fc-neutral-bg-color: #0f172a;
            --fc-list-event-hover-bg-color: #1e293b;
         }
+
+        /* Responsive fixes */
+        .fc-header-toolbar {
+           flex-wrap: wrap;
+           gap: 0.5rem;
+           margin-bottom: 1rem !important;
+        }
+
+        @media (max-width: 640px) {
+           .fc-toolbar-title { font-size: 1.1rem !important; }
+           .fc .fc-toolbar { flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+           .fc-toolbar-chunk:first-child { display: flex; width: 100%; justify-content: space-between; }
+           .fc-toolbar-chunk:nth-child(2) { text-align: center; }
+           .fc-header-toolbar { padding-bottom: 8px; border-bottom: 1px solid #1e293b; }
+           .fc-view-harness { min-height: 500px; }
+        }
+
         .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: #f8fafc; }
-        .fc th { color: #94a3b8; font-weight: 500; font-size: 0.875rem; padding: 0.5rem 0;}
+        .fc th { color: #94a3b8; font-weight: 500; font-size: 0.8rem; padding: 0.5rem 0; text-transform: uppercase; letter-spacing: 0.5px;}
         .fc-theme-standard td, .fc-theme-standard th { border-color: var(--fc-border-color); }
-        .fc .fc-button { border-radius: 0.5rem; text-transform: capitalize; }
+        .fc .fc-button { border-radius: 0.5rem; text-transform: capitalize; padding: 0.4rem 0.8rem; font-size: 0.875rem;}
+        .fc-timegrid-slot-label { font-size: 0.75rem; color: #64748b; }
       `}} />
 
     </div>
