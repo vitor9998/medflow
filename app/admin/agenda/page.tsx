@@ -8,6 +8,7 @@ import { Modal } from "@/components/Modal";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
 
 export default function AgendaPage() {
   const router = useRouter();
@@ -110,12 +111,21 @@ export default function AgendaPage() {
           <div className="min-w-full h-full">
             <FullCalendar
               ref={calendarRef}
-              plugins={[dayGridPlugin, timeGridPlugin]}
+              plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
               initialView="timeGridWeek" // Default, alterado no useEffect
               headerToolbar={{
                 left: "prev,next today",
                 center: "title",
-                right: "dayGridMonth,timeGridWeek,timeGridDay",
+                right: isMobile 
+                  ? "listMonth,timeGridWeek,timeGridDay" 
+                  : "dayGridMonth,timeGridWeek,timeGridDay",
+              }}
+              buttonText={{
+                listMonth: "mês",
+                dayGridMonth: "mês",
+                timeGridWeek: "semana",
+                timeGridDay: "dia",
+                today: "hoje"
               }}
               windowResizeDelay={100}
             events={eventos}
