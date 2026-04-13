@@ -63,52 +63,61 @@ export default function AdminPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-4 md:p-6">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">Agenda</h1>
+    <div className="min-h-screen bg-[#020617] text-white p-4 md:p-8">
 
-      {/* 📅 CALENDÁRIO RESPONSIVO */}
-      <div className="bg-white rounded-xl p-2 md:p-4 text-black mb-8 overflow-x-auto">
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin]}
-          initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
-          headerToolbar={{
-            left: "prev,next",
-            center: "title",
-            right: isMobile
-              ? ""
-              : "dayGridMonth,timeGridWeek,timeGridDay",
-          }}
-          events={eventos}
-          height="auto"
-          slotMinTime="08:00:00"
-          slotMaxTime="18:00:00"
-          allDaySlot={false}
-          eventClick={(info) => {
-            const consulta = consultas.find(
-              (c) => String(c.id) === info.event.id
-            )
-            setSelecionada(consulta)
-          }}
-        />
+      {/* HEADER */}
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold">Agenda</h1>
+        <p className="text-gray-400 mt-2">
+          Gerencie suas consultas de forma simples
+        </p>
       </div>
 
-      {/* 📋 LISTA */}
+      {/* CALENDÁRIO */}
+      <div className="bg-[#0B1120] border border-gray-800 rounded-2xl p-4 shadow-xl mb-10">
+        <div className="bg-white rounded-xl p-2 md:p-4 text-black overflow-x-auto">
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin]}
+            initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
+            headerToolbar={{
+              left: "prev,next",
+              center: "title",
+              right: isMobile
+                ? ""
+                : "dayGridMonth,timeGridWeek,timeGridDay",
+            }}
+            events={eventos}
+            height="auto"
+            slotMinTime="08:00:00"
+            slotMaxTime="18:00:00"
+            allDaySlot={false}
+            eventClick={(info) => {
+              const consulta = consultas.find(
+                (c) => String(c.id) === info.event.id
+              )
+              setSelecionada(consulta)
+            }}
+          />
+        </div>
+      </div>
+
+      {/* LISTA */}
       <div className="space-y-6">
         {consultas.map((c) => (
           <div
             key={c.id}
-            className="bg-white/5 border border-white/10 p-4 md:p-6 rounded-xl backdrop-blur-lg"
+            className="bg-[#0B1120] border border-gray-800 p-6 rounded-2xl"
           >
-            <h2 className="text-lg font-semibold">{c.nome}</h2>
-            <p className="text-gray-300">{c.email}</p>
+            <h2 className="text-xl font-semibold">{c.nome}</h2>
+            <p className="text-gray-400">{c.email}</p>
 
-            <p className="text-sm mt-2">
+            <p className="text-sm mt-3 text-gray-300">
               📅 {c.data} ⏰ {c.hora}
             </p>
 
             {/* PRIORIDADE */}
             <p
-              className={`mt-2 font-bold ${
+              className={`mt-2 font-semibold ${
                 c.prioridade === "urgente"
                   ? "text-red-400"
                   : c.prioridade === "moderado"
@@ -120,8 +129,8 @@ export default function AdminPage() {
             </p>
 
             {/* STATUS */}
-            <p
-              className={`mt-2 px-3 py-1 rounded-full text-sm w-fit font-semibold ${
+            <span
+              className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${
                 c.status === "confirmado"
                   ? "bg-green-500/20 text-green-400"
                   : c.status === "cancelado"
@@ -130,13 +139,13 @@ export default function AdminPage() {
               }`}
             >
               {c.status}
-            </p>
+            </span>
 
-            {/* RESUMO IA */}
+            {/* RESUMO */}
             {c.resumo && (
-              <div className="mt-4 bg-blue-500/10 border border-blue-500/30 p-4 rounded-lg">
+              <div className="mt-4 bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl">
                 <p className="text-blue-400 text-sm font-semibold">
-                  Resumo IA:
+                  Resumo IA
                 </p>
                 <p className="text-sm mt-1">{c.resumo}</p>
               </div>
@@ -144,49 +153,71 @@ export default function AdminPage() {
 
             {/* SINTOMAS */}
             {c.sintomas && (
-              <div className="mt-3 bg-white/5 p-4 rounded-lg text-sm text-gray-300">
+              <div className="mt-3 bg-white/5 p-4 rounded-xl text-sm text-gray-300">
                 <strong>Sintomas:</strong>
                 <p className="mt-1">{c.sintomas}</p>
               </div>
             )}
 
             {/* BOTÕES */}
-            <div className="mt-4 flex flex-col md:flex-row gap-2">
+            <div className="mt-5 flex flex-col md:flex-row gap-2">
               <button
                 onClick={() => atualizarStatus(c.id, "confirmado")}
-                className="bg-green-500 px-4 py-2 rounded-lg hover:bg-green-600 transition"
+                className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition"
               >
                 Confirmar
               </button>
 
               <button
                 onClick={() => atualizarStatus(c.id, "cancelado")}
-                className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600 transition"
+                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition"
               >
                 Cancelar
               </button>
+
+              <a
+                href={`https://wa.me/55${c.telefone}?text=${encodeURIComponent(
+                  `Olá ${c.nome}, sua consulta está ${c.status}.
+Data: ${c.data} às ${c.hora}.`
+                )}`}
+                target="_blank"
+                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-center transition"
+              >
+                WhatsApp
+              </a>
+
+              <a
+                href={`https://wa.me/55${c.telefone}?text=${encodeURIComponent(
+                  `Olá ${c.nome}, lembrando da sua consulta amanhã às ${c.hora}.
+Qualquer dúvida estamos à disposição.`
+                )}`}
+                target="_blank"
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-center transition"
+              >
+                Lembrete
+              </a>
             </div>
           </div>
         ))}
       </div>
 
-      {/* 💥 MODAL RESPONSIVO */}
+      {/* MODAL */}
       {selecionada && (
         <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
           onClick={() => setSelecionada(null)}
         >
           <div
-            className="bg-[#020617] p-6 rounded-xl w-[90%] max-w-md border border-white/10"
+            className="bg-[#0B1120] border border-gray-800 p-6 rounded-2xl w-[90%] max-w-md shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl font-bold mb-2">
               {selecionada.nome}
             </h2>
 
-            <p className="text-gray-300">{selecionada.email}</p>
+            <p className="text-gray-400">{selecionada.email}</p>
 
-            <p className="mt-2">
+            <p className="mt-3 text-gray-300">
               📅 {selecionada.data} ⏰ {selecionada.hora}
             </p>
 
@@ -210,13 +241,13 @@ export default function AdminPage() {
               </div>
             )}
 
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-5 flex flex-col gap-2">
               <button
                 onClick={() => {
                   atualizarStatus(selecionada.id, "confirmado")
                   setSelecionada(null)
                 }}
-                className="bg-green-500 px-4 py-2 rounded"
+                className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg"
               >
                 Confirmar
               </button>
@@ -226,15 +257,37 @@ export default function AdminPage() {
                   atualizarStatus(selecionada.id, "cancelado")
                   setSelecionada(null)
                 }}
-                className="bg-red-500 px-4 py-2 rounded"
+                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg"
               >
                 Cancelar
               </button>
+
+              <a
+                href={`https://wa.me/55${selecionada.telefone}?text=${encodeURIComponent(
+                  `Olá ${selecionada.nome}, sua consulta está ${selecionada.status}.
+Data: ${selecionada.data} às ${selecionada.hora}.`
+                )}`}
+                target="_blank"
+                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-center"
+              >
+                WhatsApp
+              </a>
+
+              <a
+                href={`https://wa.me/55${selecionada.telefone}?text=${encodeURIComponent(
+                  `Olá ${selecionada.nome}, lembrando da sua consulta amanhã às ${selecionada.hora}.
+Qualquer dúvida estamos à disposição.`
+                )}`}
+                target="_blank"
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-center"
+              >
+                Lembrete
+              </a>
             </div>
 
             <button
               onClick={() => setSelecionada(null)}
-              className="mt-4 text-gray-400 text-sm"
+              className="mt-4 text-gray-500 text-sm"
             >
               Fechar
             </button>

@@ -4,23 +4,40 @@ import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <nav className="w-full bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-      <h1 className="font-bold text-lg text-gray-800">
+    <nav className="w-full bg-[#020617] border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+
+      {/* LOGO */}
+      <h1 className="font-bold text-lg text-white">
         Clínica Saúde+
       </h1>
 
-      <div className="flex gap-4">
-        <Link href="/" className="text-gray-600 hover:text-black">
+      {/* LINKS */}
+      <div className="flex gap-6 items-center text-gray-300">
+
+        <Link href="/" className="hover:text-white transition">
           Home
         </Link>
 
-        <Link href="/agendamento" className="text-gray-600 hover:text-black">
+        <Link href="/pricing" className="hover:text-white transition">
+          Preços
+        </Link>
+
+        <Link href="/agendamento" className="hover:text-white transition">
           Agendar
         </Link>
 
-        <Link href="/admin" className="text-gray-600 hover:text-black">
+        <Link href="/admin" className="hover:text-white transition">
           Admin
         </Link>
+
+        {/* CTA (IMPORTANTE PRA VENDER) */}
+        <Link
+          href="/pricing"
+          className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-white font-semibold transition"
+        >
+          Começar
+        </Link>
+
       </div>
     </nav>
   );
