@@ -9,7 +9,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
-import { MessageCircle, BrainCircuit, Save, Activity } from "lucide-react";
+import { MessageCircle, BrainCircuit, Save, Activity, Paperclip, FileText, Loader2 } from "lucide-react";
 
 export default function AgendaPage() {
   const router = useRouter();
@@ -25,6 +25,7 @@ export default function AgendaPage() {
   const [iaSummary, setIaSummary] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSavingEhr, setIsSavingEhr] = useState(false);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 
   const calendarRef = useRef<any>(null);
 
@@ -138,6 +139,21 @@ export default function AgendaPage() {
      }, 2000);
   }
 
+  async function visualizarAnexo(path: string) {
+    setIsGeneratingLink(true);
+    // Cria Signed URL temporária de 90 segundos para visualização do Médico
+    const { data, error } = await supabase.storage.from("exames").createSignedUrl(path, 90);
+    setIsGeneratingLink(false);
+    
+    if (error || !data) {
+       alert("Erro ao decodificar arquivo sigiloso: " + error?.message);
+       return;
+    }
+    
+    // Abre PDF ou Imagem em nova aba
+    window.open(data.signedUrl, "_blank");
+  }
+
   const eventos = consultas.map((c) => ({
     id: String(c.id),
     title: `${c.nome} - ${c.hora}`,
@@ -235,6 +251,29 @@ export default function AgendaPage() {
               <p className="flex items-center gap-2 text-sm text-emerald-400 font-bold mb-1"><Activity className="w-4 h-4"/> Triagem do Paciente</p>
               <p className="text-sm text-slate-300 italic">"{selecionada.sintomas || "Nenhum sintoma relatado previamente."}"</p>
             </div>
+
+            {/* Visualizador de Anexo (Signed URL) */}
+            {selecionada.anexo_path && (
+               <div className="bg-emerald-900/10 border border-emerald-500/20 p-3 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                     <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
+                        <Paperclip className="w-4 h-4" />
+                     </div>
+                     <div>
+                       <p className="text-sm font-bold text-emerald-400">Anexo do Paciente Recebido</p>
+                       <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Criptogradado e Armazenado via Storage</p>
+                     </div>
+                  </div>
+                  <button
+                    onClick={() => visualizarAnexo(selecionada.anexo_path)}
+                    disabled={isGeneratingLink}
+                    className="flex items-center gap-2 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg transition-colors min-w-[120px] justify-center shadow-lg shadow-emerald-500/20"
+                  >
+                    {isGeneratingLink ? <Loader2 className="w-3 h-3 animate-spin"/> : <FileText className="w-3 h-3"/>}
+                    {isGeneratingLink ? "Gerando Link..." : "Abrir Exame"}
+                  </button>
+               </div>
+            )}
 
             {/* EHR AREA */}
             <div className="border border-indigo-500/30 bg-indigo-900/10 p-4 rounded-xl space-y-4">

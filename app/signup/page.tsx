@@ -43,6 +43,15 @@ export default function SignupPage() {
     }
 
     if (data.user) {
+      // 🔥 PROTEÇÃO ANTI-FANTASMA (SE O EMAIL JÁ EXISTIA)
+      // Quando a proteção de enumeração do Supabase está ligada, ele finge sucesso
+      // mas não associa identidades. Se identities estiver vazio, barra a continuação!
+      if (data.user.identities && data.user.identities.length === 0) {
+          setErrorMsg("Esse e-mail já existe no banco de dados. Um e-mail não pode ter múltiplas contas. Tente fazer o login ou recupere sua senha.");
+          setLoading(false);
+          return;
+      }
+
       // Cria um slug 100% único adicionando 4 dígitos aleatórios pra não travar testes
       const baseSlug = nome.toLowerCase().replace(/\s+/g, "-");
       const randomDigit = Math.floor(1000 + Math.random() * 9000);

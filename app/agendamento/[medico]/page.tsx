@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { MedsysLogo } from "@/components/Logo";
-import { ArrowLeft, Calendar, Loader2, Hospital, Clock, Phone, Mail, FileText, User } from "lucide-react";
+import { ArrowLeft, Calendar, Loader2, Hospital, Clock, Phone, Mail, FileText, User, Paperclip, X } from "lucide-react";
 
 // 🔥 PRIORIDADE
 function calcularPrioridade(sintomas: string) {
@@ -47,6 +47,10 @@ export default function AgendamentoPage() {
   const [loading, setLoading] = useState(false);
   const [agendamentosOcupados, setAgendamentosOcupados] = useState<any[]>([]);
   const [pacienteId, setPacienteId] = useState<string | null>(null);
+
+  // 🔥 UPLOADER DE EXAMES
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [uploadStatus, setUploadStatus] = useState("");
 
   // 🔥 buscar médico pelo slug
   useEffect(() => {
@@ -137,6 +141,32 @@ export default function AgendamentoPage() {
       return;
     }
 
+    let anexoPath = null;
+
+    if (arquivo) {
+       setUploadStatus("Criptografando anexo em Cofre Privado...");
+       const fileExt = arquivo.name.split('.').pop()?.toLowerCase() || '';
+       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+       const folderPath = `${pacienteId}/${fileName}`;
+
+       const { data: uploadData, error: uploadErr } = await supabase.storage
+         .from('exames')
+         .upload(folderPath, arquivo, {
+           cacheControl: '3600',
+           upsert: false
+         });
+         
+       if (uploadErr) {
+         console.log(uploadErr);
+         alert("O arquivo foi barrado pela segurança: " + uploadErr.message);
+         setLoading(false);
+         setUploadStatus("");
+         return;
+       }
+       anexoPath = folderPath;
+       setUploadStatus("");
+    }
+
     const prioridade = calcularPrioridade(sintomas);
 
     const { error } = await supabase.from("agendamentos").insert([
@@ -149,7 +179,8 @@ export default function AgendamentoPage() {
         sintomas,
         status: "pendente",
         user_id: medico.id, 
-        patient_id: pacienteId 
+        patient_id: pacienteId,
+        anexo_path: anexoPath
       },
     ]);
 
@@ -323,11 +354,52 @@ export default function AgendamentoPage() {
               </label>
               <textarea
                 placeholder="Descreva brevemente seus sintomas, quando começaram e a área da dor."
-                className="w-full px-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all min-h-[100px] sm:min-h-[120px] font-medium resize-y text-sm sm:text-base leading-relaxed"
+                className="w-full px-4 py-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all min-h-[100px] sm:min-h-[120px] font-medium resize-y text-sm sm:text-base leading-relaxed mb-4"
                 value={sintomas}
                 onChange={(e) => setSintomas(e.target.value)}
                 required
               />
+
+              {/* MÓDULO DE ANEXOS SIGILOSOS */}
+              <div className="bg-slate-100/50 border border-slate-200 border-dashed rounded-xl p-4 transition-all">
+                 <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                         <Paperclip className="w-4 h-4 text-emerald-600" /> Anexos e Laudos Anteriores <span className="text-[10px] font-bold uppercase bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Opcional</span>
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Arquivos devem ter até 5MB. PDF, JPG ou PNG.
+                      </p>
+                    </div>
+                    {arquivo ? (
+                       <div className="flex bg-white items-center gap-2 text-sm font-bold text-emerald-700 border border-emerald-200 px-3 py-2 rounded-lg shadow-sm">
+                          <FileText className="w-4 h-4 text-emerald-500" /> {arquivo.name.length > 20 ? arquivo.name.substring(0, 20) + "..." : arquivo.name}
+                          <button type="button" onClick={() => setArquivo(null)} className="ml-2 hover:text-red-500 hover:bg-red-50 rounded-full p-0.5"><X className="w-4 h-4"/></button>
+                       </div>
+                    ) : (
+                       <div>
+                         <label className="cursor-pointer bg-white border border-slate-300 hover:border-emerald-500 hover:text-emerald-700 text-slate-600 text-sm font-bold py-2.5 px-4 rounded-lg transition-all shadow-sm">
+                           Escolher Arquivo
+                           <input 
+                             type="file" 
+                             className="hidden" 
+                             accept="image/png, image/jpeg, application/pdf"
+                             onChange={(e) => {
+                               if (e.target.files && e.target.files.length > 0) {
+                                  const file = e.target.files[0];
+                                  if (file.size > 5 * 1024 * 1024) {
+                                     alert("O arquivo ultrapassa o limite máximo de 5MB!");
+                                     return;
+                                  }
+                                  setArquivo(file);
+                               }
+                             }}
+                           />
+                         </label>
+                       </div>
+                    )}
+                 </div>
+              </div>
             </div>
           </div>
 
@@ -336,7 +408,7 @@ export default function AgendamentoPage() {
             disabled={loading}
             className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-4 sm:py-5 rounded-xl font-extrabold text-base sm:text-lg mt-4 shadow-lg shadow-emerald-600/20 hover:-translate-y-0.5 transition-all active:scale-[0.98]"
           >
-            {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Verificando Fila...</> : "Confirmar Agendamento"}
+            {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> {uploadStatus || "Verificando Fila..."}</> : "Confirmar Agendamento"}
           </button>
           
           <p className="text-center text-[10px] sm:text-xs text-slate-400 mt-2 font-medium px-4">Ao confirmar, as diretrizes da clínica sobre tratamento de dados e uso do Medsys AI são asseguradas.</p>
