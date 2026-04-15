@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Clínica Saúde+",
-  description: "Sistema para organização de consultórios médicos",
+  title: "Medsys — Gestão Inteligente para Clínicas e Consultórios",
+  description: "Plataforma SaaS completa para médicos automatizarem consultas, organizarem atendimentos e aumentarem sua receita. Agendamento online, prontuário e automações.",
 };
 
 export default function RootLayout({
