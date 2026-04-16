@@ -26,6 +26,7 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const [consultas, setConsultas] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string>("");
 
   // 🔒 PROTEÇÃO + LOAD
   useEffect(() => {
@@ -39,7 +40,21 @@ export default function AdminDashboardPage() {
         return;
       }
 
-      fetchConsultas(user.id);
+      // Buscar profile para checar role
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role, medicos_ids")
+        .eq("id", user.id)
+        .single();
+
+      setUserRole(prof?.role || "doctor");
+
+      if (prof?.role === "secretaria" && prof.medicos_ids?.length > 0) {
+        // Secretária: buscar agendamentos de todos os médicos vinculados
+        fetchConsultasMulti(prof.medicos_ids);
+      } else {
+        fetchConsultas(user.id);
+      }
     }
 
     init();
@@ -50,6 +65,21 @@ export default function AdminDashboardPage() {
       .from("agendamentos")
       .select("*")
       .eq("user_id", userId)
+      .order("data", { ascending: true });
+
+    if (error) {
+      console.log("Erro ao buscar:", error);
+    } else {
+      setConsultas(data || []);
+    }
+    setIsLoading(false);
+  }
+
+  async function fetchConsultasMulti(medicoIds: string[]) {
+    const { data, error } = await supabase
+      .from("agendamentos")
+      .select("*")
+      .in("user_id", medicoIds)
       .order("data", { ascending: true });
 
     if (error) {
@@ -103,9 +133,21 @@ export default function AdminDashboardPage() {
     <div className="p-6 md:p-10 space-y-8 w-full max-w-7xl mx-auto">
       
       {/* HEADER */}
-      <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
-        <p className="text-slate-400 mt-1">Resumo das atividades do seu consultório.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
+          <p className="text-slate-400 mt-1">
+            {userRole === "secretaria" 
+              ? "Visão consolidada de todos os médicos gerenciados." 
+              : "Resumo das atividades do seu consultório."
+            }
+          </p>
+        </div>
+        {userRole === "secretaria" && (
+          <span className="text-xs font-bold uppercase bg-emerald-500/15 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+            Secretária
+          </span>
+        )}
       </div>
 
       {/* METRICS */}

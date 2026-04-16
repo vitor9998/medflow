@@ -11,7 +11,8 @@ import {
   Menu, 
   X,
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  CalendarRange
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { MedsysLogo } from "@/components/Logo";
@@ -34,13 +35,28 @@ export function Sidebar({ role }: { role?: string }) {
     };
   }, [isOpen]);
 
-  const links = [
+  const baseLinks = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/agenda", label: "Agenda", icon: CalendarDays },
+  ];
+
+  // Secretária vê agenda multi-médicos, médico vê agenda própria
+  if (role === "secretaria") {
+    baseLinks.push({ href: "/admin/secretaria", label: "Agenda Multi-Médicos", icon: CalendarRange });
+  } else {
+    baseLinks.push({ href: "/admin/agenda", label: "Agenda", icon: CalendarDays });
+  }
+
+  baseLinks.push(
     { href: "/admin/pacientes", label: "Pacientes", icon: Users },
     { href: "/admin/comunicacao", label: "Comunicação", icon: MessageCircle },
-    { href: "/admin/config", label: "Configurações", icon: Settings },
-  ];
+  );
+
+  // Só médico vê configurações do perfil
+  if (role !== "secretaria") {
+    baseLinks.push({ href: "/admin/config", label: "Configurações", icon: Settings });
+  }
+
+  const links = baseLinks;
 
   if (role === "superadmin") {
     links.push({ href: "/admin/master", label: "Painel Full Master", icon: ShieldAlert });

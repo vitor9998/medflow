@@ -13,7 +13,7 @@ export default function SignupPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [accountType, setAccountType] = useState<"doctor" | "patient">("patient");
+  const [accountType, setAccountType] = useState<"doctor" | "patient" | "secretaria">("patient");  const [codigoClinica, setCodigoClinica] = useState("");
   const [especialidade, setEspecialidade] = useState("");
   const [telefone, setTelefone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,6 +81,11 @@ export default function SignupPage() {
           setTimeout(() => {
              router.push("/admin");
           }, 2000);
+        } else if (accountType === "secretaria") {
+          setSuccessMsg("Cadastro de secretária recebido! Aguardando aprovação do administrador...");
+          setTimeout(() => {
+             router.push("/admin");
+          }, 2000);
         } else {
           setSuccessMsg("Conta criada com sucesso! Direcionando para seu Portal B2C...");
           setTimeout(() => {
@@ -139,10 +144,10 @@ export default function SignupPage() {
         >
           <div className="mb-6 text-center md:text-left">
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Criar Conta {accountType === "doctor" ? "Médico" : "Paciente"}
+              Criar Conta {accountType === "doctor" ? "Médico" : accountType === "secretaria" ? "Secretária" : "Paciente"}
             </h1>
             <p className="text-slate-500">
-              {accountType === "doctor" ? "Configure seu perfil e abra sua agenda agora." : "Gerencie todas as suas consultas em um só lugar."}
+              {accountType === "doctor" ? "Configure seu perfil e abra sua agenda agora." : accountType === "secretaria" ? "Gerencie as agendas dos médicos da sua clínica." : "Gerencie todas as suas consultas em um só lugar."}
             </p>
           </div>
 
@@ -151,16 +156,23 @@ export default function SignupPage() {
              <button
                type="button"
                onClick={() => setAccountType("patient")}
-               className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${accountType === "patient" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${accountType === "patient" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
              >
-               Sou Paciente
+               Paciente
              </button>
              <button
                type="button"
                onClick={() => setAccountType("doctor")}
-               className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${accountType === "doctor" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${accountType === "doctor" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
              >
-               Sou Médico
+               Médico
+             </button>
+             <button
+               type="button"
+               onClick={() => setAccountType("secretaria")}
+               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${accountType === "secretaria" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+             >
+               Secretária
              </button>
           </div>
 
@@ -200,6 +212,17 @@ export default function SignupPage() {
                     value={especialidade}
                     onChange={(e) => setEspecialidade(e.target.value)}
                     required={accountType === "doctor"}
+                  />
+                </div>
+              )}
+              {accountType === "secretaria" && (
+                <div className="w-full">
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Código da Clínica <span className="text-xs text-slate-400">(opcional)</span></label>
+                  <input
+                    placeholder="Fornecido pelo administrador"
+                    className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                    value={codigoClinica}
+                    onChange={(e) => setCodigoClinica(e.target.value)}
                   />
                 </div>
               )}
