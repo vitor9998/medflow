@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
       // Buscar profile para checar role
       const { data: prof } = await supabase
         .from("profiles")
-        .select("role, medicos_ids")
+        .select("role, medicos_ids, clinica_id")
         .eq("id", user.id)
         .single();
 
