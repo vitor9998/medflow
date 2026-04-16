@@ -53,6 +53,23 @@ export default function SignupPage() {
           return;
       }
 
+      // 🏥 Validar código da clínica
+      let clinicaId: string | null = null;
+      if (codigoClinica.trim()) {
+        const { data: clinica, error: clinicaErr } = await supabase
+          .from("clinicas")
+          .select("id")
+          .eq("codigo", codigoClinica.trim().toUpperCase())
+          .single();
+
+        if (clinicaErr || !clinica) {
+          setErrorMsg("Código da clínica inválido. Verifique com o administrador.");
+          setLoading(false);
+          return;
+        }
+        clinicaId = clinica.id;
+      }
+
       // Cria um slug 100% único adicionando 4 dígitos aleatórios pra não travar testes
       const baseSlug = nome.toLowerCase().replace(/\s+/g, "-");
       const randomDigit = Math.floor(1000 + Math.random() * 9000);
@@ -69,7 +86,8 @@ export default function SignupPage() {
             especialidade: accountType === "doctor" ? especialidade : null,
             telefone,
             role: accountType,
-            status: "pending"
+            status: "pending",
+            clinica_id: clinicaId
           },
         ]);
 
@@ -204,17 +222,16 @@ export default function SignupPage() {
                   />
                 </div>
               )}
-              {accountType === "secretaria" && (
-                <div className="w-full">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Código da Clínica <span className="text-xs text-slate-400">(opcional)</span></label>
-                  <input
-                    placeholder="Fornecido pelo administrador"
-                    className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
-                    value={codigoClinica}
-                    onChange={(e) => setCodigoClinica(e.target.value)}
-                  />
-                </div>
-              )}
+              <div className="w-full">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Código da Clínica</label>
+                <input
+                  placeholder="Ex: MEDSYS-001"
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm uppercase"
+                  value={codigoClinica}
+                  onChange={(e) => setCodigoClinica(e.target.value)}
+                  required
+                />
+              </div>
               <div className="w-full">
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Telefone / WhatsApp</label>
                 <input

@@ -49,9 +49,23 @@ export default function AdminDashboardPage() {
 
       setUserRole(prof?.role || "doctor");
 
-      if (prof?.role === "secretaria" && prof.medicos_ids?.length > 0) {
-        // Secretária: buscar agendamentos de todos os médicos vinculados
-        fetchConsultasMulti(prof.medicos_ids);
+      if (prof?.role === "secretaria") {
+        // Prioridade: clinica_id > medicos_ids
+        if (prof.clinica_id) {
+          const { data: docs } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("clinica_id", prof.clinica_id)
+            .eq("role", "doctor");
+
+          const ids = (docs || []).map((d: any) => d.id);
+          if (ids.length > 0) fetchConsultasMulti(ids);
+          else setIsLoading(false);
+        } else if (prof.medicos_ids?.length > 0) {
+          fetchConsultasMulti(prof.medicos_ids);
+        } else {
+          setIsLoading(false);
+        }
       } else {
         fetchConsultas(user.id);
       }

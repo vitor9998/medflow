@@ -71,16 +71,30 @@ export default function SecretariaPage() {
 
       setProfile(prof);
 
-      // Buscar médicos vinculados
-      const medicoIds: string[] = prof.medicos_ids || [];
-      if (medicoIds.length > 0) {
+      // Buscar médicos: prioridade clinica_id > medicos_ids (fallback)
+      if (prof.clinica_id) {
+        // Buscar todos os médicos da mesma clínica
         const { data: docs } = await supabase
           .from("profiles")
           .select("id, nome, especialidade, slug")
-          .in("id", medicoIds);
+          .eq("clinica_id", prof.clinica_id)
+          .eq("role", "doctor")
+          .eq("status", "active");
 
         setMedicos(docs || []);
-        setSelectedMedicos(medicoIds);
+        setSelectedMedicos((docs || []).map((d: any) => d.id));
+      } else {
+        // Fallback: usar medicos_ids manual
+        const medicoIds: string[] = prof.medicos_ids || [];
+        if (medicoIds.length > 0) {
+          const { data: docs } = await supabase
+            .from("profiles")
+            .select("id, nome, especialidade, slug")
+            .in("id", medicoIds);
+
+          setMedicos(docs || []);
+          setSelectedMedicos(medicoIds);
+        }
       }
 
       setLoading(false);
