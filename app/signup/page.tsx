@@ -13,7 +13,8 @@ export default function SignupPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const [accountType, setAccountType] = useState<"doctor" | "patient" | "secretaria">("patient");  const [codigoClinica, setCodigoClinica] = useState("");
+  const [accountType, setAccountType] = useState<"doctor" | "secretaria">("doctor");
+  const [codigoClinica, setCodigoClinica] = useState("");
   const [especialidade, setEspecialidade] = useState("");
   const [telefone, setTelefone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,7 +69,7 @@ export default function SignupPage() {
             especialidade: accountType === "doctor" ? especialidade : null,
             telefone,
             role: accountType,
-            status: accountType === "patient" ? "active" : "pending"
+            status: "pending"
           },
         ]);
 
@@ -76,21 +77,16 @@ export default function SignupPage() {
         console.log("Erro no Profile:", profileError);
         setErrorMsg(`Não foi possível criar o perfil médico. Tente alterar o nome fornecido. Erro Banco: ${profileError.message || ""}`);
       } else {
-        if (accountType === "doctor") {
-          setSuccessMsg("Perfil registrado com sucesso! Direcionando para análise de aprovação...");
-          setTimeout(() => {
-             router.push("/admin");
-          }, 2000);
-        } else if (accountType === "secretaria") {
+        if (accountType === "secretaria") {
           setSuccessMsg("Cadastro de secretária recebido! Aguardando aprovação do administrador...");
           setTimeout(() => {
              router.push("/admin");
           }, 2000);
         } else {
-          setSuccessMsg("Conta criada com sucesso! Direcionando para seu Portal B2C...");
+          setSuccessMsg("Perfil registrado com sucesso! Direcionando para análise de aprovação...");
           setTimeout(() => {
-             router.push("/portal");
-          }, 1500);
+             router.push("/admin");
+          }, 2000);
         }
       }
     }
@@ -144,10 +140,10 @@ export default function SignupPage() {
         >
           <div className="mb-6 text-center md:text-left">
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Criar Conta {accountType === "doctor" ? "Médico" : accountType === "secretaria" ? "Secretária" : "Paciente"}
+              Criar Conta {accountType === "doctor" ? "Médico" : "Secretária"}
             </h1>
             <p className="text-slate-500">
-              {accountType === "doctor" ? "Configure seu perfil e abra sua agenda agora." : accountType === "secretaria" ? "Gerencie as agendas dos médicos da sua clínica." : "Gerencie todas as suas consultas em um só lugar."}
+              {accountType === "doctor" ? "Configure seu perfil e abra sua agenda agora." : "Gerencie as agendas dos médicos da sua clínica."}
             </p>
           </div>
 
@@ -155,24 +151,17 @@ export default function SignupPage() {
           <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
              <button
                type="button"
-               onClick={() => setAccountType("patient")}
-               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${accountType === "patient" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-             >
-               Paciente
-             </button>
-             <button
-               type="button"
                onClick={() => setAccountType("doctor")}
-               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${accountType === "doctor" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+               className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${accountType === "doctor" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
              >
-               Médico
+               Sou Médico
              </button>
              <button
                type="button"
                onClick={() => setAccountType("secretaria")}
-               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${accountType === "secretaria" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+               className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${accountType === "secretaria" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
              >
-               Secretária
+               Sou Secretária
              </button>
           </div>
 

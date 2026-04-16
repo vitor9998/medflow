@@ -34,7 +34,7 @@ export default function LoginPage() {
         .single();
 
       if (prof?.role === "patient") {
-        router.push("/portal");
+        router.push("/paciente");
       } else if (prof?.role === "secretaria") {
         router.push("/admin/secretaria");
       } else {

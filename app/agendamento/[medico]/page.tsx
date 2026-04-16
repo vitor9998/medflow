@@ -334,7 +334,7 @@ export default function AgendamentoPage() {
       setHora("");
       setSintomas("");
       if (isLoggedIn) {
-        router.push("/portal");
+        router.push("/paciente");
       } else {
         router.push("/agendamento");
       }

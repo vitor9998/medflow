@@ -34,6 +34,9 @@ export default function Home() {
              <Link href="/pricing" className="hover:text-slate-900 transition-colors">
                Preços
              </Link>
+              <Link href="/paciente" className="hover:text-emerald-600 transition-colors flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5" /> Sou Paciente
+              </Link>
            </div>
            
            <div className="flex items-center gap-4">
@@ -58,6 +61,7 @@ export default function Home() {
              <hr className="border-slate-100" />
              <Link onClick={() => setMenuOpen(false)} href="/login" className="text-slate-700 font-bold text-lg text-center bg-slate-50 py-3 rounded-xl border border-slate-200">Acessar Conta</Link>
              <Link onClick={() => setMenuOpen(false)} href="/signup" className="text-white font-bold text-lg bg-slate-900 py-3 rounded-xl text-center shadow-md">Criar conta grátis</Link>
+             <Link onClick={() => setMenuOpen(false)} href="/paciente" className="text-emerald-600 font-bold text-lg text-center bg-emerald-50 py-3 rounded-xl border border-emerald-200">Sou Paciente</Link>
           </div>
         )}
       </nav>
@@ -98,6 +102,22 @@ export default function Home() {
             <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Setup em 5 minutos</span>
           </div>
         </div>
+      </section>
+
+      {/* PATIENT CTA STRIP */}
+      <section className="w-full max-w-4xl mx-auto px-6 -mt-6 mb-8 relative z-10">
+        <Link href="/paciente" className="group flex items-center justify-between bg-white border border-slate-200 rounded-2xl px-6 py-4 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-100 shrink-0">
+              <Calendar className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-sm">Já é paciente?</p>
+              <p className="text-xs text-slate-500">Acesse suas consultas usando apenas seu telefone — sem senha.</p>
+            </div>
+          </div>
+          <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all shrink-0" />
+        </Link>
       </section>
 
       {/* DASHBOARD PREVIEW MOCKUP */}
@@ -463,7 +483,7 @@ export default function Home() {
             <h4 className="text-white font-bold mb-4">Pacientes</h4>
             <ul className="space-y-3">
                <li><Link href="/agendamento" className="hover:text-white transition-colors">Agendar Consulta</Link></li>
-               <li><Link href="/portal" className="hover:text-white transition-colors">Meus Agendamentos</Link></li>
+               <li><Link href="/paciente" className="hover:text-white transition-colors">Meus Agendamentos</Link></li>
                <li><a href="#" className="hover:text-white transition-colors">Suporte</a></li>
             </ul>
           </div>
