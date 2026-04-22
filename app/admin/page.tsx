@@ -11,6 +11,7 @@ import {
   UserCheck,
   ChevronRight,
   Phone,
+  PhoneOutgoing,
   AlertCircle,
 } from "lucide-react";
 import {
@@ -158,6 +159,24 @@ export default function AdminDashboardPage() {
     }
     setUpdatingId(null);
     setExpandedId(null);
+  }
+
+  async function registrarTentativa(id: number, atual: number) {
+    setUpdatingId(id);
+    const novo = (atual || 0) + 1;
+    const { error } = await supabase
+      .from("agendamentos")
+      .update({ tentativas_contato: novo })
+      .eq("id", id);
+
+    if (!error) {
+      setConsultas((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, tentativas_contato: novo } : item
+        )
+      );
+    }
+    setUpdatingId(null);
   }
 
   // --- Metrics ---
@@ -341,7 +360,12 @@ export default function AdminDashboardPage() {
                           </div>
                         </div>
 
-                        {/* Badge + chevron */}
+                        {/* Attempts + Badge + chevron */}
+                        {(c.tentativas_contato || 0) > 0 && (
+                          <span className="text-[10px] font-mono text-slate-500 tabular-nums border border-slate-800 rounded px-1.5 py-0.5">
+                            {c.tentativas_contato}x
+                          </span>
+                        )}
                         <StatusBadge status={c.status || "pendente"} />
                         <ChevronRight
                           className={`w-4 h-4 text-slate-600 transition-transform ${
@@ -389,6 +413,16 @@ export default function AdminDashboardPage() {
                               Cancelar
                             </button>
                           )}
+                          <button
+                            onClick={() =>
+                              registrarTentativa(c.id, c.tentativas_contato || 0)
+                            }
+                            disabled={isUpdating}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-500/10 text-slate-400 border border-slate-700 hover:bg-slate-500/15 transition-all active:scale-[0.97] disabled:opacity-50 ml-auto"
+                          >
+                            <PhoneOutgoing className="w-3.5 h-3.5" />
+                            Tentativa ({c.tentativas_contato || 0})
+                          </button>
                           {c.sintomas && (
                             <div className="w-full mt-2 flex items-start gap-2 px-1">
                               <AlertCircle className="w-3.5 h-3.5 text-amber-500/70 mt-0.5 shrink-0" />

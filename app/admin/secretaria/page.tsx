@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Modal } from "@/components/Modal";
 import {
-  Loader2, Plus, CalendarRange, Clock, User, Phone, Mail, FileText,
+  Loader2, Plus, CalendarRange, Clock, User, Phone, PhoneOutgoing, Mail, FileText,
   CheckCircle2, XCircle, CalendarClock, UserCheck, ChevronLeft, ChevronRight,
   Stethoscope, AlertCircle
 } from "lucide-react";
@@ -148,6 +148,23 @@ export default function SecretariaPage() {
       prev.map(item => item.id === id ? { ...item, status } : item)
     );
     setSelecionada(null);
+  }
+
+  async function registrarTentativa(id: number, atual: number) {
+    const novo = (atual || 0) + 1;
+    const { error } = await supabase
+      .from("agendamentos")
+      .update({ tentativas_contato: novo })
+      .eq("id", id);
+
+    if (!error) {
+      setAgendamentos(prev =>
+        prev.map(item => item.id === id ? { ...item, tentativas_contato: novo } : item)
+      );
+      if (selecionada?.id === id) {
+        setSelecionada({ ...selecionada, tentativas_contato: novo });
+      }
+    }
   }
 
   async function criarConsulta(e: React.FormEvent) {
@@ -386,7 +403,12 @@ export default function SecretariaPage() {
                           : "bg-yellow-500/10 border-yellow-500/30 text-yellow-500"
                       }`}>
                         <p className="font-bold truncate">{ag.nome}</p>
-                        <p className="text-[10px] opacity-70 uppercase font-semibold mt-0.5">{ag.status}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-[10px] opacity-70 uppercase font-semibold">{ag.status}</span>
+                          {(ag.tentativas_contato || 0) > 0 && (
+                            <span className="text-[9px] font-mono opacity-60">{ag.tentativas_contato}x</span>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -488,6 +510,15 @@ export default function SecretariaPage() {
                 className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-red-500 font-semibold py-2.5 rounded-xl transition-colors"
               >
                 <span className="flex items-center justify-center gap-2"><XCircle className="w-4 h-4" /> Cancelar</span>
+              </button>
+
+              <button
+                onClick={() => registrarTentativa(selecionada.id, selecionada.tentativas_contato || 0)}
+                className="w-full flex justify-center items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl transition-colors active:scale-[0.98]"
+              >
+                <PhoneOutgoing className="w-4 h-4" />
+                Registrar Tentativa
+                <span className="text-xs font-mono text-slate-500 ml-1">({selecionada.tentativas_contato || 0})</span>
               </button>
             </div>
           </div>
