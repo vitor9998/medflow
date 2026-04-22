@@ -7,7 +7,7 @@ import { MedsysLogo } from "@/components/Logo";
 import {
   Phone, KeyRound, Loader2, Calendar, Clock, ChevronRight,
   RefreshCw, CheckCircle2, Shield, Stethoscope, Activity,
-  ArrowLeft, Search
+  ArrowLeft, Search, X, AlertCircle
 } from "lucide-react";
 
 export default function PacientePage() {
@@ -26,6 +26,84 @@ export default function PacientePage() {
   const [consultas, setConsultas] = useState<any[]>([]);
   const [medicos, setMedicos] = useState<any[]>([]);
   const [dashLoading, setDashLoading] = useState(false);
+
+  // Remarcar Consulta logic
+  const [remarcandoConsulta, setRemarcandoConsulta] = useState<any | null>(null);
+  const [novaData, setNovaData] = useState("");
+  const [novoHora, setNovoHora] = useState("");
+  const [agendamentosOcupados, setAgendamentosOcupados] = useState<any[]>([]);
+  const [remarcarLoading, setRemarcarLoading] = useState(false);
+  const [remarcarErro, setRemarcarErro] = useState("");
+
+  async function openRemarcar(consulta: any) {
+    setRemarcandoConsulta(consulta);
+    setNovaData("");
+    setNovoHora("");
+    setRemarcarErro("");
+    setRemarcarLoading(true);
+    // Busca os horários ocupados daquele médico
+    const { data } = await supabase
+      .from("agendamentos")
+      .select("id, data, hora, status")
+      .eq("user_id", consulta.user_id)
+      .neq("status", "cancelado");
+    
+    setAgendamentosOcupados(data || []);
+    setRemarcarLoading(false);
+  }
+
+  const generateSlots = () => {
+    const slots = [];
+    for (let i = 8; i <= 18; i++) {
+        slots.push(`${i.toString().padStart(2, "0")}:00`);
+        slots.push(`${i.toString().padStart(2, "0")}:30`);
+    }
+    return slots;
+  };
+
+  const getDaySlots = () => {
+    if (!novaData || !remarcandoConsulta) return [];
+    
+    // Filtra agendamentos do dia, ignorando a própria consulta atual
+    const occupiedTimes = agendamentosOcupados
+      .filter((a) => a.data === novaData && a.id !== remarcandoConsulta.id)
+      .map((a) => a.hora.substring(0, 5));
+
+    return generateSlots().map((slot) => ({
+      time: slot,
+      isOccupied: occupiedTimes.includes(slot),
+    }));
+  };
+
+  async function handleConfirmRemarcar() {
+    if (!novaData || !novoHora || !remarcandoConsulta) return;
+    
+    const hojeObj = new Date();
+    hojeObj.setHours(0,0,0,0);
+    const splitData = novaData.split("-");
+    const dateE = new Date(Number(splitData[0]), Number(splitData[1]) - 1, Number(splitData[2]));
+    
+    if (dateE < hojeObj) {
+      setRemarcarErro("A nova data precisa ser hoje ou no futuro.");
+      return;
+    }
+
+    setRemarcarErro("");
+    setRemarcarLoading(true);
+
+    const { error } = await supabase
+      .from("agendamentos")
+      .update({ data: novaData, hora: novoHora })
+      .eq("id", remarcandoConsulta.id);
+    
+    if (!error) {
+       setRemarcandoConsulta(null);
+       await fetchConsultas(); // Refresh UI
+    } else {
+       setRemarcarErro("Ocorreu um erro ao remarcar. Tente novamente.");
+    }
+    setRemarcarLoading(false);
+  }
 
   // Timer
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -414,15 +492,23 @@ export default function PacientePage() {
                             </h3>
                             <p className="text-slate-500 text-sm font-medium">{getMedicoEsp(c.user_id)}</p>
                           </div>
-                          <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl flex items-center gap-6 sm:min-w-[200px]">
-                            <div>
-                              <p className="text-xs text-slate-400 font-bold uppercase mb-1">Data</p>
-                              <p className="font-bold text-slate-800">{c.data?.split("-").reverse().join("/")}</p>
+                          <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl flex flex-col gap-3 min-w-[200px]">
+                            <div className="flex items-center gap-6 justify-between">
+                              <div>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Data</p>
+                                <p className="font-bold text-slate-800 text-sm">{c.data?.split("-").reverse().join("/")}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Hora</p>
+                                <p className="font-bold text-slate-800 text-sm">{c.hora}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-xs text-slate-400 font-bold uppercase mb-1">Hora</p>
-                              <p className="font-bold text-slate-800">{c.hora}</p>
-                            </div>
+                            <button
+                               onClick={() => openRemarcar(c)}
+                               className="w-full bg-white border border-slate-200 text-slate-600 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                            >
+                               <Calendar className="w-3.5 h-3.5" /> Remarcar
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -456,6 +542,91 @@ export default function PacientePage() {
               )}
             </div>
           )}
+        </div>
+      )}
+      {/* MODAL REMARCAR */}
+      {remarcandoConsulta && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-6 sm:p-8 border border-slate-200 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-emerald-600" /> Remarcar
+              </h3>
+              <button 
+                onClick={() => setRemarcandoConsulta(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-1 space-y-6">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-4">
+                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <Stethoscope className="w-5 h-5 text-emerald-500" />
+                 </div>
+                 <div>
+                    <p className="text-sm font-bold text-slate-800">{getMedicoNome(remarcandoConsulta.user_id)}</p>
+                    <p className="text-xs text-slate-500">Agendamento atual: {remarcandoConsulta.data?.split("-").reverse().join("/")} às {remarcandoConsulta.hora}</p>
+                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Selecione a nova data:</label>
+                <input 
+                  type="date"
+                  value={novaData}
+                  onChange={(e) => {
+                    setNovaData(e.target.value);
+                    setNovoHora("");
+                  }}
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 font-bold shadow-sm"
+                />
+              </div>
+
+              {novaData && (
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-3">Horários disponíveis para {novaData.split("-").reverse().join("/")}:</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {getDaySlots().map((slot) => (
+                      <button
+                        key={slot.time}
+                        onClick={() => !slot.isOccupied && setNovoHora(slot.time)}
+                        disabled={slot.isOccupied}
+                        className={`py-2 px-1 rounded-xl text-sm font-bold text-center transition-all border
+                          ${slot.isOccupied 
+                            ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed opacity-50" 
+                            : novoHora === slot.time
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105"
+                              : "bg-white text-slate-700 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 cursor-pointer"
+                          }
+                        `}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {remarcarErro && (
+                <div className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-xl border border-red-200 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" /> {remarcarErro}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-6 mt-4 border-t border-slate-100">
+               <button
+                 onClick={handleConfirmRemarcar}
+                 disabled={!novaData || !novoHora || remarcarLoading}
+                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 text-white py-4 rounded-xl font-extrabold shadow-lg shadow-emerald-500/20 transition-all disabled:shadow-none disabled:transform-none transform hover:-translate-y-0.5"
+               >
+                 {remarcarLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar remarcação"}
+               </button>
+            </div>
+
+          </div>
         </div>
       )}
     </div>
