@@ -7,7 +7,7 @@ import { MedsysLogo } from "@/components/Logo";
 import {
   Phone, KeyRound, Loader2, Calendar, Clock, ChevronRight,
   RefreshCw, CheckCircle2, Shield, Stethoscope, Activity,
-  ArrowLeft, Search, X, AlertCircle
+  ArrowLeft, Search, X, AlertCircle, Upload, Paperclip
 } from "lucide-react";
 
 export default function PacientePage() {
@@ -54,6 +54,42 @@ export default function PacientePage() {
     } else {
        alert("Erro ao cancelar consulta. Tente novamente.");
     }
+  }
+
+  // Upload de Exames logic
+  const [uploadingId, setUploadingId] = useState<string|null>(null);
+
+  async function handleUploadExame(e: React.ChangeEvent<HTMLInputElement>, agendamentoId: string) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingId(agendamentoId);
+    
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const folderPath = `${telefone.replace(/\D/g, "")}/${fileName}`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from('exames')
+      .upload(folderPath, file, { cacheControl: '3600', upsert: false });
+
+    if (uploadErr) {
+      alert("Erro no upload do exame: " + uploadErr.message);
+      setUploadingId(null);
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("agendamentos")
+      .update({ anexo_path: folderPath })
+      .eq("id", agendamentoId);
+    
+    if (!updateError) {
+       await fetchConsultas(); // refresh para receber data com anexo_path atualizado
+    } else {
+       alert("O upload foi feito, mas ocorreu um erro ao salvar na consulta.");
+    }
+    setUploadingId(null);
   }
 
   async function openRemarcar(consulta: any) {
@@ -537,6 +573,32 @@ export default function PacientePage() {
                               >
                                  <Calendar className="w-3.5 h-3.5" /> Remarcar
                               </button>
+                            </div>
+
+                            {/* Botão de Anexos */}
+                            <div className="mt-1">
+                               <label className={`w-full py-2 rounded-lg text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer border ${
+                                 uploadingId === c.id 
+                                  ? 'bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed'
+                                  : c.anexo_path 
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                               }`}>
+                                  {uploadingId === c.id ? (
+                                    <><Loader2 className="w-3 h-3 animate-spin" /> Anexando...</>
+                                  ) : c.anexo_path ? (
+                                    <><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Exame anexado (Trocar)</>
+                                  ) : (
+                                    <><Upload className="w-3 h-3" /> Enviar Exame/Laudo</>
+                                  )}
+                                  <input 
+                                    type="file" 
+                                    className="hidden" 
+                                    accept="application/pdf,image/png,image/jpeg" 
+                                    onChange={(e) => handleUploadExame(e, c.id)}
+                                    disabled={uploadingId === c.id}
+                                  />
+                               </label>
                             </div>
                           </div>
                         </div>
