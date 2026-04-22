@@ -8,9 +8,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  maxWidth?: string;
 }
 
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-md" }: ModalProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -30,10 +31,10 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
       onClick={onClose}
     >
       <div 
-        className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-xl flex flex-col"
+        className={`bg-white border border-slate-200 rounded-2xl w-full shadow-xl flex flex-col max-h-[90vh] ${maxWidth}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
           <h2 className="text-xl font-bold text-slate-900">{title}</h2>
           <button 
             onClick={onClose}
@@ -42,7 +43,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-5">
+        <div className="p-5 overflow-y-auto">
           {children}
         </div>
       </div>

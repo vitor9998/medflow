@@ -9,7 +9,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
-import { Loader2, KeyRound, Wand2, Calendar as CalIcon, MapPin, User, LogOut, CheckCircle2, Bot, Phone, Plus, Map, Mail, Hash, PhoneOutgoing, ShieldCheck, Download, AlertCircle, Edit, Trash2, CalendarDays, X, ChevronRight, Check, MessageCircle, BrainCircuit, Save, Activity, Paperclip, FileText } from "lucide-react";
+import { Loader2, KeyRound, Wand2, Calendar as CalIcon, MapPin, User, LogOut, CheckCircle2, Bot, Phone, Plus, Map, Mail, Hash, PhoneOutgoing, ShieldCheck, Download, AlertCircle, Edit, Trash2, CalendarDays, X, ChevronRight, Check, MessageCircle, BrainCircuit, Save, Activity, Paperclip, FileText, ClipboardList, Stethoscope } from "lucide-react";
 
 export default function AgendaPage() {
   const router = useRouter();
@@ -249,6 +249,7 @@ export default function AgendaPage() {
         isOpen={!!selecionada} 
         onClose={() => setSelecionada(null)} 
         title="Detalhes do Agendamento"
+        maxWidth="max-w-2xl"
       >
         {selecionada && (
           <div className="space-y-4">
@@ -269,66 +270,179 @@ export default function AgendaPage() {
               </div>
             </div>
 
-            {/* Informacoes do Paciente */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-              <p className="flex items-center gap-2 text-sm text-blue-500 font-bold"><Activity className="w-4 h-4"/> Informacoes do Paciente</p>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Motivo da consulta</p>
-                <p className="text-sm text-slate-700">{selecionada.sintomas || "Nenhum motivo informado."}</p>
+            {/* PRONTUÁRIO LEVE - VISUALIZAÇÃO DO PACIENTE */}
+            <div className="bg-white border text-left border-slate-200 rounded-2xl p-4 sm:p-5 space-y-5 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
+                 <div className="bg-emerald-50 p-1.5 rounded-lg">
+                    <Stethoscope className="w-5 h-5 text-emerald-600" />
+                 </div>
+                 Prontuário Leve
+              </h3>
+
+              {/* Resumo do paciente (IA) */}
+              {(selecionada.resumo_ia || (selecionada.sintomas && !selecionada.resumo_ia)) && (
+                <div>
+                   <p className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                     <Bot className="w-4 h-4" /> Resumo do Paciente (IA)
+                   </p>
+                   {selecionada.resumo_ia ? (
+                     <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-100 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-sm">
+                       {selecionada.resumo_ia}
+                     </div>
+                   ) : selecionada.ia_error ? (
+                     <div className="bg-red-50 p-3 rounded-xl border border-red-100 flex items-start gap-2 text-red-600 shadow-sm">
+                       <AlertCircle className="w-4 h-4 mt-0.5" />
+                       <p className="text-sm font-medium">{selecionada.ia_error}</p>
+                     </div>
+                   ) : (
+                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-3 text-slate-500 text-sm font-medium shadow-sm">
+                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" /> Organizando informações e gerando síntese...
+                     </div>
+                   )}
+                </div>
+              )}
+
+              {/* Queixa e Observações */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                     <Activity className="w-4 h-4 text-slate-500" /> Queixa Principal
+                   </p>
+                   <p className="text-sm font-medium text-slate-800 leading-relaxed">{selecionada.sintomas || "Não informada."}</p>
+                 </div>
+                 
+                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                     <ClipboardList className="w-4 h-4 text-slate-500" /> Observações
+                   </p>
+                   <p className="text-sm font-medium text-slate-800 leading-relaxed">{selecionada.observacoes_paciente || "Nenhuma observação informada."}</p>
+                 </div>
               </div>
-              {selecionada.observacoes_paciente && (
-                <div className="pt-2 border-t border-slate-200">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Observacoes do paciente</p>
-                  <p className="text-sm text-slate-600">{selecionada.observacoes_paciente}</p>
+
+              {/* Exames */}
+              {selecionada.anexo_path && (
+                <div>
+                   <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                     <FileText className="w-4 h-4" /> Exames / Laudos
+                   </p>
+                   {(() => {
+                       const parts = selecionada.anexo_path.split('/');
+                       const name = parts[parts.length - 1];
+                       let datestr = "Data de envio não registrada";
+                       
+                       const tsStr = name.split('_')[0];
+                       const ts = parseInt(tsStr);
+                       if (!isNaN(ts) && ts > 1700000000000) {
+                          datestr = new Date(ts).toLocaleString('pt-BR', { 
+                             day: '2-digit', month: '2-digit', year: 'numeric', 
+                             hour: '2-digit', minute: '2-digit' 
+                          });
+                       } else if (!isNaN(ts) && ts > 1600000000000) {
+                          datestr = new Date(ts).toLocaleString('pt-BR', { 
+                             day: '2-digit', month: '2-digit', year: 'numeric', 
+                             hour: '2-digit', minute: '2-digit' 
+                          });
+                       }
+
+                       return (
+                          <div className="bg-white border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm hover:border-emerald-300 transition-all group">
+                             <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-emerald-50 rounded-xl text-emerald-600 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors border border-emerald-100">
+                                   <FileText className="w-6 h-6" />
+                                </div>
+                                <div className="text-left max-w-full overflow-hidden">
+                                  <p className="text-sm font-extrabold text-slate-800 break-all line-clamp-1">{name}</p>
+                                  <p className="text-xs text-slate-500 font-medium mt-1">Enviado em: {datestr}</p>
+                                </div>
+                             </div>
+                             <button
+                               onClick={() => visualizarAnexo(selecionada.anexo_path)}
+                               disabled={isGeneratingLink}
+                               className="w-full sm:w-auto flex items-center justify-center gap-2 text-sm bg-emerald-500 hover:bg-emerald-600 focus:ring-4 focus:ring-emerald-500/20 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-md shadow-emerald-500/20 shrink-0"
+                             >
+                               {isGeneratingLink ? <Loader2 className="w-4 h-4 animate-spin"/> : <Download className="w-4 h-4"/>}
+                               {isGeneratingLink ? "Abrindo..." : "Abrir Exame"}
+                             </button>
+                          </div>
+                       );
+                   })()}
                 </div>
               )}
             </div>
 
-            {/* Resumo Automatico (IA) */}
-            {(selecionada.resumo_ia || (selecionada.sintomas && !selecionada.resumo_ia)) && (
-              <div className="bg-[#f0f7ff] p-4 rounded-xl border border-blue-100 space-y-2 relative overflow-hidden group">
-                 <div className="absolute -top-4 -right-4 text-6xl opacity-[0.03] select-none pointer-events-none group-hover:scale-110 transition-transform">✨</div>
-                 <p className="flex items-center gap-2 text-sm text-blue-600 font-bold"><Bot className="w-4 h-4"/> Resumo Automatico (IA)</p>
-                 {selecionada.resumo_ia ? (
-                   <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{selecionada.resumo_ia}</p>
-                 ) : selecionada.ia_error ? (
-                   <div className="flex items-center gap-2 text-slate-500 mt-2 bg-slate-100 p-2 rounded-lg border border-slate-200">
-                     <AlertCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                     <p className="text-xs font-semibold leading-tight text-slate-500 max-w-full">
-                       Falha ao gerar resumo: <span className="font-normal">{selecionada.ia_error}</span>
-                     </p>
-                   </div>
-                 ) : (
-                   <div className="flex items-center gap-2 text-blue-500 mt-2">
-                     <div className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                     <span className="text-xs font-semibold">Organizando informacoes e gerando resumo...</span>
-                   </div>
-                 )}
-              </div>
-            )}
+            {/* HISTÓRICO DO PACIENTE */}
+            {(() => {
+               const historico = consultas.filter(c => c.telefone === selecionada.telefone && c.id !== selecionada.id).sort((a,b) => {
+                  const dataA = new Date(`${a.data}T${a.hora}`);
+                  const dataB = new Date(`${b.data}T${b.hora}`);
+                  return dataB.getTime() - dataA.getTime();
+               });
 
-            {/* Visualizador de Anexo (Signed URL) */}
-            {selecionada.anexo_path && (
-               <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                     <div className="p-2 bg-emerald-100 rounded-lg text-emerald-500">
-                        <Paperclip className="w-4 h-4" />
-                     </div>
-                     <div>
-                       <p className="text-sm font-bold text-emerald-600">Anexo do Paciente Recebido</p>
-                       <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Criptografado e Armazenado via Storage</p>
-                     </div>
-                  </div>
-                  <button
-                    onClick={() => visualizarAnexo(selecionada.anexo_path)}
-                    disabled={isGeneratingLink}
-                    className="flex items-center gap-2 text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-3 rounded-lg transition-colors min-w-[120px] justify-center"
-                  >
-                    {isGeneratingLink ? <Loader2 className="w-3 h-3 animate-spin"/> : <FileText className="w-3 h-3"/>}
-                    {isGeneratingLink ? "Gerando Link..." : "Abrir Exame"}
-                  </button>
-               </div>
-            )}
+               if (historico.length === 0) return null;
+
+               return (
+                 <div className="bg-white border text-left border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
+                   <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
+                      <div className="bg-indigo-50 p-1.5 rounded-lg">
+                         <CalendarDays className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      Histórico do Paciente
+                      <span className="ml-auto text-xs font-black bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full">{historico.length} {historico.length === 1 ? "registro" : "registros"}</span>
+                   </h3>
+
+                   <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
+                     {historico.map(h => {
+                         let datestr = "";
+                         let name = "";
+                         if (h.anexo_path) {
+                            name = h.anexo_path.split('/').pop() || "";
+                            const ts = parseInt(name.split('_')[0]);
+                            if (!isNaN(ts) && ts > 1600000000000) {
+                               datestr = new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            }
+                         }
+
+                         return (
+                           <div key={h.id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition-colors">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+                                <p className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                   <CalendarDays className="w-4 h-4 text-slate-400" /> 
+                                   {h.data.split('-').reverse().join('/')} às {h.hora}
+                                </p>
+                                <span className={`w-fit text-[10px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider ${
+                                   h.status === "confirmado" ? "bg-emerald-100 text-emerald-700" :
+                                   h.status === "cancelado" ? "bg-red-100 text-red-700" :
+                                   "bg-amber-100 text-amber-700"
+                                }`}>
+                                   {h.status || "PENDENTE"}
+                                </span>
+                              </div>
+                              <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed">
+                                <span className="font-semibold text-slate-700">Queixa:</span> {h.sintomas || "Não informada"}
+                              </p>
+
+                              {h.anexo_path && (
+                                <button 
+                                  onClick={() => visualizarAnexo(h.anexo_path)}
+                                  className="w-full flex items-center justify-center gap-2 text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2.5 rounded-lg transition-colors border border-indigo-200 mb-2 px-2"
+                                >
+                                  <FileText className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">Abrir Exame ({name})</span>
+                                </button>
+                              )}
+                              
+                              <button 
+                                onClick={() => setSelecionada(h)}
+                                className="w-full flex items-center justify-center gap-2 text-xs bg-white hover:bg-slate-100 text-slate-600 font-bold py-2.5 rounded-lg transition-colors border border-slate-200"
+                              >
+                                Visualizar Consulta Completa
+                              </button>
+                           </div>
+                         );
+                     })}
+                   </div>
+                 </div>
+               );
+            })()}
 
             {/* EHR AREA */}
             <div className="border border-blue-200 bg-blue-50 p-4 rounded-xl space-y-4">
