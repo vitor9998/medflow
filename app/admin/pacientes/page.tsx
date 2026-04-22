@@ -213,8 +213,15 @@ export default function PacientesPage() {
                   <div className="space-y-2 mt-3">
                     {c.sintomas && (
                       <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-sm text-slate-600">
-                        <strong className="text-slate-500 block mb-1 text-xs">Sintomas / Motivo:</strong>
+                        <strong className="text-slate-500 block mb-1 text-xs">Motivo da consulta:</strong>
                         <p>{c.sintomas}</p>
+                      </div>
+                    )}
+
+                    {c.observacoes_paciente && (
+                      <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-sm text-slate-500">
+                        <strong className="text-slate-400 block mb-1 text-xs">Observacoes do paciente:</strong>
+                        <p>{c.observacoes_paciente}</p>
                       </div>
                     )}
 

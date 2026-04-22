@@ -44,6 +44,7 @@ export default function AgendamentoPage() {
   const [data, setData] = useState("");
   const [hora, setHora] = useState("");
   const [sintomas, setSintomas] = useState("");
+  const [observacoesPaciente, setObservacoesPaciente] = useState("");
   const [loading, setLoading] = useState(false);
   const [agendamentosOcupados, setAgendamentosOcupados] = useState<any[]>([]);
   const [pacienteId, setPacienteId] = useState<string | null>(null);
@@ -315,6 +316,7 @@ export default function AgendamentoPage() {
         data,
         hora,
         sintomas,
+        observacoes_paciente: observacoesPaciente || null,
         status: "pendente",
         user_id: medico.id, 
         patient_id: pacienteId, // null para OTP guests
@@ -333,6 +335,7 @@ export default function AgendamentoPage() {
       setData("");
       setHora("");
       setSintomas("");
+      setObservacoesPaciente("");
       if (isLoggedIn) {
         router.push("/paciente");
       } else {
@@ -738,14 +741,26 @@ export default function AgendamentoPage() {
 
               <div>
                 <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2 ml-1">
-                  <FileText className="w-4 h-4 text-emerald-600" /> Queixa Inicial
+                  <FileText className="w-4 h-4 text-emerald-600" /> Motivo da consulta
                 </label>
                 <textarea
-                  placeholder="Descreva brevemente o que está sentindo, quando começou e possíveis detalhes da área afetada."
-                  className="w-full px-5 py-4 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all min-h-[120px] font-medium resize-y text-sm sm:text-base leading-relaxed mb-4 shadow-sm"
+                  placeholder="Descreva brevemente o motivo da sua consulta e quando os sintomas comecaram."
+                  className="w-full px-5 py-4 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all min-h-[100px] font-medium resize-y text-sm sm:text-base leading-relaxed shadow-sm"
                   value={sintomas}
                   onChange={(e) => setSintomas(e.target.value)}
                   required
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2 ml-1">
+                  <Stethoscope className="w-4 h-4 text-slate-400" /> Observacoes adicionais <span className="text-[10px] font-black uppercase bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md ml-1">Opcional</span>
+                </label>
+                <textarea
+                  placeholder="Medicamentos em uso, alergias, cirurgias anteriores ou qualquer informacao relevante para o medico."
+                  className="w-full px-5 py-4 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-500/10 focus:border-slate-300 transition-all min-h-[80px] font-medium resize-y text-sm leading-relaxed mb-4 shadow-sm"
+                  value={observacoesPaciente}
+                  onChange={(e) => setObservacoesPaciente(e.target.value)}
                 />
 
                 {/* MÓDULO DE ANEXOS */}

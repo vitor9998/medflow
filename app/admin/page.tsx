@@ -13,6 +13,7 @@ import {
   Phone,
   PhoneOutgoing,
   AlertCircle,
+  Stethoscope,
 } from "lucide-react";
 import {
   LineChart,
@@ -428,6 +429,14 @@ export default function AdminDashboardPage() {
                               <AlertCircle className="w-3.5 h-3.5 text-amber-500/70 mt-0.5 shrink-0" />
                               <p className="text-[11px] text-slate-500 leading-relaxed italic">
                                 {c.sintomas}
+                              </p>
+                            </div>
+                          )}
+                          {c.observacoes_paciente && (
+                            <div className="w-full mt-1 flex items-start gap-2 px-1">
+                              <Stethoscope className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                              <p className="text-[11px] text-slate-400 leading-relaxed">
+                                {c.observacoes_paciente}
                               </p>
                             </div>
                           )}

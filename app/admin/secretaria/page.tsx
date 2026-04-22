@@ -44,7 +44,7 @@ export default function SecretariaPage() {
 
   // New appointment form
   const [newForm, setNewForm] = useState({
-    nome: "", telefone: "", email: "", sintomas: "",
+    nome: "", telefone: "", email: "", sintomas: "", observacoes_paciente: "",
     medicoId: "", hora: ""
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -178,6 +178,7 @@ export default function SecretariaPage() {
       data: selectedDate,
       hora: newForm.hora,
       sintomas: newForm.sintomas,
+      observacoes_paciente: newForm.observacoes_paciente || null,
       status: "confirmado",
       user_id: newForm.medicoId,
       patient_id: null,
@@ -188,7 +189,7 @@ export default function SecretariaPage() {
     } else {
       // Refresh agenda
       setShowNewModal(false);
-      setNewForm({ nome: "", telefone: "", email: "", sintomas: "", medicoId: "", hora: "" });
+      setNewForm({ nome: "", telefone: "", email: "", sintomas: "", observacoes_paciente: "", medicoId: "", hora: "" });
 
       // Re-fetch
       const { data } = await supabase
@@ -446,12 +447,23 @@ export default function SecretariaPage() {
               </div>
             </div>
 
-            {selecionada.sintomas && (
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <p className="text-sm text-blue-500 font-bold mb-1 flex items-center gap-2">
-                  <FileText className="w-4 h-4" /> Queixa
+            {(selecionada.sintomas || selecionada.observacoes_paciente) && (
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <p className="text-sm text-blue-500 font-bold flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Informacoes do Paciente
                 </p>
-                <p className="text-sm text-slate-600 italic">"{selecionada.sintomas}"</p>
+                {selecionada.sintomas && (
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Motivo da consulta</p>
+                    <p className="text-sm text-slate-700">{selecionada.sintomas}</p>
+                  </div>
+                )}
+                {selecionada.observacoes_paciente && (
+                  <div className="pt-2 border-t border-slate-200">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Observacoes do paciente</p>
+                    <p className="text-sm text-slate-600">{selecionada.observacoes_paciente}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -628,6 +640,18 @@ export default function SecretariaPage() {
               value={newForm.sintomas}
               onChange={(e) => setNewForm({ ...newForm, sintomas: e.target.value })}
               className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-400 focus:border-blue-400 outline-none transition-colors text-sm min-h-[80px] resize-y"
+            />
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 text-sm font-bold text-slate-400 mb-1.5">
+              <Stethoscope className="w-4 h-4 text-slate-400" /> Observacoes adicionais <span className="text-[10px] font-black uppercase bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md ml-1">Opcional</span>
+            </label>
+            <textarea
+              placeholder="Medicamentos, alergias, informacoes relevantes..."
+              value={newForm.observacoes_paciente}
+              onChange={(e) => setNewForm({ ...newForm, observacoes_paciente: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-400 focus:border-slate-300 outline-none transition-colors text-sm min-h-[60px] resize-y"
             />
           </div>
 

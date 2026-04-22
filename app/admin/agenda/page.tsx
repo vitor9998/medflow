@@ -246,10 +246,19 @@ export default function AgendaPage() {
               </div>
             </div>
 
-            {/* Triagem do Paciente */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <p className="flex items-center gap-2 text-sm text-blue-500 font-bold mb-1"><Activity className="w-4 h-4"/> Triagem do Paciente</p>
-              <p className="text-sm text-slate-600 italic">"{selecionada.sintomas || "Nenhum sintoma relatado previamente."}"</p>
+            {/* Informacoes do Paciente */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <p className="flex items-center gap-2 text-sm text-blue-500 font-bold"><Activity className="w-4 h-4"/> Informacoes do Paciente</p>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Motivo da consulta</p>
+                <p className="text-sm text-slate-700">{selecionada.sintomas || "Nenhum motivo informado."}</p>
+              </div>
+              {selecionada.observacoes_paciente && (
+                <div className="pt-2 border-t border-slate-200">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Observacoes do paciente</p>
+                  <p className="text-sm text-slate-600">{selecionada.observacoes_paciente}</p>
+                </div>
+              )}
             </div>
 
             {/* Visualizador de Anexo (Signed URL) */}
