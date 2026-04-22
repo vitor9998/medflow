@@ -72,9 +72,20 @@ export default function ComunicacaoPage() {
         return;
       }
 
-      // Atualiza o banco (Simulando envio)
+      // 1. Enviar emails via API backend
+      const res = await fetch('/api/lembretes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pendentes })
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Erro ao disparar envio de emails");
+      }
+
+      // 2. Atualiza o banco (marcando como enviado)
       for (const c of pendentes) {
-         // Aqui seria feita a comunicacao real (Twilio, Zap, etc)
          const { error: updError } = await supabase
            .from("agendamentos")
            .update({ lembrete_enviado: true })
@@ -83,7 +94,7 @@ export default function ComunicacaoPage() {
          if (updError) console.error("Falha ao registrar envio:", updError);
       }
 
-      alert(`Sucesso! Lembrete registrado para ${pendentes.length} consulta(s) de amanhã.`);
+      alert(`Sucesso! E-mails enviados e lembrete registrado para ${pendentes.length} consulta(s) de amanhã.`);
       fetchAgendamentosFuturos(currentUserId);
     } catch (err: any) {
       alert(`Erro: ${err.message}`);
