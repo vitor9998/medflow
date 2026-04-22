@@ -9,7 +9,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
-import { MessageCircle, BrainCircuit, Save, Activity, Paperclip, FileText, Loader2 } from "lucide-react";
+import { Loader2, KeyRound, Wand2, Calendar as CalIcon, MapPin, User, LogOut, CheckCircle2, Bot, Phone, Plus, Map, Mail, Hash, PhoneOutgoing, ShieldCheck, Download, AlertCircle, Edit, Trash2, CalendarDays, X, ChevronRight, Check, MessageCircle, BrainCircuit, Save, Activity, Paperclip, FileText } from "lucide-react";
 
 export default function AgendaPage() {
   const router = useRouter();
@@ -215,6 +215,29 @@ export default function AgendaPage() {
                   (c) => String(c.id) === info.event.id
                 );
                 setSelecionada(consulta);
+
+                // Auto-gerar resumo_ia se nao tiver
+                if (consulta && !consulta.resumo_ia && (consulta.sintomas || consulta.observacoes_paciente)) {
+                  fetch('/api/ai/resumo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      id: consulta.id,
+                      sintomas: consulta.sintomas,
+                      observacoes_paciente: consulta.observacoes_paciente
+                    })
+                  }).then(res => res.json()).then(data => {
+                    if (data.resumo_ia) {
+                       setSelecionada((prev: any) => prev?.id === consulta.id ? { ...prev, resumo_ia: data.resumo_ia } : prev);
+                       setConsultas((prevList: any) => prevList.map((c: any) => c.id === consulta.id ? { ...c, resumo_ia: data.resumo_ia } : c));
+                    } else if (data.error) {
+                       setSelecionada((prev: any) => prev?.id === consulta.id ? { ...prev, ia_error: data.error } : prev);
+                    }
+                  }).catch(err => {
+                    setSelecionada((prev: any) => prev?.id === consulta.id ? { ...prev, ia_error: "Erro de conexao" } : prev);
+                    console.error("Erro AI:", err);
+                  });
+                }
               }}
             />
           </div>
@@ -260,6 +283,29 @@ export default function AgendaPage() {
                 </div>
               )}
             </div>
+
+            {/* Resumo Automatico (IA) */}
+            {(selecionada.resumo_ia || (selecionada.sintomas && !selecionada.resumo_ia)) && (
+              <div className="bg-[#f0f7ff] p-4 rounded-xl border border-blue-100 space-y-2 relative overflow-hidden group">
+                 <div className="absolute -top-4 -right-4 text-6xl opacity-[0.03] select-none pointer-events-none group-hover:scale-110 transition-transform">✨</div>
+                 <p className="flex items-center gap-2 text-sm text-blue-600 font-bold"><Bot className="w-4 h-4"/> Resumo Automatico (IA)</p>
+                 {selecionada.resumo_ia ? (
+                   <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{selecionada.resumo_ia}</p>
+                 ) : selecionada.ia_error ? (
+                   <div className="flex items-center gap-2 text-slate-500 mt-2 bg-slate-100 p-2 rounded-lg border border-slate-200">
+                     <AlertCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                     <p className="text-xs font-semibold leading-tight text-slate-500 max-w-full">
+                       Falha ao gerar resumo: <span className="font-normal">{selecionada.ia_error}</span>
+                     </p>
+                   </div>
+                 ) : (
+                   <div className="flex items-center gap-2 text-blue-500 mt-2">
+                     <div className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                     <span className="text-xs font-semibold">Organizando informacoes e gerando resumo...</span>
+                   </div>
+                 )}
+              </div>
+            )}
 
             {/* Visualizador de Anexo (Signed URL) */}
             {selecionada.anexo_path && (
