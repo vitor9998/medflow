@@ -28,10 +28,10 @@ import {
 
 // --- Status config ---
 const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  pendente:   { label: "Pendente",   bg: "bg-amber-500/10",   text: "text-amber-400",   dot: "bg-amber-400" },
-  confirmado: { label: "Confirmado", bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400" },
-  cancelado:  { label: "Cancelado",  bg: "bg-red-500/10",     text: "text-red-400",     dot: "bg-red-400" },
-  presente:   { label: "Presente",   bg: "bg-sky-500/10",     text: "text-sky-400",     dot: "bg-sky-400" },
+  pendente:   { label: "Pendente",   bg: "bg-amber-50",   text: "text-amber-600",   dot: "bg-amber-400" },
+  confirmado: { label: "Confirmado", bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
+  cancelado:  { label: "Cancelado",  bg: "bg-red-50",     text: "text-red-600",     dot: "bg-red-400" },
+  presente:   { label: "Presente",   bg: "bg-sky-50",     text: "text-sky-600",     dot: "bg-sky-400" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -47,15 +47,15 @@ function StatusBadge({ status }: { status: string }) {
 // --- Skeleton loader ---
 function ListSkeleton() {
   return (
-    <div className="divide-y divide-slate-800/60">
+    <div className="divide-y divide-slate-100">
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="flex items-center gap-4 py-4 px-5 animate-pulse">
-          <div className="w-10 h-10 rounded-xl bg-slate-800" />
+          <div className="w-10 h-10 rounded-xl bg-slate-100" />
           <div className="flex-1 space-y-2">
-            <div className="h-3.5 bg-slate-800 rounded w-36" />
-            <div className="h-2.5 bg-slate-800/60 rounded w-24" />
+            <div className="h-3.5 bg-slate-100 rounded w-36" />
+            <div className="h-2.5 bg-slate-100 rounded w-24" />
           </div>
-          <div className="h-6 bg-slate-800 rounded w-20" />
+          <div className="h-6 bg-slate-100 rounded w-20" />
         </div>
       ))}
     </div>
@@ -229,22 +229,22 @@ export default function AdminDashboardPage() {
       label: "Hoje",
       value: consultasHoje,
       icon: CalendarDays,
-      accent: "text-emerald-400",
-      iconBg: "bg-emerald-500/10",
+      accent: "text-blue-600",
+      iconBg: "bg-blue-50",
     },
     {
       label: "Total",
       value: totalConsultas,
       icon: Clock,
-      accent: "text-slate-300",
-      iconBg: "bg-slate-500/10",
+      accent: "text-slate-700",
+      iconBg: "bg-slate-100",
     },
     {
       label: "Cancelamento",
       value: `${taxaFalta}%`,
       icon: XCircle,
-      accent: "text-red-400",
-      iconBg: "bg-red-500/10",
+      accent: "text-red-500",
+      iconBg: "bg-red-50",
     },
   ];
 
@@ -253,7 +253,7 @@ export default function AdminDashboardPage() {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
             Dashboard
           </h1>
           <p className="text-slate-500 mt-1 text-sm">
@@ -263,26 +263,26 @@ export default function AdminDashboardPage() {
           </p>
         </div>
         {userRole === "secretaria" && (
-          <span className="text-xs font-bold uppercase bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/20">
+          <span className="text-xs font-bold uppercase bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-200">
             Secretaria
           </span>
         )}
       </div>
 
       {/* METRICS — no cards, just clean rows with border-b */}
-      <div className="grid grid-cols-3 gap-0 bg-[#0B1120] rounded-2xl border border-slate-800 overflow-hidden">
+      <div className="grid grid-cols-3 gap-0 bg-white rounded-2xl border border-slate-200 overflow-hidden">
         {metricas.map((m, i) => (
           <div
             key={m.label}
             className={`flex items-center gap-4 p-5 ${
-              i < metricas.length - 1 ? "border-r border-slate-800" : ""
+              i < metricas.length - 1 ? "border-r border-slate-200" : ""
             }`}
           >
             <div className={`p-2.5 rounded-xl ${m.iconBg}`}>
               <m.icon className={`w-5 h-5 ${m.accent}`} />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                 {m.label}
               </p>
               <p className={`text-2xl font-bold ${m.accent} font-mono tabular-nums`}>
@@ -296,9 +296,9 @@ export default function AdminDashboardPage() {
       {/* MAIN CONTENT — List + Charts side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* APPOINTMENT LIST — 3 cols */}
-        <div className="lg:col-span-3 bg-[#0B1120] border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/60">
-            <h2 className="text-sm font-bold text-white tracking-tight">
+        <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <h2 className="text-sm font-bold text-slate-800 tracking-tight">
               Agendamentos
             </h2>
             <span className="text-xs text-slate-500 font-mono tabular-nums">
@@ -312,16 +312,16 @@ export default function AdminDashboardPage() {
             ) : consultasAtivas.length === 0 ? (
               /* Empty state */
               <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center mb-4">
-                  <CalendarDays className="w-6 h-6 text-slate-600" />
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                  <CalendarDays className="w-6 h-6 text-slate-400" />
                 </div>
-                <p className="text-sm font-bold text-slate-400 mb-1">Nenhum agendamento</p>
+                <p className="text-sm font-bold text-slate-500 mb-1">Nenhum agendamento</p>
                 <p className="text-xs text-slate-600 max-w-[240px] leading-relaxed">
                   Quando pacientes agendarem consultas, elas aparecerao aqui em tempo real.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-800/40">
+              <div className="divide-y divide-slate-100">
                 {consultasAtivas.map((c) => {
                   const isExpanded = expandedId === c.id;
                   const isUpdating = updatingId === c.id;
@@ -333,21 +333,21 @@ export default function AdminDashboardPage() {
                         onClick={() =>
                           setExpandedId(isExpanded ? null : c.id)
                         }
-                        className="w-full flex items-center gap-3.5 py-3.5 px-5 text-left hover:bg-slate-800/30 transition-colors active:scale-[0.995]"
+                        className="w-full flex items-center gap-3.5 py-3.5 px-5 text-left hover:bg-slate-50 transition-colors active:scale-[0.995]"
                       >
                         {/* Time block */}
-                        <div className="w-11 h-11 rounded-xl bg-slate-800/60 flex flex-col items-center justify-center shrink-0 border border-slate-700/40">
+                        <div className="w-11 h-11 rounded-xl bg-slate-50 flex flex-col items-center justify-center shrink-0 border border-slate-200">
                           <span className="text-[10px] font-bold text-slate-500 uppercase leading-none">
                             {c.data?.split("-")[2]}/{c.data?.split("-")[1]}
                           </span>
-                          <span className="text-xs font-bold text-white leading-tight font-mono">
+                          <span className="text-xs font-bold text-slate-700 leading-tight font-mono">
                             {c.hora?.substring(0, 5)}
                           </span>
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-white truncate">
+                          <p className="text-sm font-bold text-slate-800 truncate">
                             {c.nome}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
@@ -362,7 +362,7 @@ export default function AdminDashboardPage() {
 
                         {/* Attempts + Badge + chevron */}
                         {(c.tentativas_contato || 0) > 0 && (
-                          <span className="text-[10px] font-mono text-slate-500 tabular-nums border border-slate-800 rounded px-1.5 py-0.5">
+                          <span className="text-[10px] font-mono text-slate-400 tabular-nums border border-slate-200 rounded px-1.5 py-0.5">
                             {c.tentativas_contato}x
                           </span>
                         )}
@@ -376,14 +376,14 @@ export default function AdminDashboardPage() {
 
                       {/* Expanded actions */}
                       {isExpanded && (
-                        <div className="px-5 pb-4 pt-1 flex flex-wrap gap-2 bg-slate-900/30 border-t border-slate-800/30">
+                        <div className="px-5 pb-4 pt-1 flex flex-wrap gap-2 bg-slate-50/50 border-t border-slate-100">
                           {c.status !== "confirmado" && (
                             <button
                               onClick={() =>
                                 atualizarStatus(c.id, "confirmado")
                               }
                               disabled={isUpdating}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all active:scale-[0.97] disabled:opacity-50"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-all active:scale-[0.97] disabled:opacity-50"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               Confirmar
@@ -395,7 +395,7 @@ export default function AdminDashboardPage() {
                                 atualizarStatus(c.id, "presente")
                               }
                               disabled={isUpdating}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20 transition-all active:scale-[0.97] disabled:opacity-50"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-50 text-sky-600 border border-sky-200 hover:bg-sky-100 transition-all active:scale-[0.97] disabled:opacity-50"
                             >
                               <UserCheck className="w-3.5 h-3.5" />
                               Presente
@@ -407,7 +407,7 @@ export default function AdminDashboardPage() {
                                 atualizarStatus(c.id, "cancelado")
                               }
                               disabled={isUpdating}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all active:scale-[0.97] disabled:opacity-50"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all active:scale-[0.97] disabled:opacity-50"
                             >
                               <XCircle className="w-3.5 h-3.5" />
                               Cancelar
@@ -418,7 +418,7 @@ export default function AdminDashboardPage() {
                               registrarTentativa(c.id, c.tentativas_contato || 0)
                             }
                             disabled={isUpdating}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-500/10 text-slate-400 border border-slate-700 hover:bg-slate-500/15 transition-all active:scale-[0.97] disabled:opacity-50 ml-auto"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 transition-all active:scale-[0.97] disabled:opacity-50 ml-auto"
                           >
                             <PhoneOutgoing className="w-3.5 h-3.5" />
                             Tentativa ({c.tentativas_contato || 0})
@@ -444,8 +444,8 @@ export default function AdminDashboardPage() {
         {/* CHARTS — 2 cols */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* LINE CHART */}
-          <div className="bg-[#0B1120] border border-slate-800 rounded-2xl p-5 flex flex-col">
-            <h2 className="text-sm font-bold text-white mb-4 tracking-tight">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col">
+            <h2 className="text-sm font-bold text-slate-800 mb-4 tracking-tight">
               Volume por dia
             </h2>
             <div className="h-[200px] w-full text-xs">
@@ -458,35 +458,35 @@ export default function AdminDashboardPage() {
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
-                      stroke="#1e293b"
+                      stroke="#e2e8f0"
                     />
                     <XAxis
                       dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#475569", fontSize: 10 }}
+                      tick={{ fill: "#94a3b8", fontSize: 10 }}
                       dy={8}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#475569", fontSize: 10 }}
+                      tick={{ fill: "#94a3b8", fontSize: 10 }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#0f172a",
-                        borderColor: "#1e293b",
+                        backgroundColor: "#ffffff",
+                        borderColor: "#e2e8f0",
                         borderRadius: "8px",
                         fontSize: "12px",
                       }}
-                      itemStyle={{ color: "#e2e8f0" }}
+                      itemStyle={{ color: "#334155" }}
                     />
                     <Line
                       type="monotone"
                       dataKey="consultas"
-                      stroke="#34d399"
+                      stroke="#3b82f6"
                       strokeWidth={2}
-                      dot={{ r: 3, fill: "#34d399", strokeWidth: 0 }}
+                      dot={{ r: 3, fill: "#3b82f6", strokeWidth: 0 }}
                       activeDot={{ r: 5 }}
                     />
                   </LineChart>
@@ -500,8 +500,8 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* BAR CHART */}
-          <div className="bg-[#0B1120] border border-slate-800 rounded-2xl p-5 flex flex-col">
-            <h2 className="text-sm font-bold text-white mb-4 tracking-tight">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col">
+            <h2 className="text-sm font-bold text-slate-800 mb-4 tracking-tight">
               Por status
             </h2>
             <div className="h-[200px] w-full text-xs">
@@ -510,20 +510,20 @@ export default function AdminDashboardPage() {
                   <BarChart data={dadosStatus} margin={{ left: -25 }}>
                     <XAxis
                       dataKey="name"
-                      tick={{ fill: "#475569", fontSize: 10 }}
+                      tick={{ fill: "#94a3b8", fontSize: 10 }}
                       axisLine={false}
                       tickLine={false}
                     />
                     <YAxis
-                      tick={{ fill: "#475569", fontSize: 10 }}
+                      tick={{ fill: "#94a3b8", fontSize: 10 }}
                       axisLine={false}
                       tickLine={false}
                     />
                     <Tooltip
-                      cursor={{ fill: "#1e293b", opacity: 0.4 }}
+                      cursor={{ fill: "#f1f5f9", opacity: 0.6 }}
                       contentStyle={{
-                        backgroundColor: "#0f172a",
-                        borderColor: "#1e293b",
+                        backgroundColor: "#ffffff",
+                        borderColor: "#e2e8f0",
                         borderRadius: "8px",
                         fontSize: "12px",
                       }}

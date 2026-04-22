@@ -64,7 +64,6 @@ export default function ConfigPage() {
         nome: profile.nome,
         especialidade: profile.especialidade,
         telefone: profile.telefone,
-        // email is read only, mostly managed by auth
       })
       .eq("id", profile.id);
 
@@ -82,7 +81,7 @@ export default function ConfigPage() {
   if (isLoading) {
     return (
       <div className="p-8 flex justify-center items-center h-full">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
       </div>
     );
   }
@@ -90,98 +89,98 @@ export default function ConfigPage() {
   return (
     <div className="p-6 md:p-10 flex flex-col h-full max-w-4xl mx-auto w-full">
       <div className="mb-8 shrink-0">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Configurações</h1>
-        <p className="text-slate-400 mt-1">Gerencie os dados do seu perfil médico público.</p>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Configuracoes</h1>
+        <p className="text-slate-500 mt-1 text-sm">Gerencie os dados do seu perfil medico publico.</p>
       </div>
 
       <Card className="p-6 md:p-8 shrink-0">
         <form onSubmit={handleSave} className="flex flex-col gap-6">
           
-          {/* FOTO - Mock simples por agora */}
+          {/* Photo */}
           <div className="flex items-center gap-6 mb-2">
-            <div className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center border-2 border-slate-700 shadow-inner">
-               <span className="text-3xl font-bold text-slate-500">{profile.nome?.substring(0, 1)?.toUpperCase() || "Dr"}</span>
+            <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200">
+               <span className="text-2xl font-bold text-slate-400">{profile.nome?.substring(0, 1)?.toUpperCase() || "Dr"}</span>
             </div>
             <div>
-               <button type="button" className="text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition-colors border border-gray-700">
+               <button type="button" className="text-sm font-medium bg-white hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-lg transition-colors border border-slate-200">
                  Alterar Foto
                </button>
-               <p className="text-xs text-slate-500 mt-2 max-w-xs">JPG, GIF ou PNG. Tamanho máximo recomendado de 2MB.</p>
+               <p className="text-xs text-slate-400 mt-2 max-w-xs">JPG, GIF ou PNG. Tamanho maximo recomendado de 2MB.</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Nome Completo</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500 ml-0.5">Nome Completo</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-slate-500" />
+                  <User className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
                   type="text"
                   required
                   value={profile.nome}
                   onChange={(e) => setProfile({ ...profile, nome: e.target.value })}
-                  className="pl-10 w-full bg-[#020617] border border-gray-800 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="pl-10 w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all"
                   placeholder="Ex: Dr. Carlos Silva"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Especialidade</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500 ml-0.5">Especialidade</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Briefcase className="h-5 w-5 text-slate-500" />
+                  <Briefcase className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
                   type="text"
                   value={profile.especialidade}
                   onChange={(e) => setProfile({ ...profile, especialidade: e.target.value })}
-                  className="pl-10 w-full bg-[#020617] border border-gray-800 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="pl-10 w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all"
                   placeholder="Ex: Cardiologia"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">Telefone / WhatsApp</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500 ml-0.5">Telefone / WhatsApp</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-slate-500" />
+                  <Phone className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
                   type="text"
                   value={profile.telefone}
                   onChange={(e) => setProfile({ ...profile, telefone: e.target.value })}
-                  className="pl-10 w-full bg-[#020617] border border-gray-800 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="pl-10 w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all"
                   placeholder="Ex: 11999999999"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-500 ml-1">Email <span className="text-xs text-slate-600">(Apenas Leitura)</span></label>
-              <div className="relative opacity-60">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-400 ml-0.5">Email <span className="text-xs text-slate-300">(Apenas Leitura)</span></label>
+              <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-500" />
+                  <Mail className="h-4 w-4 text-slate-300" />
                 </div>
                 <input
                   type="email"
                   value={profile.email}
                   disabled
-                  className="pl-10 w-full bg-slate-900 border border-gray-800 rounded-xl px-4 py-3 text-slate-400 cursor-not-allowed"
+                  className="pl-10 w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-400 text-sm cursor-not-allowed"
                 />
               </div>
             </div>
           </div>
 
-          {/* Feedback & Botão */}
-          <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4 mt-2">
+          {/* Feedback & Button */}
+          <div className="pt-5 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 mt-2">
             
             <div className="flex-1">
               {successMsg && (
-                <div className="inline-flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-500/20 animate-fade-in-up">
+                <div className="inline-flex items-center gap-2 text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-200 animate-fade-in-up">
                   <CheckCircle2 className="w-4 h-4" />
                   {successMsg}
                 </div>
@@ -191,12 +190,12 @@ export default function ConfigPage() {
             <button 
               type="submit" 
               disabled={isSaving}
-              className="w-full md:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-600/20"
+              className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-8 py-2.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Salvando...</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
               ) : (
-                <><Save className="w-5 h-5" /> Salvar Alterações</>
+                <><Save className="w-4 h-4" /> Salvar Alteracoes</>
               )}
             </button>
           </div>

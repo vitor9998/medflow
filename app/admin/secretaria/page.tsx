@@ -263,13 +263,13 @@ export default function SecretariaPage() {
   if (medicos.length === 0) {
     return (
       <div className="p-6 md:p-10 flex flex-col items-center justify-center h-full text-center max-w-lg mx-auto">
-        <div className="w-20 h-20 bg-yellow-500/10 text-yellow-500 rounded-2xl flex items-center justify-center mb-6 border border-yellow-500/20">
+        <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mb-6 border border-amber-200">
           <AlertCircle className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-3">Nenhum Médico Vinculado</h2>
-        <p className="text-slate-400 leading-relaxed">
-          Sua conta de secretária ainda não está vinculada a nenhum médico. 
-          Peça ao administrador para adicionar os IDs dos médicos na sua coluna <code className="text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded text-xs">medicos_ids</code> na tabela profiles.
+        <h2 className="text-2xl font-bold text-slate-800 mb-3">Nenhum Medico Vinculado</h2>
+        <p className="text-slate-500 leading-relaxed">
+          Sua conta de secretaria ainda nao esta vinculada a nenhum medico. 
+          Peca ao administrador para adicionar os IDs dos medicos na sua coluna <code className="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded text-xs">medicos_ids</code> na tabela profiles.
         </p>
       </div>
     );
@@ -281,16 +281,16 @@ export default function SecretariaPage() {
       {/* HEADER */}
       <div className="mb-6 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <CalendarRange className="w-7 h-7 text-emerald-400" />
-            Agenda Multi-Médicos
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+            <CalendarRange className="w-7 h-7 text-blue-500" />
+            Agenda Multi-Medicos
           </h1>
-          <p className="text-slate-400 mt-1 text-sm">Gerencie os horários de todos os médicos da clínica.</p>
+          <p className="text-slate-500 mt-1 text-sm">Gerencie os horarios de todos os medicos da clinica.</p>
         </div>
 
         <button
           onClick={() => setShowNewModal(true)}
-          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-600/20 text-sm"
+          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold transition-all text-sm"
         >
           <Plus className="w-5 h-5" /> Nova Consulta
         </button>
@@ -306,12 +306,12 @@ export default function SecretariaPage() {
               onClick={() => toggleMedico(m.id)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all border ${
                 selectedMedicos.includes(m.id)
-                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                  : "bg-slate-800/50 text-slate-500 border-slate-700 hover:text-slate-300"
+                  ? "bg-blue-50 text-blue-600 border-blue-200"
+                  : "bg-white text-slate-500 border-slate-200 hover:text-slate-700"
               }`}
             >
               <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-extrabold ${
-                selectedMedicos.includes(m.id) ? "bg-emerald-500 text-white" : "bg-slate-700 text-slate-400"
+                selectedMedicos.includes(m.id) ? "bg-blue-500 text-white" : "bg-slate-200 text-slate-400"
               }`}>
                 {m.nome?.charAt(0)}
               </div>
@@ -323,7 +323,7 @@ export default function SecretariaPage() {
 
         {/* Date navigation */}
         <div className="flex items-center gap-2 ml-auto shrink-0">
-          <button onClick={() => changeDate(-1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors">
+          <button onClick={() => changeDate(-1)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
@@ -331,10 +331,10 @@ export default function SecretariaPage() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white cursor-pointer focus:border-emerald-500 outline-none"
+              className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 cursor-pointer focus:border-blue-400 outline-none"
             />
           </div>
-          <button onClick={() => changeDate(1)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors">
+          <button onClick={() => changeDate(1)} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -344,21 +344,21 @@ export default function SecretariaPage() {
       <p className="text-sm font-bold text-slate-500 mb-4 capitalize shrink-0">{displayDate}</p>
 
       {/* GRID MULTI-MÉDICOS */}
-      <div className="flex-1 bg-[#0B1120] border border-gray-800 rounded-2xl overflow-hidden flex flex-col min-h-0">
-        {/* Header colunas (médicos) */}
-        <div className="flex border-b border-gray-800 shrink-0 bg-[#020617]/80">
-          <div className="w-20 sm:w-24 shrink-0 p-3 border-r border-gray-800 flex items-center justify-center">
-            <Clock className="w-4 h-4 text-slate-600" />
+      <div className="flex-1 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col min-h-0">
+        {/* Header colunas (medicos) */}
+        <div className="flex border-b border-slate-200 shrink-0 bg-slate-50">
+          <div className="w-20 sm:w-24 shrink-0 p-3 border-r border-slate-200 flex items-center justify-center">
+            <Clock className="w-4 h-4 text-slate-400" />
           </div>
           {medicosVisiveis.map(m => (
-            <div key={m.id} className="flex-1 min-w-[140px] sm:min-w-[180px] p-3 border-r border-gray-800 last:border-r-0">
+            <div key={m.id} className="flex-1 min-w-[140px] sm:min-w-[180px] p-3 border-r border-slate-200 last:border-r-0">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center font-bold text-sm shrink-0">
                   {m.nome?.charAt(0)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-white truncate">{m.nome}</p>
-                  <p className="text-[10px] text-emerald-500 font-semibold uppercase tracking-wider truncate">
+                  <p className="text-sm font-bold text-slate-800 truncate">{m.nome}</p>
+                  <p className="text-[10px] text-blue-500 font-semibold uppercase tracking-wider truncate">
                     {m.especialidade || "Clínico"}
                   </p>
                 </div>
@@ -370,20 +370,20 @@ export default function SecretariaPage() {
         {/* Grid de horários */}
         <div className="flex-1 overflow-y-auto overflow-x-auto">
           {slots.map(slot => (
-            <div key={slot} className="flex border-b border-gray-800/50 hover:bg-slate-800/20 transition-colors">
-              {/* Horário */}
-              <div className="w-20 sm:w-24 shrink-0 p-2 sm:p-3 border-r border-gray-800 flex items-center justify-center">
-                <span className="text-xs font-bold text-slate-500 font-mono">{slot}</span>
+            <div key={slot} className="flex border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+              {/* Horario */}
+              <div className="w-20 sm:w-24 shrink-0 p-2 sm:p-3 border-r border-slate-200 flex items-center justify-center">
+                <span className="text-xs font-bold text-slate-400 font-mono">{slot}</span>
               </div>
 
-              {/* Células por médico */}
+              {/* Celulas por medico */}
               {medicosVisiveis.map(m => {
                 const ag = getAgendamento(m.id, slot);
                 return (
                   <div
                     key={`${m.id}-${slot}`}
-                    className={`flex-1 min-w-[140px] sm:min-w-[180px] p-1.5 sm:p-2 border-r border-gray-800/50 last:border-r-0 min-h-[48px] ${
-                      !ag ? "cursor-pointer hover:bg-emerald-500/5" : ""
+                    className={`flex-1 min-w-[140px] sm:min-w-[180px] p-1.5 sm:p-2 border-r border-slate-100 last:border-r-0 min-h-[48px] ${
+                      !ag ? "cursor-pointer hover:bg-blue-50/50" : ""
                     }`}
                     onClick={() => {
                       if (ag) {
@@ -397,10 +397,10 @@ export default function SecretariaPage() {
                     {ag && (
                       <div className={`p-2 rounded-lg border text-xs cursor-pointer transition-all hover:scale-[1.02] ${
                         ag.status === "confirmado"
-                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                           : ag.status === "presente"
-                          ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
-                          : "bg-yellow-500/10 border-yellow-500/30 text-yellow-500"
+                          ? "bg-sky-50 border-sky-200 text-sky-600"
+                          : "bg-amber-50 border-amber-200 text-amber-600"
                       }`}>
                         <p className="font-bold truncate">{ag.nome}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
@@ -429,38 +429,38 @@ export default function SecretariaPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">Paciente</p>
-              <p className="text-lg font-bold text-white">{selecionada.nome}</p>
-              <p className="text-sm text-slate-300">{selecionada.email || "Sem e-mail"}</p>
+              <p className="text-lg font-bold text-slate-800">{selecionada.nome}</p>
+              <p className="text-sm text-slate-500">{selecionada.email || "Sem e-mail"}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-xl border border-gray-800">
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
-                <p className="text-sm text-slate-400 font-medium">Data e Horário</p>
-                <p className="font-semibold text-white">
-                  {selecionada.data?.split("-").reverse().join("/")} às {selecionada.hora}
+                <p className="text-sm text-slate-400 font-medium">Data e Horario</p>
+                <p className="font-semibold text-slate-800">
+                  {selecionada.data?.split("-").reverse().join("/")} as {selecionada.hora}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-slate-400 font-medium">WhatsApp</p>
-                <p className="font-semibold text-white">{selecionada.telefone || "Não informado"}</p>
+                <p className="font-semibold text-slate-800">{selecionada.telefone || "Nao informado"}</p>
               </div>
             </div>
 
             {selecionada.sintomas && (
-              <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                <p className="text-sm text-emerald-400 font-bold mb-1 flex items-center gap-2">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <p className="text-sm text-blue-500 font-bold mb-1 flex items-center gap-2">
                   <FileText className="w-4 h-4" /> Queixa
                 </p>
-                <p className="text-sm text-slate-300 italic">"{selecionada.sintomas}"</p>
+                <p className="text-sm text-slate-600 italic">"{selecionada.sintomas}"</p>
               </div>
             )}
 
             {/* Médico responsável */}
-            <div className="bg-slate-900/50 p-3 rounded-xl border border-gray-800 flex items-center gap-3">
-              <Stethoscope className="w-4 h-4 text-emerald-500" />
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center gap-3">
+              <Stethoscope className="w-4 h-4 text-blue-500" />
               <div>
-                <p className="text-xs text-slate-500 font-medium">Médico Responsável</p>
-                <p className="text-sm font-bold text-white">
+                <p className="text-xs text-slate-500 font-medium">Medico Responsavel</p>
+                <p className="text-sm font-bold text-slate-800">
                   {medicos.find(m => m.id === selecionada.user_id)?.nome || "Desconhecido"}
                 </p>
               </div>
@@ -470,27 +470,27 @@ export default function SecretariaPage() {
             <div className="pt-2">
               <p className="text-sm text-slate-400 font-medium mb-1">Status Atual</p>
               <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold ${
-                selecionada.status === "confirmado" ? "bg-emerald-500/20 text-emerald-400" :
-                selecionada.status === "presente" ? "bg-blue-500/20 text-blue-400" :
-                selecionada.status === "cancelado" ? "bg-red-500/20 text-red-400" :
-                "bg-yellow-500/20 text-yellow-500"
+                selecionada.status === "confirmado" ? "bg-emerald-50 text-emerald-600" :
+                selecionada.status === "presente" ? "bg-sky-50 text-sky-600" :
+                selecionada.status === "cancelado" ? "bg-red-50 text-red-600" :
+                "bg-amber-50 text-amber-600"
               }`}>
                 {selecionada.status?.toUpperCase() || "PENDENTE"}
               </span>
             </div>
 
             {/* Ações */}
-            <div className="pt-4 mt-2 flex flex-col gap-2.5 border-t border-gray-800">
+            <div className="pt-4 mt-2 flex flex-col gap-2.5 border-t border-slate-200">
               <button
                 onClick={() => atualizarStatus(selecionada.id, "presente")}
-                className="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-lg shadow-blue-600/20"
+                className="w-full flex justify-center items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 rounded-xl transition-colors"
               >
-                <UserCheck className="w-5 h-5" /> Marcar Presença
+                <UserCheck className="w-5 h-5" /> Marcar Presenca
               </button>
 
               <button
                 onClick={() => atualizarStatus(selecionada.id, "confirmado")}
-                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-semibold py-2.5 rounded-xl transition-colors"
+                className="w-full bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-emerald-600 font-semibold py-2.5 rounded-xl transition-colors"
               >
                 <span className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" /> Confirmar</span>
               </button>
@@ -500,21 +500,21 @@ export default function SecretariaPage() {
                   setRescheduleData({ data: selecionada.data, hora: selecionada.hora });
                   setShowRescheduleModal(true);
                 }}
-                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-400 font-semibold py-2.5 rounded-xl transition-colors"
+                className="w-full bg-white hover:bg-amber-50 border border-slate-200 hover:border-amber-200 text-amber-600 font-semibold py-2.5 rounded-xl transition-colors"
               >
                 <span className="flex items-center justify-center gap-2"><CalendarClock className="w-4 h-4" /> Reagendar</span>
               </button>
 
               <button
                 onClick={() => atualizarStatus(selecionada.id, "cancelado")}
-                className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-red-500 font-semibold py-2.5 rounded-xl transition-colors"
+                className="w-full bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 text-red-500 font-semibold py-2.5 rounded-xl transition-colors"
               >
                 <span className="flex items-center justify-center gap-2"><XCircle className="w-4 h-4" /> Cancelar</span>
               </button>
 
               <button
                 onClick={() => registrarTentativa(selecionada.id, selecionada.tentativas_contato || 0)}
-                className="w-full flex justify-center items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl transition-colors active:scale-[0.98]"
+                className="w-full flex justify-center items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl transition-colors active:scale-[0.98]"
               >
                 <PhoneOutgoing className="w-4 h-4" />
                 Registrar Tentativa
@@ -541,7 +541,7 @@ export default function SecretariaPage() {
               required
               value={newForm.nome}
               onChange={(e) => setNewForm({ ...newForm, nome: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-[#020617] border border-gray-800 text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-400 focus:border-blue-400 outline-none transition-colors text-sm"
             />
           </div>
 
@@ -554,7 +554,7 @@ export default function SecretariaPage() {
                 placeholder="(11) 99999-9999"
                 value={newForm.telefone}
                 onChange={(e) => setNewForm({ ...newForm, telefone: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#020617] border border-gray-800 text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition-colors text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-400 focus:border-blue-400 outline-none transition-colors text-sm"
               />
             </div>
             <div>
@@ -566,7 +566,7 @@ export default function SecretariaPage() {
                 placeholder="email@paciente.com"
                 value={newForm.email}
                 onChange={(e) => setNewForm({ ...newForm, email: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#020617] border border-gray-800 text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition-colors text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-400 focus:border-blue-400 outline-none transition-colors text-sm"
               />
             </div>
           </div>
@@ -579,7 +579,7 @@ export default function SecretariaPage() {
               required
               value={newForm.medicoId}
               onChange={(e) => setNewForm({ ...newForm, medicoId: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-[#020617] border border-gray-800 text-white focus:border-emerald-500 outline-none transition-colors text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 focus:border-blue-400 outline-none transition-colors text-sm"
             >
               <option value="">Selecione o médico</option>
               {medicos.map(m => (
@@ -598,7 +598,7 @@ export default function SecretariaPage() {
                 required
                 value={selectedDate}
                 readOnly
-                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-gray-800 text-slate-400 cursor-not-allowed text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 cursor-not-allowed text-sm"
               />
             </div>
             <div>
@@ -609,7 +609,7 @@ export default function SecretariaPage() {
                 required
                 value={newForm.hora}
                 onChange={(e) => setNewForm({ ...newForm, hora: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-[#020617] border border-gray-800 text-white focus:border-emerald-500 outline-none transition-colors text-sm"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 focus:border-blue-400 outline-none transition-colors text-sm"
               >
                 <option value="">Selecionar</option>
                 {generateSlots().map(s => (
@@ -627,14 +627,14 @@ export default function SecretariaPage() {
               placeholder="Motivo ou observação da consulta..."
               value={newForm.sintomas}
               onChange={(e) => setNewForm({ ...newForm, sintomas: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-[#020617] border border-gray-800 text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition-colors text-sm min-h-[80px] resize-y"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 placeholder-slate-400 focus:border-blue-400 outline-none transition-colors text-sm min-h-[80px] resize-y"
             />
           </div>
 
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
           >
             {isSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</> : <><Plus className="w-4 h-4" /> Criar Agendamento</>}
           </button>
@@ -649,9 +649,9 @@ export default function SecretariaPage() {
       >
         {selecionada && (
           <form onSubmit={reagendar} className="space-y-4">
-            <div className="bg-slate-900/50 p-4 rounded-xl border border-gray-800">
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
               <p className="text-sm text-slate-400 mb-1">Paciente</p>
-              <p className="text-white font-bold">{selecionada.nome}</p>
+              <p className="text-slate-800 font-bold">{selecionada.nome}</p>
               <p className="text-xs text-slate-500 mt-1">
                 Horário atual: {selecionada.data?.split("-").reverse().join("/")} às {selecionada.hora}
               </p>
@@ -665,7 +665,7 @@ export default function SecretariaPage() {
                   required
                   value={rescheduleData.data}
                   onChange={(e) => setRescheduleData({ ...rescheduleData, data: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#020617] border border-gray-800 text-white focus:border-amber-500 outline-none transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 focus:border-amber-400 outline-none transition-colors text-sm"
                 />
               </div>
               <div>
@@ -674,7 +674,7 @@ export default function SecretariaPage() {
                   required
                   value={rescheduleData.hora}
                   onChange={(e) => setRescheduleData({ ...rescheduleData, hora: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-[#020617] border border-gray-800 text-white focus:border-amber-500 outline-none transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 focus:border-amber-400 outline-none transition-colors text-sm"
                 >
                   <option value="">Selecionar</option>
                   {generateSlots().map(s => (
@@ -687,7 +687,7 @@ export default function SecretariaPage() {
             <button
               type="submit"
               disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-600/20 disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
             >
               {isSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Reagendando...</> : <><CalendarClock className="w-4 h-4" /> Confirmar Reagendamento</>}
             </button>

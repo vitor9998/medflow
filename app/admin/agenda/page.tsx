@@ -170,7 +170,7 @@ export default function AgendaPage() {
   if (isLoading) {
     return (
       <div className="p-8 flex justify-center items-center h-full">
-        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -179,12 +179,12 @@ export default function AgendaPage() {
     <div className="p-4 sm:p-6 md:p-10 flex flex-col h-full max-w-7xl mx-auto w-full overflow-hidden">
       
       <div className="mb-4 sm:mb-6 shrink-0 mt-2 sm:mt-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Agenda</h1>
-        <p className="text-slate-400 mt-1 text-sm sm:text-base">Gerencie os agendamentos e horários da clínica.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Agenda</h1>
+        <p className="text-slate-500 mt-1 text-sm sm:text-base">Gerencie os agendamentos e horarios da clinica.</p>
       </div>
 
-      <div className="bg-[#0B1120] border border-gray-800 rounded-2xl p-2 sm:p-4 shadow-sm flex-1 flex flex-col min-h-0 w-full">
-        <div className="bg-[#020617] rounded-xl p-1 sm:p-4 flex-1 overflow-x-auto overflow-y-hidden text-slate-300 w-full relative agenda-calendar-wrapper">
+      <div className="bg-white border border-slate-200 rounded-2xl p-2 sm:p-4 shadow-sm flex-1 flex flex-col min-h-0 w-full">
+        <div className="bg-slate-50 rounded-xl p-1 sm:p-4 flex-1 overflow-x-auto overflow-y-hidden text-slate-700 w-full relative agenda-calendar-wrapper">
           <div className="min-w-full h-full">
             <FullCalendar
               ref={calendarRef}
@@ -231,43 +231,43 @@ export default function AgendaPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">Paciente</p>
-              <p className="text-lg font-bold text-white">{selecionada.nome}</p>
-              <p className="text-sm text-slate-300">{selecionada.email || "Sem e-mail"}</p>
+              <p className="text-lg font-bold text-slate-800">{selecionada.nome}</p>
+              <p className="text-sm text-slate-500">{selecionada.email || "Sem e-mail"}</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-xl border border-gray-800">
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
               <div>
-                <p className="text-sm text-slate-400 font-medium">Data e Horário</p>
-                <p className="font-semibold text-white">{selecionada.data.split('-').reverse().join('/')} às {selecionada.hora}</p>
+                <p className="text-sm text-slate-400 font-medium">Data e Horario</p>
+                <p className="font-semibold text-slate-800">{selecionada.data.split('-').reverse().join('/')} as {selecionada.hora}</p>
               </div>
               <div>
                 <p className="text-sm text-slate-400 font-medium">WhatsApp</p>
-                <p className="font-semibold text-white">{selecionada.telefone || "Não informado"}</p>
+                <p className="font-semibold text-slate-800">{selecionada.telefone || "Nao informado"}</p>
               </div>
             </div>
 
             {/* Triagem do Paciente */}
-            <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-              <p className="flex items-center gap-2 text-sm text-emerald-400 font-bold mb-1"><Activity className="w-4 h-4"/> Triagem do Paciente</p>
-              <p className="text-sm text-slate-300 italic">"{selecionada.sintomas || "Nenhum sintoma relatado previamente."}"</p>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <p className="flex items-center gap-2 text-sm text-blue-500 font-bold mb-1"><Activity className="w-4 h-4"/> Triagem do Paciente</p>
+              <p className="text-sm text-slate-600 italic">"{selecionada.sintomas || "Nenhum sintoma relatado previamente."}"</p>
             </div>
 
             {/* Visualizador de Anexo (Signed URL) */}
             {selecionada.anexo_path && (
-               <div className="bg-emerald-900/10 border border-emerald-500/20 p-3 rounded-xl flex items-center justify-between">
+               <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                     <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
+                     <div className="p-2 bg-emerald-100 rounded-lg text-emerald-500">
                         <Paperclip className="w-4 h-4" />
                      </div>
                      <div>
-                       <p className="text-sm font-bold text-emerald-400">Anexo do Paciente Recebido</p>
-                       <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Criptogradado e Armazenado via Storage</p>
+                       <p className="text-sm font-bold text-emerald-600">Anexo do Paciente Recebido</p>
+                       <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Criptografado e Armazenado via Storage</p>
                      </div>
                   </div>
                   <button
                     onClick={() => visualizarAnexo(selecionada.anexo_path)}
                     disabled={isGeneratingLink}
-                    className="flex items-center gap-2 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg transition-colors min-w-[120px] justify-center shadow-lg shadow-emerald-500/20"
+                    className="flex items-center gap-2 text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-3 rounded-lg transition-colors min-w-[120px] justify-center"
                   >
                     {isGeneratingLink ? <Loader2 className="w-3 h-3 animate-spin"/> : <FileText className="w-3 h-3"/>}
                     {isGeneratingLink ? "Gerando Link..." : "Abrir Exame"}
@@ -276,52 +276,51 @@ export default function AgendaPage() {
             )}
 
             {/* EHR AREA */}
-            <div className="border border-indigo-500/30 bg-indigo-900/10 p-4 rounded-xl space-y-4">
-              <h3 className="font-bold text-indigo-400 border-b border-indigo-500/20 pb-2 mb-2 flex justify-between items-center">
-                📋 Prontuário Médico
-                <span className="text-[10px] uppercase bg-indigo-500/20 px-2 py-0.5 rounded-full">Anamnese & Diagnóstico</span>
+            <div className="border border-blue-200 bg-blue-50 p-4 rounded-xl space-y-4">
+              <h3 className="font-bold text-blue-600 border-b border-blue-200 pb-2 mb-2 flex justify-between items-center">
+                Prontuario Medico
+                <span className="text-[10px] uppercase bg-blue-100 text-blue-500 px-2 py-0.5 rounded-full">Anamnese & Diagnostico</span>
               </h3>
               
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Observações da Consulta</label>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Observacoes da Consulta</label>
                 <textarea 
                   value={obsText}
                   onChange={e => setObsText(e.target.value)}
                   placeholder="Relate os achados do exame clínico, pressão, queixas e orientações..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 outline-none focus:border-indigo-500 transition-all min-h-[100px] resize-y"
+                  className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all min-h-[100px] resize-y"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">C.I.D. ou Diagnóstico Final</label>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">C.I.D. ou Diagnostico Final</label>
                 <input 
                   value={diagnosticoText}
                   onChange={e => setDiagnosticoText(e.target.value)}
                   type="text"
                   placeholder="Ex: J01 - Sinusite aguda"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                  className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all"
                 />
               </div>
 
               {/* MÓDULO INTELIGÊNCIA ARTIFICIAL */}
-              <div className="bg-[#020617] rounded-xl p-4 border border-slate-800 mt-4 relative overflow-hidden">
-                 <div className="absolute top-0 right-0 p-8 blur-2xl opacity-10 bg-indigo-500 rounded-full"></div>
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 mt-4 relative overflow-hidden">
                  <div className="relative z-10">
                    <div className="flex items-center justify-between mb-3">
-                     <p className="text-sm font-semibold text-indigo-300 flex items-center gap-2">
-                       <BrainCircuit className="w-4 h-4" /> Resumo Clínico (Medsys AI)
+                     <p className="text-sm font-semibold text-blue-600 flex items-center gap-2">
+                       <BrainCircuit className="w-4 h-4" /> Resumo Clinico (Medsys AI)
                      </p>
                      <button 
                        onClick={gerarResumoIA}
                        disabled={isAiLoading || (!obsText && !selecionada.sintomas)}
-                       className="text-xs bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 text-white font-bold py-1.5 px-3 rounded-md transition-colors"
+                       className="text-xs bg-blue-500 hover:bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-1.5 px-3 rounded-md transition-colors"
                      >
                        {isAiLoading ? "Processando..." : "Mágico: Gerar IA"}
                      </button>
                    </div>
                    
                    {iaSummary ? (
-                     <div className="bg-indigo-950/40 border border-indigo-900/50 p-3 rounded-lg text-xs leading-relaxed text-indigo-100 whitespace-pre-wrap">
+                     <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-xs leading-relaxed text-slate-700 whitespace-pre-wrap">
                        {iaSummary}
                      </div>
                    ) : (
@@ -333,7 +332,7 @@ export default function AgendaPage() {
               <button
                 onClick={salvarProntuario}
                 disabled={isSavingEhr}
-                className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold py-3 mt-2 rounded-lg transition-colors shadow-lg shadow-indigo-600/20"
+                className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-3 mt-2 rounded-lg transition-colors"
               >
                 <Save className="w-4 h-4" /> {isSavingEhr ? "Salvando..." : "Arquivar Prontuário"}
               </button>
@@ -342,9 +341,9 @@ export default function AgendaPage() {
             <div className="pt-2 mt-2">
               <p className="text-sm text-slate-400 font-medium mb-1">Status Atual</p>
               <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold ${
-                selecionada.status === "confirmado" ? "bg-emerald-500/20 text-emerald-400" :
-                selecionada.status === "cancelado" ? "bg-red-500/20 text-red-400" :
-                "bg-yellow-500/20 text-yellow-500"
+                selecionada.status === "confirmado" ? "bg-emerald-50 text-emerald-600" :
+                selecionada.status === "cancelado" ? "bg-red-50 text-red-600" :
+                "bg-amber-50 text-amber-600"
               }`}>
                 {selecionada.status?.toUpperCase() || "PENDENTE"}
               </span>
@@ -353,7 +352,7 @@ export default function AgendaPage() {
             <div className="pt-4 mt-2 flex flex-col gap-3 border-t border-gray-800">
               <button
                 onClick={() => enviarWhatsApp(selecionada)}
-                className="w-full flex justify-center items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold py-2.5 rounded-xl transition-colors shadow-lg shadow-[#25D366]/20"
+                className="w-full flex justify-center items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-xl transition-colors"
               >
                 <MessageCircle className="w-5 h-5" />
                 Lembrete via WhatsApp
@@ -361,14 +360,14 @@ export default function AgendaPage() {
 
               <button
                 onClick={() => atualizarStatus(selecionada.id, "confirmado")}
-                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-semibold py-2.5 rounded-xl transition-colors"
+                className="w-full bg-white hover:bg-slate-50 border border-slate-200 text-emerald-600 font-semibold py-2.5 rounded-xl transition-colors"
               >
                 Confirmar no Sistema
               </button>
               
               <button
                 onClick={() => atualizarStatus(selecionada.id, "cancelado")}
-                className="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-red-500 font-semibold py-2.5 rounded-xl transition-colors"
+                className="w-full bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 text-red-500 font-semibold py-2.5 rounded-xl transition-colors"
               >
                 Cancelar Agendamento
               </button>
@@ -380,21 +379,20 @@ export default function AgendaPage() {
       {/* Global styles fix for FullCalendar in dark mode */}
       <style dangerouslySetInnerHTML={{__html: `
         .agenda-calendar-wrapper {
-           --fc-border-color: #1e293b;
-           --fc-button-text-color: #e2e8f0;
-           --fc-button-bg-color: #0f172a;
-           --fc-button-border-color: #334155;
-           --fc-button-hover-bg-color: #1e293b;
-           --fc-button-hover-border-color: #475569;
-           --fc-button-active-bg-color: #334155;
-           --fc-button-active-border-color: #475569;
-           --fc-today-bg-color: rgba(16, 185, 129, 0.05);
-           --fc-page-bg-color: #020617;
-           --fc-neutral-bg-color: #0f172a;
-           --fc-list-event-hover-bg-color: #1e293b;
+           --fc-border-color: #e2e8f0;
+           --fc-button-text-color: #475569;
+           --fc-button-bg-color: #ffffff;
+           --fc-button-border-color: #e2e8f0;
+           --fc-button-hover-bg-color: #f1f5f9;
+           --fc-button-hover-border-color: #cbd5e1;
+           --fc-button-active-bg-color: #e2e8f0;
+           --fc-button-active-border-color: #cbd5e1;
+           --fc-today-bg-color: rgba(59, 130, 246, 0.04);
+           --fc-page-bg-color: #f8fafc;
+           --fc-neutral-bg-color: #f1f5f9;
+           --fc-list-event-hover-bg-color: #f1f5f9;
         }
 
-        /* Responsive fixes */
         .fc-header-toolbar {
            flex-wrap: wrap;
            gap: 0.5rem;
@@ -406,15 +404,15 @@ export default function AgendaPage() {
            .fc .fc-toolbar { flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
            .fc-toolbar-chunk:first-child { display: flex; width: 100%; justify-content: space-between; }
            .fc-toolbar-chunk:nth-child(2) { text-align: center; }
-           .fc-header-toolbar { padding-bottom: 8px; border-bottom: 1px solid #1e293b; }
+           .fc-header-toolbar { padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
            .fc-view-harness { min-height: 500px; }
         }
 
-        .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: #f8fafc; }
+        .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 600; color: #1e293b; }
         .fc th { color: #94a3b8; font-weight: 500; font-size: 0.8rem; padding: 0.5rem 0; text-transform: uppercase; letter-spacing: 0.5px;}
         .fc-theme-standard td, .fc-theme-standard th { border-color: var(--fc-border-color); }
         .fc .fc-button { border-radius: 0.5rem; text-transform: capitalize; padding: 0.4rem 0.8rem; font-size: 0.875rem;}
-        .fc-timegrid-slot-label { font-size: 0.75rem; color: #64748b; }
+        .fc-timegrid-slot-label { font-size: 0.75rem; color: #94a3b8; }
       `}} />
 
     </div>
