@@ -10,6 +10,8 @@ export default function ComunicacaoPage() {
   const router = useRouter();
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isSendingReminders, setIsSendingReminders] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -22,6 +24,7 @@ export default function ComunicacaoPage() {
         return;
       }
 
+      setCurrentUserId(user.id);
       fetchAgendamentosFuturos(user.id);
     }
 
@@ -43,6 +46,52 @@ export default function ComunicacaoPage() {
     setIsLoading(false);
   }
 
+  const dispararLembretesDeAmanha = async () => {
+    if (!currentUserId) return;
+    setIsSendingReminders(true);
+
+    try {
+      const amanha = new Date();
+      amanha.setDate(amanha.getDate() + 1);
+      const dataAmanhaFormatada = amanha.toISOString().split('T')[0];
+
+      // Busca consultas de amanhã que ainda nao tiveram alerta enviado
+      const { data: consultasAmanha, error: fError } = await supabase
+        .from("agendamentos")
+        .select("*")
+        .eq("user_id", currentUserId)
+        .eq("data", dataAmanhaFormatada);
+
+      if (fError) throw fError;
+
+      const pendentes = (consultasAmanha || []).filter(c => !c.lembrete_enviado);
+
+      if (pendentes.length === 0) {
+        alert("Não ha consultas para amanha com lembrete pendente.");
+        setIsSendingReminders(false);
+        return;
+      }
+
+      // Atualiza o banco (Simulando envio)
+      for (const c of pendentes) {
+         // Aqui seria feita a comunicacao real (Twilio, Zap, etc)
+         const { error: updError } = await supabase
+           .from("agendamentos")
+           .update({ lembrete_enviado: true })
+           .eq("id", c.id);
+           
+         if (updError) console.error("Falha ao registrar envio:", updError);
+      }
+
+      alert(`Sucesso! Lembrete registrado para ${pendentes.length} consulta(s) de amanhã.`);
+      fetchAgendamentosFuturos(currentUserId);
+    } catch (err: any) {
+      alert(`Erro: ${err.message}`);
+    } finally {
+      setIsSendingReminders(false);
+    }
+  }
+
   const sendWhatsApp = (telefone: string, texto: string) => {
     const defaultDDI = telefone?.startsWith("55") ? "" : "55";
     const url = `https://wa.me/${defaultDDI}${telefone?.replace(/\D/g, '')}?text=${encodeURIComponent(texto)}`;
@@ -59,9 +108,20 @@ export default function ComunicacaoPage() {
 
   return (
     <div className="p-6 md:p-10 flex flex-col h-full max-w-7xl mx-auto w-full">
-      <div className="mb-8 shrink-0">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Comunicacao</h1>
-        <p className="text-slate-500 mt-1 text-sm">Gerencie envio de mensagens e lembretes para os pacientes.</p>
+      <div className="mb-8 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Comunicacao</h1>
+          <p className="text-slate-500 mt-1 text-sm">Gerencie envio de mensagens e lembretes para os pacientes.</p>
+        </div>
+        
+        <button 
+          onClick={dispararLembretesDeAmanha}
+          disabled={isSendingReminders}
+          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 w-full md:w-auto justify-center"
+        >
+          <BellRing className="w-4 h-4" />
+          {isSendingReminders ? "Processando..." : "Testar Gatilho (Amanha)"}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 overflow-y-auto pb-8 pr-2">
@@ -85,13 +145,24 @@ export default function ComunicacaoPage() {
             </div>
 
             <div className="space-y-2 mb-5 flex-1">
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                 <CalendarDays className="w-4 h-4 text-slate-400" />
-                 <span>{c.data?.split('-').reverse().join('/')} as {c.hora}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                   <CalendarDays className="w-4 h-4 text-slate-400" />
+                   <span>{c.data?.split('-').reverse().join('/')} as {c.hora}</span>
+                </div>
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-600">
                  <Phone className="w-4 h-4 text-slate-400" />
                  <span>{c.telefone || "Sem telefone"}</span>
+              </div>
+              
+              <div className="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
+                 <span className="text-xs font-semibold text-slate-500">Alerta de Consulta:</span>
+                 <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-md ${
+                   c.lembrete_enviado ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-500"
+                 }`}>
+                   {c.lembrete_enviado ? "✔ Enviado" : "Pendente"}
+                 </span>
               </div>
             </div>
 
