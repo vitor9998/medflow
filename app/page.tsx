@@ -19,7 +19,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-900 selection:bg-emerald-200 overflow-x-hidden flex flex-col items-center">
+    <div className="min-h-screen bg-[#FAFAFA] text-slate-900 selection:bg-emerald-200 overflow-x-hidden flex flex-col items-center" style={{ fontFamily: "'Geist', ui-sans-serif, system-ui, sans-serif" }}>
       
       {/* NAVBAR */}
       <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm py-3" : "bg-transparent py-5"}`}>
@@ -77,7 +77,7 @@ export default function Home() {
              <Sparkles className="w-4 h-4 text-emerald-500 animate-pulse" />
              O SaaS definitivo para Clínicas e Consultórios
           </div>
-          <h1 className="text-5xl sm:text-6xl md:text-8xl font-extrabold tracking-tight text-slate-900 mb-6 max-w-4xl leading-[1.1]">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tighter text-slate-900 mb-6 max-w-4xl leading-[1.05]">
             Mais pacientes. <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-600 bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">Menos tarefas.</span>
           </h1>
           <p className="text-lg md:text-2xl text-slate-500 mb-10 max-w-2xl leading-relaxed font-medium">
@@ -207,7 +207,7 @@ export default function Home() {
             <p className="text-slate-500 text-xl max-w-2xl mx-auto font-medium">Deixe as tarefas manuais para trás. O Medsys automatiza a sua rotina para que você foque no que importa: <span className="text-slate-900 font-bold">seus pacientes.</span></p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-200 hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-900/5 transition-all text-left flex flex-col h-full group">
                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
@@ -510,7 +510,7 @@ export default function Home() {
       <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 pointer-events-none">
          <div className={`transition-all duration-500 flex justify-center ${scrolled ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0'}`}>
             <Link href="/signup" className="pointer-events-auto w-full max-w-[300px] flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-4 rounded-full font-bold shadow-2xl shadow-slate-900/40 ring-2 ring-white/20 active:scale-95 transition-all text-base">
-              🚀 Começar meu trial grátis
+              Começar grátis <ArrowRight className="w-4 h-4" />
             </Link>
          </div>
       </div>
