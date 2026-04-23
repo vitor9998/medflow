@@ -168,6 +168,22 @@ export default function SecretariaPage() {
     }
   }
 
+  async function atualizarConfirmacao(id: number, confirmacao_status: string) {
+    const { error } = await supabase
+      .from("agendamentos")
+      .update({ confirmacao_status })
+      .eq("id", id);
+
+    if (!error) {
+      setAgendamentos(prev =>
+        prev.map(item => item.id === id ? { ...item, confirmacao_status } : item)
+      );
+      if (selecionada?.id === id) {
+        setSelecionada({ ...selecionada, confirmacao_status });
+      }
+    }
+  }
+
   async function criarConsulta(e: React.FormEvent) {
     e.preventDefault();
     setIsSaving(true);
@@ -469,6 +485,21 @@ export default function SecretariaPage() {
                                     <span className="text-[9px] font-mono opacity-60">{ag.tentativas_contato}x</span>
                                   )}
                                 </div>
+                                {/* Confirmação Badge */}
+                                <div className="mt-1.5">
+                                  <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
+                                    ag.confirmacao_status === "confirmado" ? "bg-emerald-100 text-emerald-700" :
+                                    ag.confirmacao_status === "enviado" ? "bg-blue-100 text-blue-700" :
+                                    ag.confirmacao_status === "sem_resposta" ? "bg-amber-100 text-amber-700" :
+                                    "bg-slate-200 text-slate-500"
+                                  }`}>
+                                    💬 {
+                                      ag.confirmacao_status === "sem_resposta" ? "S/ RESPOSTA" : 
+                                      ag.confirmacao_status === "confirmado" ? "CONFIRMOU" :
+                                      ag.confirmacao_status === "enviado" ? "ENVIADO" : "PENDENTE"
+                                    }
+                                  </span>
+                                </div>
                               </div>
 
                               {/* AÇÕES DIRETA NA GRID */}
@@ -569,17 +600,44 @@ export default function SecretariaPage() {
               </div>
             </div>
 
-            {/* Status */}
-            <div className="pt-2">
-              <p className="text-sm text-slate-400 font-medium mb-1">Status Atual</p>
-              <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold ${
-                selecionada.status === "confirmado" ? "bg-emerald-50 text-emerald-600" :
-                selecionada.status === "presente" ? "bg-sky-50 text-sky-600" :
-                selecionada.status === "cancelado" ? "bg-red-50 text-red-600" :
-                "bg-amber-50 text-amber-600"
-              }`}>
-                {selecionada.status?.toUpperCase() || "PENDENTE"}
-              </span>
+            {/* Status Geral */}
+            <div className="pt-2 grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-slate-400 font-medium mb-1">Status da Consulta</p>
+                <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold ${
+                  selecionada.status === "confirmado" ? "bg-emerald-50 text-emerald-600" :
+                  selecionada.status === "presente" ? "bg-sky-50 text-sky-600" :
+                  selecionada.status === "cancelado" ? "bg-red-50 text-red-600" :
+                  "bg-amber-50 text-amber-600"
+                }`}>
+                  {selecionada.status?.toUpperCase() || "PENDENTE"}
+                </span>
+              </div>
+            </div>
+
+            {/* Confirmação Paciente (Mensagens) */}
+            <div className="pt-4 border-t border-slate-100 mt-2">
+              <p className="text-sm text-slate-400 font-medium mb-2 flex items-center gap-1">
+                💬 Resposta do Paciente
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button 
+                  onClick={() => atualizarConfirmacao(selecionada.id, "pendente")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${(!selecionada.confirmacao_status || selecionada.confirmacao_status === "pendente") ? "bg-slate-200 text-slate-700" : "bg-white border border-slate-200 text-slate-400 hover:bg-slate-50"}`}
+                >Pendente</button>
+                <button 
+                  onClick={() => atualizarConfirmacao(selecionada.id, "enviado")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${selecionada.confirmacao_status === "enviado" ? "bg-blue-100 text-blue-700 ring-1 ring-blue-300" : "bg-white border border-slate-200 text-slate-400 hover:bg-blue-50 hover:text-blue-600"}`}
+                >Lembrete Enviado</button>
+                <button 
+                  onClick={() => atualizarConfirmacao(selecionada.id, "confirmado")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${selecionada.confirmacao_status === "confirmado" ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300" : "bg-white border border-slate-200 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600"}`}
+                >Paciente Confirmou</button>
+                <button 
+                  onClick={() => atualizarConfirmacao(selecionada.id, "sem_resposta")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${selecionada.confirmacao_status === "sem_resposta" ? "bg-amber-100 text-amber-700 ring-1 ring-amber-300" : "bg-white border border-slate-200 text-slate-400 hover:bg-amber-50 hover:text-amber-600"}`}
+                >Sem Resposta</button>
+              </div>
             </div>
 
             {/* Ações */}
