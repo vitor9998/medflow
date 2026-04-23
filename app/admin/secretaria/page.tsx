@@ -7,7 +7,7 @@ import { Modal } from "@/components/Modal";
 import {
   Loader2, Plus, CalendarRange, Clock, User, Phone, PhoneOutgoing, Mail, FileText,
   CheckCircle2, XCircle, CalendarClock, UserCheck, ChevronLeft, ChevronRight,
-  Stethoscope, AlertCircle
+  Stethoscope, AlertCircle, Lock
 } from "lucide-react";
 
 // Gerar slots de 30 min
@@ -27,7 +27,7 @@ export default function SecretariaPage() {
 
   // Médicos vinculados
   const [medicos, setMedicos] = useState<any[]>([]);
-  const [selectedMedicos, setSelectedMedicos] = useState<string[]>([]);
+  const [selectedMedicoId, setSelectedMedicoId] = useState<string>("todos");
 
   // Agendamentos
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
@@ -82,7 +82,6 @@ export default function SecretariaPage() {
           .eq("status", "active");
 
         setMedicos(docs || []);
-        setSelectedMedicos((docs || []).map((d: any) => d.id));
       } else {
         // Fallback: usar medicos_ids manual
         const medicoIds: string[] = prof.medicos_ids || [];
@@ -93,7 +92,6 @@ export default function SecretariaPage() {
             .in("id", medicoIds);
 
           setMedicos(docs || []);
-          setSelectedMedicos(medicoIds);
         }
       }
 
@@ -104,13 +102,14 @@ export default function SecretariaPage() {
 
   // Buscar agendamentos quando data ou médicos mudam
   useEffect(() => {
-    if (selectedMedicos.length === 0 || !selectedDate) return;
+    if (medicos.length === 0 || !selectedDate) return;
 
     async function fetchAgendamentos() {
+      const medicoIds = medicos.map(m => m.id);
       const { data, error } = await supabase
         .from("agendamentos")
         .select("*")
-        .in("user_id", selectedMedicos)
+        .in("user_id", medicoIds)
         .eq("data", selectedDate)
         .neq("status", "cancelado");
 
@@ -119,10 +118,12 @@ export default function SecretariaPage() {
       }
     }
     fetchAgendamentos();
-  }, [selectedMedicos, selectedDate]);
+  }, [medicos, selectedDate]);
 
   // Médicos visíveis (filtrados)
-  const medicosVisiveis = medicos.filter(m => selectedMedicos.includes(m.id));
+  const medicosVisiveis = selectedMedicoId === "todos" 
+    ? medicos 
+    : medicos.filter(m => m.id === selectedMedicoId);
   const slots = generateSlots();
 
   // Encontrar agendamento na célula
@@ -192,10 +193,11 @@ export default function SecretariaPage() {
       setNewForm({ nome: "", telefone: "", email: "", sintomas: "", observacoes_paciente: "", medicoId: "", hora: "" });
 
       // Re-fetch
+      const medicoIds = medicos.map(m => m.id);
       const { data } = await supabase
         .from("agendamentos")
         .select("*")
-        .in("user_id", selectedMedicos)
+        .in("user_id", medicoIds)
         .eq("data", selectedDate)
         .neq("status", "cancelado");
 
@@ -203,6 +205,40 @@ export default function SecretariaPage() {
     }
     setIsSaving(false);
   }
+
+  async function bloquearHorario() {
+    setIsSaving(true);
+    const { error } = await supabase.from("agendamentos").insert([{
+      nome: "Horário Bloqueado",
+      email: "",
+      telefone: "",
+      data: selectedDate,
+      hora: newForm.hora,
+      status: "bloqueado",
+      user_id: newForm.medicoId,
+      patient_id: null,
+    }]);
+
+    if (error) {
+      alert(`Erro: ${error.message}`);
+    } else {
+      setShowNewModal(false);
+      setNewForm({ nome: "", telefone: "", email: "", sintomas: "", observacoes_paciente: "", medicoId: "", hora: "" });
+
+      // Re-fetch
+      const medicoIds = medicos.map(m => m.id);
+      const { data } = await supabase
+        .from("agendamentos")
+        .select("*")
+        .in("user_id", medicoIds)
+        .eq("data", selectedDate)
+        .neq("status", "cancelado");
+
+      setAgendamentos(data || []);
+    }
+    setIsSaving(false);
+  }
+
 
   async function reagendar(e: React.FormEvent) {
     e.preventDefault();
@@ -221,10 +257,11 @@ export default function SecretariaPage() {
       setSelecionada(null);
 
       // Re-fetch
+      const medicoIds = medicos.map(m => m.id);
       const { data } = await supabase
         .from("agendamentos")
         .select("*")
-        .in("user_id", selectedMedicos)
+        .in("user_id", medicoIds)
         .eq("data", selectedDate)
         .neq("status", "cancelado");
 
@@ -244,12 +281,7 @@ export default function SecretariaPage() {
     weekday: "long", day: "numeric", month: "long"
   });
 
-  // Toggling doctor filter
-  function toggleMedico(id: string) {
-    setSelectedMedicos(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-  }
+  // Toggling doctor filter (now handled via single select)
 
   // Loading
   if (loading) {
@@ -301,18 +333,29 @@ export default function SecretariaPage() {
       <div className="mb-4 shrink-0 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         {/* Doctor filter chips */}
         <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedMedicoId("todos")}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all border ${
+              selectedMedicoId === "todos"
+                ? "bg-slate-800 text-white border-slate-800 shadow-md"
+                : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700"
+            }`}
+          >
+            Todos os Médicos
+          </button>
+
           {medicos.map(m => (
             <button
               key={m.id}
-              onClick={() => toggleMedico(m.id)}
+              onClick={() => setSelectedMedicoId(m.id)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all border ${
-                selectedMedicos.includes(m.id)
-                  ? "bg-blue-50 text-blue-600 border-blue-200"
-                  : "bg-white text-slate-500 border-slate-200 hover:text-slate-700"
+                selectedMedicoId === m.id
+                  ? "bg-blue-50 text-blue-600 border-blue-200 shadow-sm"
+                  : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700"
               }`}
             >
               <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-extrabold ${
-                selectedMedicos.includes(m.id) ? "bg-blue-500 text-white" : "bg-slate-200 text-slate-400"
+                selectedMedicoId === m.id ? "bg-blue-500 text-white" : "bg-slate-200 text-slate-500"
               }`}>
                 {m.nome?.charAt(0)}
               </div>
@@ -397,7 +440,9 @@ export default function SecretariaPage() {
                   >
                     {ag && (
                       <div className={`p-2 rounded-lg border text-xs cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between min-h-full ${
-                        ag.status === "confirmado"
+                        ag.status === "bloqueado"
+                          ? "bg-slate-100 border-slate-200 text-slate-500"
+                          : ag.status === "confirmado"
                           ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                           : ag.status === "presente"
                           ? "bg-sky-50 border-sky-200 text-sky-600"
@@ -405,43 +450,56 @@ export default function SecretariaPage() {
                           ? "bg-red-50 border-red-200 text-red-600"
                           : "bg-amber-50 border-amber-200 text-amber-600"
                       }`}>
-                        <div>
-                          <p className="font-bold truncate">{ag.nome}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] opacity-70 uppercase font-semibold">{ag.status}</span>
-                            {(ag.tentativas_contato || 0) > 0 && (
-                              <span className="text-[9px] font-mono opacity-60">{ag.tentativas_contato}x</span>
-                            )}
-                          </div>
-                        </div>
+                        {ag.status === "bloqueado" ? (
+                           <div 
+                             className="flex flex-col items-center justify-center h-full text-slate-400 gap-1"
+                             onClick={(e) => { e.stopPropagation(); atualizarStatus(ag.id, "cancelado") }}
+                             title="Clique para desbloquear"
+                           >
+                              <Lock className="w-4 h-4 mb-0.5 opacity-60" />
+                              <span className="font-bold text-[10px] uppercase tracking-wider">Indisponível</span>
+                           </div>
+                        ) : (
+                           <>
+                              <div>
+                                <p className="font-bold truncate">{ag.nome}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-[10px] opacity-70 uppercase font-semibold">{ag.status}</span>
+                                  {(ag.tentativas_contato || 0) > 0 && (
+                                    <span className="text-[9px] font-mono opacity-60">{ag.tentativas_contato}x</span>
+                                  )}
+                                </div>
+                              </div>
 
-                        {/* AÇÕES DIRETA NA GRID */}
-                        {ag.status !== "cancelado" && ag.status !== "presente" && (
-                          <div className="flex items-center gap-1 mt-2 pt-2 border-t border-black/5" onClick={(e) => e.stopPropagation()}>
-                            {ag.status !== "confirmado" && (
-                              <button
-                                onClick={() => atualizarStatus(ag.id, "confirmado")}
-                                className="flex-1 flex justify-center items-center bg-emerald-500 hover:bg-emerald-600 text-white py-1.5 rounded transition-colors shadow-sm"
-                                title="Confirmar"
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => atualizarStatus(ag.id, "presente")}
-                              className="flex-1 flex justify-center items-center bg-sky-500 hover:bg-sky-600 text-white py-1.5 rounded transition-colors shadow-sm"
-                              title="Presente (Check-in)"
-                            >
-                              <UserCheck className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => atualizarStatus(ag.id, "cancelado")}
-                              className="flex-1 flex justify-center items-center bg-red-400 hover:bg-red-500 text-white py-1.5 rounded transition-colors shadow-sm"
-                              title="Cancelar"
-                            >
-                              <XCircle className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                              {/* AÇÕES DIRETA NA GRID */}
+                              {ag.status !== "cancelado" && ag.status !== "presente" && (
+                                <div className="flex items-center gap-1 mt-2 pt-2 border-t border-black/5" onClick={(e) => e.stopPropagation()}>
+                                  {ag.status !== "confirmado" && (
+                                    <button
+                                      onClick={() => atualizarStatus(ag.id, "confirmado")}
+                                      className="flex-1 flex justify-center items-center bg-emerald-500 hover:bg-emerald-600 text-white py-1.5 rounded transition-colors shadow-sm"
+                                      title="Confirmar"
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => atualizarStatus(ag.id, "presente")}
+                                    className="flex-1 flex justify-center items-center bg-sky-500 hover:bg-sky-600 text-white py-1.5 rounded transition-colors shadow-sm"
+                                    title="Presente (Check-in)"
+                                  >
+                                    <UserCheck className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => atualizarStatus(ag.id, "cancelado")}
+                                    className="flex-1 flex justify-center items-center bg-red-400 hover:bg-red-500 text-white py-1.5 rounded transition-colors shadow-sm"
+                                    title="Cancelar"
+                                  >
+                                    <XCircle className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                           </>
                         )}
                       </div>
                     )}
@@ -688,13 +746,24 @@ export default function SecretariaPage() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={isSaving}
-            className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
-          >
-            {isSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</> : <><Plus className="w-4 h-4" /> Criar Agendamento</>}
-          </button>
+          <div className="flex gap-3">
+             <button
+                type="button"
+                onClick={bloquearHorario}
+                disabled={isSaving || !newForm.hora || !newForm.medicoId}
+                className="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold transition-all disabled:opacity-50"
+             >
+                <Lock className="w-4 h-4" /> Bloquear Horário
+             </button>
+
+             <button
+               type="submit"
+               disabled={isSaving}
+               className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
+             >
+               {isSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</> : <><Plus className="w-4 h-4" /> Criar Agendamento</>}
+             </button>
+          </div>
         </form>
       </Modal>
 
