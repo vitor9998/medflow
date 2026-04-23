@@ -26,6 +26,8 @@ export default function AgendaPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isSavingEhr, setIsSavingEhr] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [evolucaoText, setEvolucaoText] = useState("");
+  const [isSavingEvolucao, setIsSavingEvolucao] = useState(false);
 
   const calendarRef = useRef<any>(null);
 
@@ -34,6 +36,7 @@ export default function AgendaPage() {
        setObsText(selecionada.observacoes_medico || "");
        setDiagnosticoText(selecionada.diagnostico_final || "");
        setIaSummary(selecionada.resumo_ia || "");
+       setEvolucaoText(selecionada.evolucao || "");
     }
   }, [selecionada]);
 
@@ -127,6 +130,26 @@ export default function AgendaPage() {
       alert("Prontuário Médico salvo e ancorado com sucesso!");
     }
     setIsSavingEhr(false);
+  }
+
+  async function salvarEvolucao() {
+    setIsSavingEvolucao(true);
+    const { error } = await supabase
+      .from("agendamentos")
+      .update({ evolucao: evolucaoText })
+      .eq("id", selecionada.id);
+      
+    if (error) {
+      alert("Erro ao gravar evolução.");
+    } else {
+      setConsultas((prev) =>
+        prev.map((item) =>
+          item.id === selecionada.id ? { ...item, evolucao: evolucaoText } : item
+        )
+      );
+      // alert("Evolução salva com sucesso!"); // Optional, you can let it save silently or with alert
+    }
+    setIsSavingEvolucao(false);
   }
 
   async function gerarResumoIA() {
@@ -421,6 +444,13 @@ export default function AgendaPage() {
                                 <span className="font-semibold text-slate-700">Queixa:</span> {h.sintomas || "Não informada"}
                               </p>
 
+                              {h.evolucao && (
+                                <div className="bg-purple-50/50 border border-purple-100 rounded-lg p-3 mb-4">
+                                  <p className="text-xs font-bold text-purple-700 mb-1 flex items-center gap-1.5"><Activity className="w-3.5 h-3.5"/> Evolução Clínica</p>
+                                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{h.evolucao}</p>
+                                </div>
+                              )}
+
                               {h.anexo_path && (
                                 <button 
                                   onClick={() => visualizarAnexo(h.anexo_path)}
@@ -505,6 +535,26 @@ export default function AgendaPage() {
               >
                 <Save className="w-4 h-4" /> {isSavingEhr ? "Salvando..." : "Arquivar Prontuário"}
               </button>
+            </div>
+
+            {/* SEÇÃO EVOLUÇÃO */}
+            <div className="border border-purple-200 bg-purple-50 p-4 rounded-xl space-y-4">
+               <h3 className="font-bold text-purple-700 border-b border-purple-200 pb-2 mb-2 flex items-center gap-2">
+                  <Activity className="w-5 h-5" /> Evolução do Atendimento
+               </h3>
+               <textarea 
+                  value={evolucaoText}
+                  onChange={e => setEvolucaoText(e.target.value)}
+                  placeholder="Registre os detalhes da evolução clínica do paciente, novos sintomas, ou progresso do tratamento..."
+                  className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm text-slate-700 outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-200 transition-all min-h-[100px] resize-y"
+               />
+               <button
+                  onClick={salvarEvolucao}
+                  disabled={isSavingEvolucao}
+                  className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold py-3 mt-2 rounded-lg transition-colors"
+               >
+                  <Save className="w-4 h-4" /> {isSavingEvolucao ? "Salvando..." : "Salvar Evolução"}
+               </button>
             </div>
 
             <div className="pt-2 mt-2">

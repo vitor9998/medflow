@@ -396,20 +396,53 @@ export default function SecretariaPage() {
                     }}
                   >
                     {ag && (
-                      <div className={`p-2 rounded-lg border text-xs cursor-pointer transition-all hover:scale-[1.02] ${
+                      <div className={`p-2 rounded-lg border text-xs cursor-pointer transition-all hover:scale-[1.02] flex flex-col justify-between min-h-full ${
                         ag.status === "confirmado"
                           ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                           : ag.status === "presente"
                           ? "bg-sky-50 border-sky-200 text-sky-600"
+                          : ag.status === "cancelado"
+                          ? "bg-red-50 border-red-200 text-red-600"
                           : "bg-amber-50 border-amber-200 text-amber-600"
                       }`}>
-                        <p className="font-bold truncate">{ag.nome}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[10px] opacity-70 uppercase font-semibold">{ag.status}</span>
-                          {(ag.tentativas_contato || 0) > 0 && (
-                            <span className="text-[9px] font-mono opacity-60">{ag.tentativas_contato}x</span>
-                          )}
+                        <div>
+                          <p className="font-bold truncate">{ag.nome}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] opacity-70 uppercase font-semibold">{ag.status}</span>
+                            {(ag.tentativas_contato || 0) > 0 && (
+                              <span className="text-[9px] font-mono opacity-60">{ag.tentativas_contato}x</span>
+                            )}
+                          </div>
                         </div>
+
+                        {/* AÇÕES DIRETA NA GRID */}
+                        {ag.status !== "cancelado" && ag.status !== "presente" && (
+                          <div className="flex items-center gap-1 mt-2 pt-2 border-t border-black/5" onClick={(e) => e.stopPropagation()}>
+                            {ag.status !== "confirmado" && (
+                              <button
+                                onClick={() => atualizarStatus(ag.id, "confirmado")}
+                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-1 rounded text-[10px] font-bold transition-colors shadow-sm"
+                                title="Confirmar"
+                              >
+                                Conf
+                              </button>
+                            )}
+                            <button
+                              onClick={() => atualizarStatus(ag.id, "presente")}
+                              className="flex-1 bg-sky-500 hover:bg-sky-600 text-white py-1 rounded text-[10px] font-bold transition-colors shadow-sm"
+                              title="Presente"
+                            >
+                              Pres
+                            </button>
+                            <button
+                              onClick={() => atualizarStatus(ag.id, "cancelado")}
+                              className="flex-1 bg-red-400 hover:bg-red-500 text-white py-1 rounded text-[10px] font-bold transition-colors shadow-sm"
+                              title="Cancelar"
+                            >
+                              Canc
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
