@@ -11,14 +11,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-br">
-      <body className="bg-[#020617] text-white">
-
-        {/* CONTEÚDO DAS PÁGINAS */}
+    <html lang="pt-br" style={{ fontFamily: "'Geist', ui-sans-serif, system-ui, sans-serif" }}>
+      <body className="bg-[#020617] text-white antialiased">
         <main className="min-h-screen">
           {children}
         </main>
-
       </body>
     </html>
   );

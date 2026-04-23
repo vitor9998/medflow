@@ -33,13 +33,14 @@ const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot:
   confirmado: { label: "Confirmado", bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
   cancelado:  { label: "Cancelado",  bg: "bg-red-50",     text: "text-red-600",     dot: "bg-red-400" },
   presente:   { label: "Presente",   bg: "bg-sky-50",     text: "text-sky-600",     dot: "bg-sky-400" },
+  bloqueado:  { label: "Bloqueado",  bg: "bg-slate-100",  text: "text-slate-500",   dot: "bg-slate-300" },
 };
 
 function StatusBadge({ status }: { status: string }) {
   const s = STATUS_MAP[status] || STATUS_MAP.pendente;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold tracking-wide ${s.bg} ${s.text}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-bold tracking-wide ${s.bg} ${s.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
       {s.label}
     </span>
   );
@@ -50,13 +51,13 @@ function ListSkeleton() {
   return (
     <div className="divide-y divide-slate-100">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 py-4 px-5 animate-pulse">
-          <div className="w-10 h-10 rounded-xl bg-slate-100" />
+        <div key={i} className="flex items-center gap-4 py-4 px-5">
+          <div className="w-11 h-11 rounded-xl skeleton shrink-0" />
           <div className="flex-1 space-y-2">
-            <div className="h-3.5 bg-slate-100 rounded w-36" />
-            <div className="h-2.5 bg-slate-100 rounded w-24" />
+            <div className="h-3 skeleton rounded w-40" />
+            <div className="h-2.5 skeleton rounded w-24" />
           </div>
-          <div className="h-6 bg-slate-100 rounded w-20" />
+          <div className="h-6 skeleton rounded-md w-20" />
         </div>
       ))}
     </div>
@@ -198,6 +199,14 @@ export default function AdminDashboardPage() {
       ? ((canceladas / totalConsultas) * 100).toFixed(1)
       : "0.0";
 
+  // Greeting by time of day
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+  const dataHoje = new Date().toLocaleDateString("pt-BR", {
+    weekday: "long", day: "numeric", month: "long"
+  });
+  const dataHojeFormatada = dataHoje.charAt(0).toUpperCase() + dataHoje.slice(1);
+
   // Chart data
   const dadosPorDiaMap = consultas.reduce((acc, c) => {
     const datePart = c.data.split("-").slice(1).join("/");
@@ -237,11 +246,18 @@ export default function AdminDashboardPage() {
       label: "Total",
       value: totalConsultas,
       icon: Clock,
-      accent: "text-slate-700",
+      accent: "text-slate-600",
       iconBg: "bg-slate-100",
     },
     {
-      label: "Cancelamento",
+      label: "Confirmados",
+      value: confirmadas,
+      icon: CheckCircle2,
+      accent: "text-emerald-600",
+      iconBg: "bg-emerald-50",
+    },
+    {
+      label: "Cancelamentos",
       value: `${taxaFalta}%`,
       icon: XCircle,
       accent: "text-red-500",
@@ -250,43 +266,44 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="p-6 md:p-10 space-y-8 w-full max-w-7xl mx-auto">
+    <div className="p-6 md:p-10 space-y-7 w-full max-w-7xl mx-auto">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-            Dashboard
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{dataHojeFormatada}</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-none">
+            {saudacao}
           </h1>
-          <p className="text-slate-500 mt-1 text-sm">
+          <p className="text-slate-500 mt-1.5 text-sm">
             {userRole === "secretaria"
-              ? "Todos os agendamentos dos seus medicos."
+              ? "Visao consolidada de todos os medicos."
               : "Resumo das atividades do consultorio."}
           </p>
         </div>
         {userRole === "secretaria" && (
-          <span className="text-xs font-bold uppercase bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-200">
+          <span className="text-[11px] font-bold uppercase bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-100 tracking-wide shrink-0 mt-1">
             Secretaria
           </span>
         )}
       </div>
 
-      {/* METRICS — no cards, just clean rows with border-b */}
-      <div className="grid grid-cols-3 gap-0 bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      {/* METRICS — borderless row, divide-x */}
+      <div className="grid grid-cols-2 md:grid-cols-4 bg-white rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.06)] overflow-hidden">
         {metricas.map((m, i) => (
           <div
             key={m.label}
-            className={`flex items-center gap-4 p-5 ${
-              i < metricas.length - 1 ? "border-r border-slate-200" : ""
-            }`}
+            className={`flex items-center gap-3.5 p-5 ${
+              i < metricas.length - 1 ? "border-r border-slate-100" : ""
+            } ${i >= 2 ? "border-t border-slate-100 md:border-t-0" : ""}`}
           >
-            <div className={`p-2.5 rounded-xl ${m.iconBg}`}>
-              <m.icon className={`w-5 h-5 ${m.accent}`} />
+            <div className={`p-2.5 rounded-xl shrink-0 ${m.iconBg}`}>
+              <m.icon className={`w-[17px] h-[17px] ${m.accent}`} />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">
                 {m.label}
               </p>
-              <p className={`text-2xl font-bold ${m.accent} font-mono tabular-nums`}>
+              <p className={`text-xl font-bold tabular-nums leading-none font-mono ${m.accent}`}>
                 {m.value}
               </p>
             </div>

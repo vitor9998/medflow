@@ -1,123 +1,256 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap");
 
-/* Shimmer animation for gradient text */
+/* ─── Design Tokens ──────────────────────────────────────────────── */
+:root {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  --color-bg:        #f8fafc;
+  --color-surface:   #ffffff;
+  --color-border:    #e2e8f0;
+  --color-border-subtle: #f1f5f9;
+
+  --color-text-primary:   #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted:     #94a3b8;
+
+  --color-accent:        #2563eb;
+  --color-accent-light:  #eff6ff;
+  --color-accent-border: #bfdbfe;
+
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 20px 40px -8px rgba(15, 23, 42, 0.10), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+/* Mono numbers for tabular data */
+.font-mono, [class*="tabular"] {
+  font-family: var(--font-mono);
+}
+
+/* ─── Animations ─────────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @keyframes shimmer {
-  0% { background-position: 200% center; }
+  0%   { background-position: 200% center; }
   100% { background-position: -200% center; }
 }
 
-/* Fade-in-up animation for staggered card entrances */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes skeleton-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
 
-/* 🏥 Medsys FullCalendar Customization (SaaS Premium) */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.85); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease both;
+}
+
+/* Skeleton shimmer effect */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e2e8f0 40%,
+    #f1f5f9 80%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* Stagger helpers */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+
+/* ─── FullCalendar — Medsys Light Theme ──────────────────────────── */
 .fc {
-  font-family: inherit !important;
+  font-family: var(--font-sans) !important;
+  --fc-border-color: #e2e8f0;
+  --fc-today-bg-color: rgba(37, 99, 235, 0.04);
+  --fc-event-bg-color: #10b981;
+  --fc-event-border-color: #059669;
+  --fc-event-text-color: #ffffff;
+  --fc-button-bg-color: #ffffff;
+  --fc-button-border-color: #e2e8f0;
+  --fc-button-text-color: #475569;
+  --fc-button-hover-bg-color: #f8fafc;
+  --fc-button-active-bg-color: #eff6ff;
+  --fc-button-active-border-color: #bfdbfe;
+  --fc-button-active-text-color: #2563eb;
 }
+
 .fc-theme-standard td, .fc-theme-standard th {
-  border-color: #1e293b !important;
+  border-color: #e2e8f0 !important;
 }
+
 .fc-theme-standard .fc-scrollgrid {
   border: none !important;
 }
+
 .fc-header-toolbar {
-  margin-bottom: 1.5rem !important;
-  gap: 1rem;
+  margin-bottom: 1.25rem !important;
+  gap: 0.75rem;
 }
+
 .fc-toolbar-title {
-  font-size: 1.25rem !important;
+  font-size: 1rem !important;
   font-weight: 700 !important;
-  color: #f8fafc !important;
+  color: #0f172a !important;
+  letter-spacing: -0.02em;
 }
+
 .fc-button-primary {
-  background-color: #0f172a !important;
-  border-color: #1e293b !important;
-  color: #e2e8f0 !important;
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
   text-transform: capitalize !important;
-  border-radius: 0.75rem !important;
-  padding: 0.5rem 1rem !important;
+  border-radius: 0.625rem !important;
+  padding: 0.4rem 0.875rem !important;
   font-weight: 600 !important;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  font-size: 0.8125rem !important;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.04) !important;
 }
+
 .fc-button-primary:hover {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
 }
-.fc-button-primary:active, .fc-button-active {
-  background-color: #059669 !important; /* Emerald 600 */
-  border-color: #059669 !important;
-  color: white !important;
+
+.fc-button-primary:active,
+.fc-button-active {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #2563eb !important;
+  box-shadow: none !important;
 }
+
 .fc-col-header-cell-cushion {
   color: #94a3b8 !important;
   font-weight: 600 !important;
   text-transform: uppercase;
-  font-size: 0.8rem;
-  padding: 0.75rem 0 !important;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  padding: 0.625rem 0 !important;
+  text-decoration: none !important;
 }
+
 .fc-timegrid-slot-label {
-  color: #64748b !important;
+  color: #94a3b8 !important;
   font-weight: 500 !important;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
+
 .fc-v-event {
-  background-color: #10b981 !important; /* Emerald 500 */
-  border-color: #059669 !important;
+  background-color: #10b981 !important;
+  border-color: transparent !important;
   border-radius: 6px !important;
-  padding: 2px 4px !important;
-  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2) !important;
+  padding: 2px 6px !important;
+  box-shadow: 0 2px 6px -1px rgba(16, 185, 129, 0.25) !important;
 }
+
 .fc-h-event, .fc-daygrid-event {
   background-color: #10b981 !important;
   border-color: transparent !important;
-  border-radius: 4px !important;
+  border-radius: 5px !important;
   padding: 2px 6px !important;
   margin-top: 2px !important;
 }
+
 .fc-daygrid-event-dot {
-  display: none !important; /* Esconde a bolinha azul nativa */
+  display: none !important;
 }
+
 .fc-daygrid-day-number {
-  color: #94a3b8 !important; /* Cor da numeração do dia (1, 2, 3...) */
+  color: #64748b !important;
   font-weight: 600 !important;
-  padding: 8px !important;
+  padding: 6px 8px !important;
+  font-size: 0.8rem !important;
   text-decoration: none !important;
 }
-.fc-daygrid-day.fc-day-today {
-  background-color: rgba(16, 185, 129, 0.05) !important;
+
+.fc-day-today .fc-daygrid-day-number {
+  color: #2563eb !important;
 }
+
+.fc-daygrid-day.fc-day-today {
+  background-color: rgba(37, 99, 235, 0.03) !important;
+}
+
 .fc-event-title, .fc-event-time {
-  font-weight: 700 !important;
-  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  font-size: 0.7rem !important;
   color: white !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
+
 .fc-today-button {
   text-transform: uppercase !important;
-  font-size: 0.75rem !important;
-  letter-spacing: 0.5px;
-}
-.fc-day-today {
-  background-color: rgba(16, 185, 129, 0.05) !important; /* Emerald Fundo */
+  font-size: 0.7rem !important;
+  letter-spacing: 0.04em;
 }
 
-/* 🔥 Correções extremas para celular */
+.fc-day-today {
+  background-color: rgba(37, 99, 235, 0.03) !important;
+}
+
+/* ─── Mobile Calendar Fixes ──────────────────────────────────────── */
 @media (max-width: 640px) {
   .fc-header-toolbar {
     flex-direction: column !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 10px !important;
   }
   .fc-toolbar-chunk {
     display: flex;
@@ -126,14 +259,13 @@
     margin-bottom: 0 !important;
   }
   .fc-toolbar-title {
-    font-size: 1.1rem !important;
+    font-size: 0.9rem !important;
     text-align: center;
   }
   .fc-button {
-    padding: 0.5rem 0.7rem !important;
-    font-size: 0.75rem !important;
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.7rem !important;
   }
-  /* Obriga a agenda a rolar em TODOS os views (Mês, Semana, Dia) */
   .fc-view-harness {
     overflow-x: auto !important;
     overflow-y: hidden !important;
