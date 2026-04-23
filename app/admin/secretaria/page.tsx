@@ -421,25 +421,25 @@ export default function SecretariaPage() {
                             {ag.status !== "confirmado" && (
                               <button
                                 onClick={() => atualizarStatus(ag.id, "confirmado")}
-                                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-1 rounded text-[10px] font-bold transition-colors shadow-sm"
+                                className="flex-1 flex justify-center items-center bg-emerald-500 hover:bg-emerald-600 text-white py-1.5 rounded transition-colors shadow-sm"
                                 title="Confirmar"
                               >
-                                Conf
+                                <CheckCircle2 className="w-3.5 h-3.5" />
                               </button>
                             )}
                             <button
                               onClick={() => atualizarStatus(ag.id, "presente")}
-                              className="flex-1 bg-sky-500 hover:bg-sky-600 text-white py-1 rounded text-[10px] font-bold transition-colors shadow-sm"
-                              title="Presente"
+                              className="flex-1 flex justify-center items-center bg-sky-500 hover:bg-sky-600 text-white py-1.5 rounded transition-colors shadow-sm"
+                              title="Presente (Check-in)"
                             >
-                              Pres
+                              <UserCheck className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => atualizarStatus(ag.id, "cancelado")}
-                              className="flex-1 bg-red-400 hover:bg-red-500 text-white py-1 rounded text-[10px] font-bold transition-colors shadow-sm"
+                              className="flex-1 flex justify-center items-center bg-red-400 hover:bg-red-500 text-white py-1.5 rounded transition-colors shadow-sm"
                               title="Cancelar"
                             >
-                              Canc
+                              <XCircle className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         )}
