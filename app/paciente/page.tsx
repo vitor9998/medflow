@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { MedsysLogo } from "@/components/Logo";
@@ -21,6 +21,16 @@ export default function PacientePage() {
   const [otpError, setOtpError] = useState("");
   const [otpTimer, setOtpTimer] = useState(300);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Restore session
+  useEffect(() => {
+    const savedPhone = localStorage.getItem("medsys_paciente_auth");
+    if (savedPhone) {
+      setTelefone(savedPhone);
+      setStep("dashboard");
+      fetchConsultas(savedPhone);
+    }
+  }, []);
 
   // Dashboard data
   const [consultas, setConsultas] = useState<any[]>([]);
@@ -234,7 +244,8 @@ export default function PacientePage() {
 
       if (result.valid) {
         if (timerRef.current) clearInterval(timerRef.current);
-        await fetchConsultas();
+        localStorage.setItem("medsys_paciente_auth", telefone);
+        await fetchConsultas(telefone);
         setStep("dashboard");
       } else {
         setOtpError(result.reason || "Código inválido");
@@ -248,9 +259,10 @@ export default function PacientePage() {
   }
 
   // Fetch appointments by phone
-  async function fetchConsultas() {
+  async function fetchConsultas(phoneOverride?: string) {
     setDashLoading(true);
-    const cleanPhone = telefone.replace(/\D/g, "");
+    const phoneToUse = phoneOverride || telefone;
+    const cleanPhone = phoneToUse.replace(/\D/g, "");
 
     // Buscar por telefone — funciona para agendamentos com e sem conta
     const { data, error } = await supabase
@@ -327,7 +339,7 @@ export default function PacientePage() {
           </Link>
           {step === "dashboard" && (
             <button
-              onClick={() => { setStep("phone"); setConsultas([]); setOtpCode(["","","","","",""]); }}
+              onClick={() => { localStorage.removeItem("medsys_paciente_auth"); setStep("phone"); setConsultas([]); setOtpCode(["","","","","",""]); }}
               className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5"
             >
               <ArrowLeft className="w-4 h-4" /> Sair

@@ -83,6 +83,13 @@ export default function AgendamentoPage() {
             setNome(prof.nome || "");
             setTelefone(prof.telefone || "");
          }
+       } else {
+         const savedPhone = localStorage.getItem("medsys_paciente_auth");
+         if (savedPhone) {
+           setTelefone(savedPhone);
+           setIsLoggedIn(true);
+           setStep("schedule");
+         }
        }
        // Não redireciona mais — permite acesso sem login
        setPageLoading(false);
@@ -208,6 +215,7 @@ export default function AgendamentoPage() {
       const result = await res.json();
 
       if (result.valid) {
+        localStorage.setItem("medsys_paciente_auth", telefone);
         setStep("schedule");
       } else {
         setOtpError(result.reason || "Código inválido");
