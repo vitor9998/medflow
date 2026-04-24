@@ -46,9 +46,13 @@ export default function AgendamentoSelecaoPage() {
              Medsys
            </Link>
            <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-500 font-bold hidden sm:block">Portal do Paciente</span>
+              <Link href="/paciente" className="text-sm text-slate-500 font-bold hidden sm:flex items-center gap-1.5 hover:text-emerald-600 transition-colors">
+                 🧑 Portal do Paciente
+              </Link>
               <div className="h-6 w-[1px] bg-slate-200 hidden sm:block"></div>
-              <Link href="/login" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">Acessar Consultas</Link>
+              <Link href="/login" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5">
+                 👨‍⚕️ Área do Profissional
+              </Link>
            </div>
         </div>
       </header>
