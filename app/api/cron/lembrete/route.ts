@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
+import { confirmacaoAgent } from '@/lib/agents/confirmacaoAgent';
 
 export async function GET(req: Request) {
   try {
@@ -9,8 +10,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. BUSCAR PENDENTES DE AMANHA
+    // 2. BUSCAR PENDENTES DE AMANHA (Corrigido para Fuso BR)
     const amanha = new Date();
+    amanha.setHours(amanha.getHours() - 3); // Força UTC-3 para evitar virada de dia incorreta
     amanha.setDate(amanha.getDate() + 1);
     const dataAmanhaFormatada = amanha.toISOString().split('T')[0];
 
@@ -30,34 +32,21 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: 'Nenhum lembrete para enviar', enviados: 0 });
     }
 
-    // 3. REAPROVEITAR LÓGICA DE ENVIO (/api/lembretes)
-    // Resolvemos as URLs locais e em producao (Vercel) para fazer o POST reutilizando nossa logica original.
+    // 3. ENVIAR VIA AGENT (UM A UM)
+    // Resolvemos as URLs locais e em producao (Vercel) para passar para o Agent
     const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
     const host = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || req.headers.get('host') || 'localhost:3000';
     const baseUrl = `${protocol}://${host}`;
 
-    const res = await fetch(`${baseUrl}/api/lembretes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pendentes })
-    });
-
-    if (!res.ok) {
-        const err = await res.json();
-        throw new Error(`Erro API lembretes: ${err.error || res.statusText}`);
-    }
-
-    // 4. ATUALIZAR STATUS PARA ENVIADO NO BANCO
+    let enviados = 0;
+    
+    // O Agent processa, dispara e registra no MCP
     for (const c of pendentes) {
-        const { error: updError } = await supabase
-           .from("agendamentos")
-           .update({ lembrete_enviado: true })
-           .eq("id", c.id);
-           
-        if (updError) console.error("Falha ao registrar envio no Cron:", updError);
+        const resultado = await confirmacaoAgent(c, baseUrl);
+        if (resultado?.success) enviados++;
     }
 
-    return NextResponse.json({ success: true, enviados: pendentes.length });
+    return NextResponse.json({ success: true, enviados });
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
