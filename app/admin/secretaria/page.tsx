@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { agendaAgent } from "@/lib/agents/agendaAgent";
 import { Modal } from "@/components/Modal";
 import {
   Loader2, Plus, CalendarRange, Clock, User, Phone, PhoneOutgoing, Mail, FileText,
@@ -110,8 +111,7 @@ export default function SecretariaPage() {
         .from("agendamentos")
         .select("*")
         .in("user_id", medicoIds)
-        .eq("data", selectedDate)
-        .neq("status", "cancelado");
+        .eq("data", selectedDate);
 
       if (!error && data) {
         setAgendamentos(data);
@@ -135,6 +135,41 @@ export default function SecretariaPage() {
 
   // Ações
   async function atualizarStatus(id: number, status: string) {
+    // NOVA ARQUITETURA: Fluxo isolado via Agent
+    if (status === "confirmado") {
+      try {
+        await agendaAgent("confirmar", { id });
+        setAgendamentos(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+        setSelecionada(null);
+      } catch (error) {
+        alert("Erro ao confirmar consulta.");
+      }
+      return;
+    }
+
+    if (status === "cancelado") {
+      try {
+        await agendaAgent("cancelar", { id });
+        setAgendamentos(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+        setSelecionada(null);
+      } catch (error) {
+        alert("Erro ao cancelar consulta.");
+      }
+      return;
+    }
+
+    if (status === "presente") {
+      try {
+        await agendaAgent("presente", { id });
+        setAgendamentos(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+        setSelecionada(null);
+      } catch (error) {
+        alert("Erro ao marcar presença.");
+      }
+      return;
+    }
+
+    // ARQUITETURA ANTIGA: Chamada direta (mantido para outros status)
     const { error } = await supabase
       .from("agendamentos")
       .update({ status })
