@@ -6,17 +6,10 @@ export function MedsysLogo({ className = "h-8 w-auto" }: { className?: string })
       className={className}
       fill="none"
     >
-      <defs>
-        <linearGradient id="medsysGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0ea5e9" />
-          <stop offset="100%" stopColor="#1e3a8a" />
-        </linearGradient>
-      </defs>
-      
       {/* Cruz médica principal (Shape Básico do Fundo) */}
       <path
         d="M 35 15 H 65 V 35 H 85 V 65 H 65 V 85 H 35 V 65 H 15 V 35 H 35 V 15 Z"
-        fill="url(#medsysGrad)"
+        fill="currentColor"
       />
       
       {/* Stethoscope Path (Branco cortando a cruz) */}

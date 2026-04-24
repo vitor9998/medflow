@@ -553,13 +553,22 @@ export default function PacientePage() {
                               c.status === "presente" ? "bg-blue-100 text-blue-700" :
                               "bg-yellow-100 text-yellow-700"
                             }`}>
-                              {c.status}
+                              {c.status === "pendente" ? "Aguardando confirmação" : c.status}
                             </span>
                             <h3 className="text-lg font-bold text-slate-900 mt-2 flex items-center gap-2">
                               <Stethoscope className="w-4 h-4 text-emerald-500" />
                               {getMedicoNome(c.user_id)}
                             </h3>
                             <p className="text-slate-500 text-sm font-medium">{getMedicoEsp(c.user_id)}</p>
+                            
+                            {c.status === "pendente" && (
+                              <div className="mt-3 flex items-start gap-1.5 bg-amber-50/50 p-2.5 rounded-lg border border-amber-100/50 max-w-[280px]">
+                                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                <p className="text-[11px] text-amber-700 font-medium leading-snug">
+                                  Você receberá uma mensagem para confirmar sua consulta.
+                                </p>
+                              </div>
+                            )}
                           </div>
                           <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl flex flex-col gap-3 min-w-[200px]">
                             <div className="flex items-center gap-6 justify-between">

@@ -615,17 +615,24 @@ export default function AgendamentoPage() {
           {/* ===== STEP 3: SCHEDULE (formulário original) ===== */}
           {step === "schedule" && (
             <form onSubmit={salvar} className="space-y-6">
+            
+              <div className="flex items-center gap-2 bg-emerald-50/80 border border-emerald-100 px-4 py-3 rounded-xl mb-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <p className="text-sm text-emerald-800 font-medium">
+                  Paciente verificado: <span className="font-extrabold tracking-wide ml-1">{telefone}</span>
+                </p>
+              </div>
 
-              {/* Dados do paciente (readonly se logado, editável se OTP) */}
+              {/* Dados do paciente (editável) */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2 ml-1">
                   <User className="w-4 h-4 text-emerald-600" /> Paciente
                 </label>
                 <input
                   placeholder="Seu nome completo"
-                  className={`w-full px-5 py-4 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold ${(isLoggedIn || !isLoggedIn) ? 'bg-slate-50 cursor-not-allowed opacity-80' : 'bg-white shadow-sm'}`}
+                  className="w-full px-5 py-4 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold shadow-sm"
                   value={nome}
-                  readOnly
+                  onChange={(e) => setNome(e.target.value)}
                   required
                 />
               </div>
@@ -638,10 +645,9 @@ export default function AgendamentoPage() {
                   <input
                     type="email"
                     placeholder="voce@email.com"
-                    className={`w-full px-5 py-4 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold ${isLoggedIn ? 'bg-slate-50 cursor-not-allowed opacity-80' : 'bg-white shadow-sm'}`}
+                    className="w-full px-5 py-4 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold shadow-sm"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    readOnly={isLoggedIn}
                   />
                 </div>
                 <div className="w-full">

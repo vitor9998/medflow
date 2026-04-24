@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
-import { ArrowRight, Stethoscope, Search, Loader2, CalendarHeart, ShieldCheck, MapPin } from "lucide-react";
+import { ArrowRight, Stethoscope, Search, Loader2, CalendarHeart, ShieldCheck, MapPin, User } from "lucide-react";
 import { MedsysLogo } from "@/components/Logo";
 
 export default function AgendamentoSelecaoPage() {
@@ -45,13 +45,13 @@ export default function AgendamentoSelecaoPage() {
              <MedsysLogo className="h-8 w-auto text-emerald-600 drop-shadow-sm" /> 
              Medsys
            </Link>
-           <div className="flex items-center gap-4">
-              <Link href="/paciente" className="text-sm text-slate-500 font-bold hidden sm:flex items-center gap-1.5 hover:text-emerald-600 transition-colors">
-                 🧑 Portal do Paciente
+           <div className="flex items-center gap-4 sm:gap-6">
+              <Link href="/paciente" className="text-sm text-slate-500 font-bold hidden sm:flex items-center gap-2 hover:text-emerald-600 transition-colors">
+                 <User className="w-4 h-4" /> Portal do Paciente
               </Link>
               <div className="h-6 w-[1px] bg-slate-200 hidden sm:block"></div>
-              <Link href="/login" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5">
-                 👨‍⚕️ Área do Profissional
+              <Link href="/login" className="text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-2">
+                 <Stethoscope className="w-4 h-4" /> Área do Profissional
               </Link>
            </div>
         </div>
