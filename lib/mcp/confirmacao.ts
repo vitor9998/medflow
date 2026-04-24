@@ -29,3 +29,15 @@ export async function registrarTentativa(id: number, atual: number) {
   if (error) throw new Error(error.message);
   return data;
 }
+
+export async function registrarSemResposta(id: number) {
+  const { data, error } = await supabase
+    .from("agendamentos")
+    .update({ confirmacao_status: "sem_resposta" })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}

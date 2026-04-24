@@ -4,34 +4,55 @@ import * as mcp from "@/lib/mcp/confirmacao";
 
 export async function confirmacaoAgent(consulta: any, baseUrl: string) {
   try {
-    // Validações orquestradas pelo Agent
+    // 1. Se status = cancelado → ignorar
     if (consulta.status === 'cancelado') {
       return { success: false, reason: "cancelado" };
     }
     
-    if (consulta.lembrete_enviado) {
-      return { success: false, reason: "ja_enviado" };
+    // 2. Se confirmacao_status = confirmado → NÃO fazer nada
+    if (consulta.confirmacao_status === 'confirmado') {
+      return { success: false, reason: "ja_confirmado" };
     }
 
-    // 1. Enviar lembrete
-    const res = await fetch(`${baseUrl}/api/lembretes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pendentes: [consulta] })
-    });
+    const tentativas = consulta.tentativas_contato || 0;
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(`Erro API lembretes: ${err?.error || res.statusText}`);
+    // 3. Se lembrete_enviado = false
+    if (!consulta.lembrete_enviado) {
+      const res = await fetch(`${baseUrl}/api/lembretes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pendentes: [consulta] })
+      });
+
+      if (!res.ok) throw new Error("Erro API lembretes");
+
+      await mcp.registrarEnvio(consulta.id);
+      await mcp.registrarTentativa(consulta.id, tentativas);
+      return { success: true, action: "primeiro_envio" };
     }
 
-    // 2. Registrar Envio via MCP
-    await mcp.registrarEnvio(consulta.id);
+    // 4. Se lembrete_enviado = true E confirmacao_status != confirmado
+    if (consulta.lembrete_enviado && consulta.confirmacao_status !== 'confirmado') {
+      if (tentativas < 2) {
+        // Enviar novamente
+        const res = await fetch(`${baseUrl}/api/lembretes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pendentes: [consulta] })
+        });
 
-    // 3. Registrar Tentativa via MCP
-    await mcp.registrarTentativa(consulta.id, consulta.tentativas_contato || 0);
+        if (!res.ok) throw new Error("Erro API lembretes na re-tentativa");
 
-    return { success: true };
+        await mcp.registrarTentativa(consulta.id, tentativas);
+        return { success: true, action: "re-tentativa" };
+      } else {
+        // Excedeu tentativas
+        await mcp.registrarSemResposta(consulta.id);
+        return { success: true, action: "marcado_sem_resposta" };
+      }
+    }
+
+    return { success: false, reason: "nenhuma_condicao_atendida" };
 
   } catch (error: any) {
     console.error(`[Agent-Confirmacao] Erro ao processar agendamento ${consulta?.id}:`, error);
