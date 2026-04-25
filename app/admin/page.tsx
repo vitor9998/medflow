@@ -26,6 +26,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
+  LabelList,
 } from "recharts";
 
 // --- Status config ---
@@ -259,7 +261,7 @@ export default function AdminDashboardPage() {
 
   // Split appointments and sort by priority
   const consultasAtivas = mappedConsultas
-    .filter((c) => c.status !== "cancelado")
+    .filter((c) => c.status !== "cancelado" && c.data >= hoje)
     .sort((a, b) => {
       // Helper para prioridade
       const getPriority = (c: any) => {
@@ -589,53 +591,64 @@ export default function AdminDashboardPage() {
 
                       {/* Expanded actions */}
                       {isExpanded && (
-                        <div className="px-5 pb-4 pt-1 flex flex-wrap gap-2 bg-slate-50/50 border-t border-slate-100">
-                          {c.status !== "confirmado" && (
-                            <button
-                              onClick={() =>
-                                atualizarStatus(c.id, "confirmado")
-                              }
-                              disabled={isUpdating}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-all active:scale-[0.97] disabled:opacity-50"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              Confirmar
-                            </button>
-                          )}
-                          {c.status !== "presente" && (
-                            <button
-                              onClick={() =>
-                                atualizarStatus(c.id, "presente")
-                              }
-                              disabled={isUpdating}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-50 text-sky-600 border border-sky-200 hover:bg-sky-100 transition-all active:scale-[0.97] disabled:opacity-50"
-                            >
-                              <UserCheck className="w-3.5 h-3.5" />
-                              Presente
-                            </button>
-                          )}
-                          {c.status !== "cancelado" && (
-                            <button
-                              onClick={() =>
-                                atualizarStatus(c.id, "cancelado")
-                              }
-                              disabled={isUpdating}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all active:scale-[0.97] disabled:opacity-50"
-                            >
-                              <XCircle className="w-3.5 h-3.5" />
-                              Cancelar
-                            </button>
-                          )}
-                          <button
-                            onClick={() =>
-                              registrarTentativa(c.id, c.tentativas_contato || 0)
+                        <div className="px-5 pb-4 pt-1 bg-slate-50/50 border-t border-slate-100">
+                          {(() => {
+                            const agora = new Date();
+                            const dataConsulta = new Date(`${c.data}T${c.hora}`);
+                            const isPassado = dataConsulta < agora;
+
+                            if (isPassado) {
+                              return (
+                                <div className="py-2 flex items-center gap-2 text-slate-500 italic">
+                                  <CalendarDays className="w-3.5 h-3.5" />
+                                  <span className="text-[11px] font-medium">Agendamento finalizado. Ações desabilitadas.</span>
+                                </div>
+                              );
                             }
-                            disabled={isUpdating}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 transition-all active:scale-[0.97] disabled:opacity-50 ml-auto"
-                          >
-                            <PhoneOutgoing className="w-3.5 h-3.5" />
-                            Tentativa ({c.tentativas_contato || 0})
-                          </button>
+
+                            return (
+                              <div className="flex flex-wrap gap-2 pt-2">
+                                {c.status !== "confirmado" && (
+                                  <button
+                                    onClick={() => atualizarStatus(c.id, "confirmado")}
+                                    disabled={isUpdating}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-all active:scale-[0.97] disabled:opacity-50"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    Confirmar
+                                  </button>
+                                )}
+                                {c.status !== "presente" && (
+                                  <button
+                                    onClick={() => atualizarStatus(c.id, "presente")}
+                                    disabled={isUpdating}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-50 text-sky-600 border border-sky-200 hover:bg-sky-100 transition-all active:scale-[0.97] disabled:opacity-50"
+                                  >
+                                    <UserCheck className="w-3.5 h-3.5" />
+                                    Presente
+                                  </button>
+                                )}
+                                {c.status !== "cancelado" && (
+                                  <button
+                                    onClick={() => atualizarStatus(c.id, "cancelado")}
+                                    disabled={isUpdating}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all active:scale-[0.97] disabled:opacity-50"
+                                  >
+                                    <XCircle className="w-3.5 h-3.5" />
+                                    Cancelar
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => registrarTentativa(c.id, c.tentativas_contato || 0)}
+                                  disabled={isUpdating}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 transition-all active:scale-[0.97] disabled:opacity-50 ml-auto"
+                                >
+                                  <PhoneOutgoing className="w-3.5 h-3.5" />
+                                  Tentativa ({c.tentativas_contato || 0})
+                                </button>
+                              </div>
+                            );
+                          })()}
                           {c.sintomas && (
                             <div className="w-full mt-2 flex items-start gap-2 px-1">
                               <AlertCircle className="w-3.5 h-3.5 text-amber-500/70 mt-0.5 shrink-0" />
@@ -722,18 +735,21 @@ export default function AdminDashboardPage() {
 
           {/* BAR CHART */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col">
-            <h2 className="text-sm font-bold text-slate-800 mb-4 tracking-tight">
-              Por status
+            <h2 className="text-sm font-black text-slate-800 mb-5 uppercase tracking-wider flex items-center gap-2">
+              <div className="w-1 h-3 bg-blue-500 rounded-full" />
+              Status das Consultas (Hoje)
             </h2>
             <div className="h-[200px] w-full text-xs">
               {totalConsultas > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dadosStatus} margin={{ left: -25 }}>
+                  <BarChart data={dadosStatus} margin={{ top: 20, right: 0, left: -25, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis
                       dataKey="name"
-                      tick={{ fill: "#94a3b8", fontSize: 10 }}
+                      tick={{ fill: "#64748b", fontSize: 10, fontWeight: 600 }}
                       axisLine={false}
                       tickLine={false}
+                      dy={10}
                     />
                     <YAxis
                       tick={{ fill: "#94a3b8", fontSize: 10 }}
@@ -741,15 +757,29 @@ export default function AdminDashboardPage() {
                       tickLine={false}
                     />
                     <Tooltip
-                      cursor={{ fill: "#f1f5f9", opacity: 0.6 }}
+                      cursor={{ fill: "#f8fafc" }}
                       contentStyle={{
                         backgroundColor: "#ffffff",
                         borderColor: "#e2e8f0",
-                        borderRadius: "8px",
-                        fontSize: "12px",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                        padding: "8px 12px"
                       }}
                     />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={40}>
+                      {dadosStatus.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                      <LabelList 
+                        dataKey="value" 
+                        position="top" 
+                        fill="#64748b" 
+                        fontSize={11} 
+                        fontWeight={700}
+                        offset={10}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (

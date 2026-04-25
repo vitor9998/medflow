@@ -789,48 +789,68 @@ export default function AgendaPage() {
               })()}
             </div>
 
-            <div className="pt-4 flex flex-col gap-3">
-              {selecionada.status !== 'presente' && selecionada.status !== 'cancelado' && (
-                <button
-                  onClick={() => atualizarStatus(selecionada.id, "presente")}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-2 active:scale-95"
-                >
-                  <CheckCircle2 className="w-5 h-5" /> Marcar como PRESENTE
-                </button>
-              )}
+            {/* ACTIONS - Only show for future or current appointments */}
+            {(() => {
+              const agora = new Date();
+              const dataConsulta = new Date(`${selecionada.data}T${selecionada.hora}`);
+              const isPassado = dataConsulta < agora;
 
-              <div className="grid grid-cols-2 gap-3">
-                {selecionada.status !== 'cancelado' && (
-                  <>
-                    {(() => {
-                      const visual = getStatusVisual(selecionada);
-                      const isHighRisk = visual.label.includes("Risco");
-                      
-                      return (
-                        <button
-                          onClick={() => enviarWhatsApp(selecionada)}
-                          className={`flex justify-center items-center gap-2 font-bold py-3 rounded-2xl transition-all border ${
-                            isHighRisk 
-                              ? "bg-red-50 border-red-100 text-red-600 hover:bg-red-100" 
-                              : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                          }`}
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          <span className="text-xs uppercase tracking-tight">{isHighRisk ? "Cobrar Resposta" : "Enviar Lembrete"}</span>
-                        </button>
-                      );
-                    })()}
+              if (isPassado) return (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center gap-3">
+                   <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                      <CalendarDays className="w-4 h-4" />
+                   </div>
+                   <p className="text-xs text-slate-500 font-medium italic">
+                      Ações de status desabilitadas para consultas passadas.
+                   </p>
+                </div>
+              );
 
+              return (
+                <>
+                  {selecionada.status !== 'presente' && selecionada.status !== 'cancelado' && (
                     <button
-                      onClick={() => atualizarStatus(selecionada.id, "cancelado")}
-                      className="flex justify-center items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-slate-600 font-bold py-3 rounded-2xl transition-all text-xs uppercase tracking-tight"
+                      onClick={() => atualizarStatus(selecionada.id, "presente")}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-2 active:scale-95"
                     >
-                      <XCircle className="w-4 h-4" /> Cancelar
+                      <CheckCircle2 className="w-5 h-5" /> Marcar como PRESENTE
                     </button>
-                  </>
-                )}
-              </div>
-            </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {selecionada.status !== 'cancelado' && (
+                      <>
+                        {(() => {
+                          const visual = getStatusVisual(selecionada);
+                          const isHighRisk = visual.label.includes("Risco");
+                          
+                          return (
+                            <button
+                              onClick={() => enviarWhatsApp(selecionada)}
+                              className={`flex justify-center items-center gap-2 font-bold py-3 rounded-2xl transition-all border ${
+                                isHighRisk 
+                                  ? "bg-red-50 border-red-100 text-red-600 hover:bg-red-100" 
+                                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                              }`}
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span className="text-xs uppercase tracking-tight">{isHighRisk ? "Cobrar Resposta" : "Enviar Lembrete"}</span>
+                            </button>
+                          );
+                        })()}
+
+                        <button
+                          onClick={() => atualizarStatus(selecionada.id, "cancelado")}
+                          className="flex justify-center items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-slate-600 font-bold py-3 rounded-2xl transition-all text-xs uppercase tracking-tight"
+                        >
+                          <XCircle className="w-4 h-4" /> Cancelar
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
       </Modal>
