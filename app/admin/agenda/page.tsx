@@ -365,6 +365,88 @@ export default function AgendaPage() {
               </div>
             </div>
 
+            {/* ALERTAS CLÍNICOS E OPERACIONAIS */}
+            {(() => {
+              const alertas = [];
+              const agora = new Date();
+              const dataConsulta = new Date(`${selecionada.data}T${selecionada.hora}`);
+              const diffMs = dataConsulta.getTime() - agora.getTime();
+              const diffHoras = diffMs / (1000 * 60 * 60);
+
+              if (selecionada.confirmacao_status === 'sem_resposta') {
+                alertas.push({
+                  text: "Paciente não respondeu às tentativas de confirmação",
+                  action: { label: "Entrar em contato", onClick: () => enviarWhatsApp(selecionada) }
+                });
+              }
+              
+              const temFaltas = consultas.some(c => 
+                (c.paciente_id === selecionada.paciente_id || c.telefone === selecionada.telefone) && 
+                c.id !== selecionada.id &&
+                (new Date(`${c.data}T${c.hora}`) < agora) && 
+                c.status !== 'presente' && c.status !== 'cancelado'
+              );
+              
+              const isPendente = selecionada.status !== 'confirmado' && selecionada.status !== 'presente' && selecionada.status !== 'cancelado' && selecionada.confirmacao_status !== 'confirmado';
+
+              if (temFaltas && isPendente) {
+                alertas.push({
+                  text: "Paciente possui histórico de faltas não justificadas",
+                  action: { 
+                    label: "Confirmar manualmente", 
+                    sublabel: "Força a confirmação mesmo sem resposta do paciente",
+                    onClick: () => atualizarStatus(selecionada.id, "confirmado") 
+                  }
+                });
+              }
+
+              if (diffHoras > 0 && diffHoras < 2 && selecionada.status !== 'presente' && selecionada.status !== 'cancelado') {
+                alertas.push({
+                  text: "Consulta próxima do horário (menos de 2h)",
+                  action: { 
+                    label: "Preparar atendimento", 
+                    onClick: () => {
+                      const ehr = document.querySelector('textarea');
+                      ehr?.focus();
+                      ehr?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
+                });
+              }
+
+              if (alertas.length === 0) return null;
+
+              return (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                  <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" /> Atenção
+                  </p>
+                  <div className="space-y-4">
+                    {alertas.slice(0, 2).map((alerta, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-l-2 border-amber-200 pl-3">
+                        <p className="text-xs text-amber-900 font-medium pt-1">
+                          {alerta.text}
+                        </p>
+                        <div className="flex flex-col items-end gap-1">
+                          <button 
+                            onClick={alerta.action.onClick}
+                            className="text-[10px] bg-white hover:bg-amber-100 text-amber-700 font-bold py-1.5 px-3 rounded-lg border border-amber-200 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+                          >
+                            {alerta.action.label}
+                          </button>
+                          {alerta.action.sublabel && (
+                            <span className="text-[9px] text-amber-600/70 font-medium max-w-[150px] text-right leading-tight">
+                              {alerta.action.sublabel}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* PRONTUÁRIO LEVE - VISUALIZAÇÃO DO PACIENTE */}
             <div className="bg-white border text-left border-slate-200 rounded-2xl p-6 space-y-6 shadow-sm border-t-4 border-t-emerald-500">
               <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-4 mb-2">
