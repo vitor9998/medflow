@@ -694,11 +694,11 @@ export default function AgendamentoPage() {
                   {data ? (
                     <div className="space-y-3">
                       {/* Manhã */}
-                      {getDaySlots().filter(s => parseInt(s.time) < 12).length > 0 && (
+                      {getDaySlots().filter((s: any) => parseInt(s.time) < 12).length > 0 && (
                         <div>
                           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">☀️ Manhã</p>
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {getDaySlots().filter(s => parseInt(s.time) < 12).map((slot) => (
+                            {getDaySlots().filter((s: any) => parseInt(s.time) < 12).map((slot: any) => (
                               <button
                                 type="button"
                                 key={slot.time}
@@ -720,11 +720,11 @@ export default function AgendamentoPage() {
                         </div>
                       )}
                       {/* Tarde */}
-                      {getDaySlots().filter(s => parseInt(s.time) >= 12).length > 0 && (
+                      {getDaySlots().filter((s: any) => parseInt(s.time) >= 12).length > 0 && (
                         <div>
                           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1 mt-2">🌙 Tarde</p>
                           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                            {getDaySlots().filter(s => parseInt(s.time) >= 12).map((slot) => (
+                            {getDaySlots().filter((s: any) => parseInt(s.time) >= 12).map((slot: any) => (
                               <button
                                 type="button"
                                 key={slot.time}

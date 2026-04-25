@@ -122,7 +122,7 @@ export default function SecretariaPage() {
   // Médicos visíveis (filtrados)
   const medicosVisiveis = selectedMedicoId === "todos" 
     ? medicos 
-    : medicos.filter(m => m.id === selectedMedicoId);
+    : medicos.filter((m: any) => m.id === selectedMedicoId);
   const slots = generateSlots();
 
   // Encontrar agendamento na célula
@@ -641,7 +641,7 @@ export default function SecretariaPage() {
               <div>
                 <p className="text-xs text-slate-500 font-medium">Medico Responsavel</p>
                 <p className="text-sm font-bold text-slate-800">
-                  {medicos.find(m => m.id === selecionada.user_id)?.nome || "Desconhecido"}
+                  {medicos.find((m: any) => m.id === selecionada.user_id)?.nome || "Desconhecido"}
                 </p>
               </div>
             </div>

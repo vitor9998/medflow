@@ -625,7 +625,7 @@ export default function AgendaPage() {
 
             {/* HISTÓRICO DO PACIENTE */}
             {(() => {
-               const historico = consultas.filter(c => c.telefone === selecionada.telefone && c.id !== selecionada.id).sort((a,b) => {
+               const historico = consultas.filter((c: any) => c.telefone === selecionada.telefone && c.id !== selecionada.id).sort((a: any,b: any) => {
                   const dataA = new Date(`${a.data}T${a.hora}`);
                   const dataB = new Date(`${b.data}T${b.hora}`);
                   return dataB.getTime() - dataA.getTime();
@@ -644,7 +644,7 @@ export default function AgendaPage() {
                    </h3>
 
                    <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
-                     {historico.map(h => {
+                     {historico.map((h: any) => {
                          let datestr = "";
                          let name = "";
                          if (h.anexo_path) {
