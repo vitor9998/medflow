@@ -77,11 +77,11 @@ export default function MasterPanelPage() {
 
     if (tipo === "secretaria") {
       setSecretarias((prev) => 
-        prev.map(m => m.id === id ? { ...m, status: novoStatus } : m)
+        prev.map((m: any) => m.id === id ? { ...m, status: novoStatus } : m)
       );
     } else {
       setMedicos((prev) => 
-        prev.map(m => m.id === id ? { ...m, status: novoStatus } : m)
+        prev.map((m: any) => m.id === id ? { ...m, status: novoStatus } : m)
       );
     }
   }
