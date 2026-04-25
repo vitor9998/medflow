@@ -14,6 +14,7 @@ import {
   PhoneOutgoing,
   AlertCircle,
   Stethoscope,
+  Sparkles,
 } from "lucide-react";
 import {
   LineChart,
@@ -33,6 +34,7 @@ const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot:
   confirmado: { label: "Confirmado", bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
   cancelado:  { label: "Cancelado",  bg: "bg-red-50",     text: "text-red-600",     dot: "bg-red-400" },
   presente:   { label: "Presente",   bg: "bg-sky-50",     text: "text-sky-600",     dot: "bg-sky-400" },
+  falta:      { label: "Falta",      bg: "bg-red-50",     text: "text-red-600",     dot: "bg-red-500" },
   bloqueado:  { label: "Bloqueado",  bg: "bg-slate-100",  text: "text-slate-500",   dot: "bg-slate-300" },
 };
 
@@ -181,34 +183,64 @@ export default function AdminDashboardPage() {
     setUpdatingId(null);
   }
 
-  // --- Metrics ---
-  const hoje = new Date().toISOString().split("T")[0];
+  // --- Derived logic for "falta" (no-show) ---
+  const agora = new Date();
+  const mappedConsultas = consultas.map(c => {
+    if (c.status === 'presente' || c.status === 'cancelado') return c;
+    
+    const [year, month, day] = c.data.split('-').map(Number);
+    const [hour, minute] = (c.hora || '00:00').split(':').map(Number);
+    const dataConsulta = new Date(year, month - 1, day, hour, minute);
+    
+    // Margem de 15 minutos antes de marcar como falta
+    dataConsulta.setMinutes(dataConsulta.getMinutes() + 15);
 
-  const consultasHoje = consultas.filter((c) => c.data === hoje).length;
-  const totalConsultas = consultas.length;
-  const canceladas = consultas.filter((c) => c.status === "cancelado").length;
-  const pendentes = consultas.filter(
-    (c) => c.status === "pendente" || c.status === "aguardando"
+    if (dataConsulta < agora) {
+       return { ...c, status: 'falta' };
+    }
+    return c;
+  });
+
+  // --- Metrics using mapped data ---
+  const hoje = new Date().toLocaleDateString('en-CA'); // Garante formato YYYY-MM-DD local
+
+  const consultasHoje = mappedConsultas.filter((c) => c.data === hoje).length;
+  const totalConsultas = mappedConsultas.length;
+  const canceladas = mappedConsultas.filter((c) => c.status === "cancelado").length;
+  const faltas = mappedConsultas.filter((c) => c.status === "falta").length;
+  const pendentes = mappedConsultas.filter(
+    (c) => c.status === "pendente"
   ).length;
-  const confirmadas = consultas.filter(
+  const confirmadas = mappedConsultas.filter(
     (c) => c.status === "confirmado"
   ).length;
 
   const taxaFalta =
     totalConsultas > 0
-      ? ((canceladas / totalConsultas) * 100).toFixed(1)
+      ? (((canceladas + faltas) / totalConsultas) * 100).toFixed(1)
       : "0.0";
 
+  // --- HOJE DETAIL METRICS ---
+  const consultasHojeLista = mappedConsultas.filter((c) => c.data === hoje);
+  const totalHoje = consultasHojeLista.length;
+  const presentesHoje = consultasHojeLista.filter(c => c.status === 'presente').length;
+  const faltasHoje = consultasHojeLista.filter(c => c.status === 'falta' || (c.data === hoje && c.status === 'cancelado')).length;
+  const confirmadasHoje = consultasHojeLista.filter(c => c.status === 'confirmado').length;
+  const altoRiscoHoje = consultasHojeLista.filter(c => c.status === 'pendente' && (c.confirmacao_status === 'sem_resposta' || (c.tentativas_contato || 0) >= 2)).length;
+
+  const taxaPresencaHoje = totalHoje > 0 ? Math.round((presentesHoje / totalHoje) * 100) : 0;
+  const taxaFaltaHoje = totalHoje > 0 ? Math.round((faltasHoje / totalHoje) * 100) : 0;
+
   // Greeting by time of day
-  const hora = new Date().getHours();
-  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+  const horaAtual = new Date().getHours();
+  const saudacao = horaAtual < 12 ? "Bom dia" : horaAtual < 18 ? "Boa tarde" : "Boa noite";
   const dataHoje = new Date().toLocaleDateString("pt-BR", {
     weekday: "long", day: "numeric", month: "long"
   });
   const dataHojeFormatada = dataHoje.charAt(0).toUpperCase() + dataHoje.slice(1);
 
   // Chart data
-  const dadosPorDiaMap = consultas.reduce((acc, c) => {
+  const dadosPorDiaMap = mappedConsultas.reduce((acc, c) => {
     const datePart = c.data.split("-").slice(1).join("/");
     acc[datePart] = (acc[datePart] || 0) + 1;
     return acc;
@@ -220,15 +252,31 @@ export default function AdminDashboardPage() {
     .slice(-14);
 
   const dadosStatus = [
-    { name: "Confirmado", value: confirmadas, fill: "#34d399" },
-    { name: "Cancelado", value: canceladas, fill: "#f87171" },
-    { name: "Pendente", value: pendentes, fill: "#fbbf24" },
+    { name: "Confirmado", value: confirmadasHoje, fill: "#34d399" },
+    { name: "Falta", value: faltasHoje, fill: "#f87171" },
+    { name: "Pendente", value: totalHoje - presentesHoje - faltasHoje, fill: "#fbbf24" },
   ];
 
-  // Split appointments
-  const consultasAtivas = consultas
+  // Split appointments and sort by priority
+  const consultasAtivas = mappedConsultas
     .filter((c) => c.status !== "cancelado")
     .sort((a, b) => {
+      // Helper para prioridade
+      const getPriority = (c: any) => {
+        const isAltoRisco = c.status === 'pendente' && (c.confirmacao_status === 'sem_resposta' || (c.tentativas_contato || 0) >= 2);
+        if (isAltoRisco) return 1;
+        if (c.status === 'pendente') return 2;
+        if (c.status === 'confirmado') return 3;
+        if (c.status === 'presente') return 4;
+        return 5;
+      };
+
+      const prioA = getPriority(a);
+      const prioB = getPriority(b);
+
+      if (prioA !== prioB) return prioA - prioB;
+      
+      // Se mesma prioridade, ordena por data e hora
       if (a.data === b.data) return (a.hora || "").localeCompare(b.hora || "");
       return a.data.localeCompare(b.data);
     });
@@ -236,14 +284,14 @@ export default function AdminDashboardPage() {
   // --- Metrics array for clean rendering ---
   const metricas = [
     {
-      label: "Hoje",
+      label: "Consultas hoje",
       value: consultasHoje,
       icon: CalendarDays,
       accent: "text-blue-600",
       iconBg: "bg-blue-50",
     },
     {
-      label: "Total",
+      label: "Total geral",
       value: totalConsultas,
       icon: Clock,
       accent: "text-slate-600",
@@ -265,13 +313,54 @@ export default function AdminDashboardPage() {
     },
   ];
 
+  // Decision support messages
+  const mensagensDecisao = [];
+  if (altoRiscoHoje > 0) {
+    mensagensDecisao.push({
+      text: `${altoRiscoHoje} ${altoRiscoHoje === 1 ? 'risco de falta' : 'riscos de falta'}`,
+      icon: AlertCircle,
+      color: 'text-amber-500'
+    });
+  }
+  if (faltasHoje > 0) {
+    mensagensDecisao.push({
+      text: `${faltasHoje} ${faltasHoje === 1 ? 'não compareceu' : 'não compareceram'}`,
+      icon: XCircle,
+      color: 'text-red-500'
+    });
+  }
+  if (taxaPresencaHoje >= 80 && totalHoje >= 3) {
+     mensagensDecisao.push({
+      text: "Alta presença",
+      icon: CheckCircle2,
+      color: 'text-emerald-500'
+    });
+  } else if (taxaPresencaHoje < 50 && totalHoje >= 3) {
+     mensagensDecisao.push({
+      text: "Muitas faltas",
+      icon: AlertCircle,
+      color: 'text-red-500'
+    });
+  }
+
+  // Fallback para quando não houver nada crítico ou estiver vazio
+  if (mensagensDecisao.length === 0) {
+    mensagensDecisao.push({
+      text: totalHoje === 0 ? "Agenda livre" : "Operação estável",
+      icon: Sparkles,
+      color: 'text-slate-400'
+    });
+  }
+  
+  const resumoExibido = mensagensDecisao.slice(0, 2);
+
   return (
     <div className="p-6 md:p-10 space-y-7 w-full max-w-7xl mx-auto">
       {/* HEADER */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{dataHojeFormatada}</p>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-none">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">
             {saudacao}
           </h1>
           <p className="text-slate-500 mt-1.5 text-sm">
@@ -286,6 +375,112 @@ export default function AdminDashboardPage() {
           </span>
         )}
       </div>
+
+      {/* ALERTAS OPERACIONAIS */}
+      {altoRiscoHoje > 0 && (
+        <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-3">
+            <div className="bg-amber-100 p-2 rounded-xl">
+              <AlertCircle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-amber-900 leading-none">
+                Atenção: {altoRiscoHoje} {altoRiscoHoje === 1 ? 'paciente com alto risco' : 'pacientes com alto risco'} hoje
+              </p>
+              <p className="text-[11px] text-amber-700 mt-1.5 font-medium">Aguardando confirmação ou sem resposta às tentativas de contato.</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => router.push('/admin/agenda')}
+            className="text-[10px] font-black uppercase tracking-widest bg-white text-amber-700 px-4 py-2 rounded-xl border border-amber-200 hover:bg-amber-100 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+          >
+            Ver na agenda
+          </button>
+        </div>
+      )}
+
+      {/* SEÇÃO 1: MONITORAMENTO DE HOJE */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Painel Operacional (Hoje)</h2>
+          </div>
+
+          {/* RESUMO EXECUTIVO (Sinalização Rápida) */}
+          {resumoExibido.length > 0 && (
+            <div className="flex items-center gap-3">
+              {resumoExibido.map((msg, idx) => (
+                <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-100 shadow-sm animate-in fade-in zoom-in duration-700">
+                  <msg.icon className={`w-3 h-3 ${msg.color}`} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{msg.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        <div className="bg-white rounded-[32px] p-8 md:p-10 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full -mr-24 -mt-24 blur-3xl group-hover:bg-emerald-500/10 transition-all duration-1000" />
+          
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Agenda de hoje</p>
+              <div className="flex items-baseline gap-4">
+                 <span className="text-7xl font-black tabular-nums text-slate-900 tracking-tighter">{totalHoje}</span>
+                 <div className="flex flex-col">
+                   <span className="text-slate-900 font-black text-xl leading-tight">Agendamentos</span>
+                   <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Total confirmados</span>
+                 </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 lg:gap-16 pt-8 lg:pt-0 border-t lg:border-t-0 lg:border-l border-slate-100 lg:pl-16">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Presentes</p>
+                </div>
+                <p className="text-3xl font-black tabular-nums text-slate-900">{presentesHoje}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{taxaPresencaHoje}% presença</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
+                  <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Faltas</p>
+                </div>
+                <p className="text-3xl font-black tabular-nums text-slate-900">{faltasHoje}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{taxaFaltaHoje}% falta</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
+                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Confirmadas</p>
+                </div>
+                <p className="text-3xl font-black tabular-nums text-slate-900">{confirmadasHoje}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Em espera</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] animate-pulse" />
+                  <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Alto Risco</p>
+                </div>
+                <p className="text-3xl font-black tabular-nums text-slate-900">{altoRiscoHoje}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Críticos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SEÇÃO 2: RESUMO GERAL */}
+      <div className="pt-4 space-y-5">
+        <div className="flex items-center gap-2">
+           <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Desempenho e Histórico Geral</h2>
+        </div>
 
       {/* METRICS — borderless row, divide-x */}
       <div className="grid grid-cols-2 md:grid-cols-4 bg-white rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.06)] overflow-hidden">
@@ -567,5 +762,6 @@ export default function AdminDashboardPage() {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
