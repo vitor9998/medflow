@@ -43,7 +43,7 @@ export default function PacientesPage() {
       // Agrupar agendamentos por paciente
       const pacMap = new Map();
 
-      (data || []).forEach((c) => {
+      (data || []).forEach((c: any) => {
         const key = `${c.nome?.trim().toLowerCase()}-${c.telefone}`;
         if (!pacMap.has(key)) {
           pacMap.set(key, {
