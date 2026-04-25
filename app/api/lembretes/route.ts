@@ -1,51 +1,59 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { buildMensagemLembrete } from '@/lib/communication';
 
-// Inicializa o cliente Resend com a chave do .env
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
-    const { pendentes } = await req.json();
+    const { pendentes, sandboxEmail } = await req.json();
 
     if (!pendentes || pendentes.length === 0) {
       return NextResponse.json({ error: 'Nenhum agendamento fornecido' }, { status: 400 });
     }
 
-    const { enviosFormatados, emailsParaEnviar } = processarEmails(pendentes);
+    const resultados = [];
 
-    let sucessoEnvio = true;
+    for (const c of pendentes) {
+      const canal = c.canal_utilizado || "email";
+      const mensagem = buildMensagemLembrete(c);
+      
+      console.log(`[API-Lembretes] Processando: Paciente=${c.nome}, Canal=${canal}, Sandbox=${!!sandboxEmail}`);
 
-    if (emailsParaEnviar.length > 0) {
-        // O Resend permite batch se enviar arrays, mas num nível simples podemos usar loop promises ou batch API custom.
-        // Aqui usaremos Promise.all para enviar simultaneamente.
-        const promises = emailsParaEnviar.map(email => resend.emails.send(email));
-        
-        await Promise.allSettled(promises);
+      if (canal === "email") {
+        const targetEmail = sandboxEmail || c.email;
+        if (!targetEmail) {
+          console.log(`[API-Lembretes] Pulando: Paciente=${c.nome} (Sem e-mail)`);
+          resultados.push({ id: c.id, status: "sem_email", canal: "email" });
+          continue;
+        }
+
+        try {
+          await resend.emails.send({
+            from: 'MedFlow Lembretes <onboarding@resend.dev>',
+            to: targetEmail,
+            subject: 'Lembrete de Consulta',
+            html: `<p>${mensagem.replace(/\n/g, '<br>')}</p>`
+          });
+          resultados.push({ id: c.id, status: "enviado", canal: "email" });
+        } catch (e) {
+          console.error(`Erro Resend para ${c.nome}:`, e);
+          resultados.push({ id: c.id, status: "falha", canal: "email" });
+        }
+      } else if (canal === "whatsapp") {
+        // MOCK WhatsApp
+        console.log(`[WHATSAPP MOCK] Para: ${c.telefone} | Msg: ${mensagem}`);
+        resultados.push({ id: c.id, status: "enviado", canal: "whatsapp" });
+      } else if (canal === "sms") {
+        // MOCK SMS
+        console.log(`[SMS MOCK] Para: ${c.telefone} | Msg: ${mensagem}`);
+        resultados.push({ id: c.id, status: "enviado", canal: "sms" });
+      }
     }
 
-    return NextResponse.json({ success: true, message: `Lembretes processados: ${pendentes.length}` });
+    return NextResponse.json({ success: true, resultados });
     
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
-}
-
-// Helper interno
-function processarEmails(pendentes: any[]) {
-    const emailsParaEnviar: any[] = [];
-    const enviosFormatados: any[] = [];
-
-    for (const c of pendentes) {
-        if (c.email) {
-            emailsParaEnviar.push({
-                from: 'MedFlow Lembretes <onboarding@resend.dev>',
-                to: c.email,
-                subject: 'Lembrete de Consulta',
-                html: `<p>Olá <strong>${c.nome}</strong>,</p><p>Você tem uma consulta agendada para <strong>${c.data?.split('-').reverse().join('/')} às ${c.hora}</strong>.</p><p>Até breve!</p>`
-            });
-        }
-    }
-
-    return { emailsParaEnviar, enviosFormatados };
 }
