@@ -15,7 +15,7 @@ export default function Navbar() {
   useEffect(() => {
     // 🔥 Listener de autenticação
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (_event: any, session: any) => {
         const currentUser = session?.user || null;
         setUser(currentUser);
 
