@@ -1,4 +1,6 @@
-import * as mcp from "@/lib/mcp/agendamento";
+import * as mcpAgendamento from "@/lib/mcp/agendamento";
+import * as mcpConfirmacao from "@/lib/mcp/confirmacao";
+import { AgendaActionPayload } from "@/lib/types";
 
 // Agent ONLY orchestrates actions
 
@@ -6,17 +8,19 @@ type Action = "confirmar" | "cancelar" | "presente" | "reagendar" | "tentativa";
 
 export async function agendaAgent(action: Action, payload: any) {
   try {
+    const actionPayload: AgendaActionPayload = { id: payload.id };
+
     switch (action) {
       case "confirmar":
-        return await mcp.atualizarStatus(payload.id, "confirmado");
+        return await mcpAgendamento.atualizarStatus(actionPayload, "confirmado");
       case "cancelar":
-        return await mcp.atualizarStatus(payload.id, "cancelado");
+        return await mcpAgendamento.atualizarStatus(actionPayload, "cancelado");
       case "presente":
-        return await mcp.atualizarStatus(payload.id, "presente");
+        return await mcpAgendamento.atualizarStatus(actionPayload, "presente");
       case "reagendar":
-        return await mcp.reagendar(payload.id, payload.novaData, payload.novaHora);
+        return await mcpAgendamento.reagendar(actionPayload, payload.novaData, payload.novaHora);
       case "tentativa":
-        return await mcp.registrarTentativa(payload.id, payload.atual);
+        return await mcpConfirmacao.registrarTentativa(actionPayload, payload.atual);
       default:
         throw new Error("Ação não reconhecida pelo Agent");
     }

@@ -1,15 +1,17 @@
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import { AgendaActionPayload } from "@/lib/types";
 
-// MCP handles ALL database operations for Confirmations
+// MCP handles ALL database operations for Confirmations using Server Client
 
-export async function registrarEnvio(id: number) {
-  const { data, error } = await supabase
+export async function registrarPrimeiroEnvio(payload: AgendaActionPayload, tentativasAtuais: number) {
+  const { data, error } = await supabaseAdmin
     .from("agendamentos")
     .update({ 
       lembrete_enviado: true,
-      confirmacao_status: "enviado" // atualiza a nova feature de rastreamento
+      confirmacao_status: "enviado",
+      tentativas_contato: (tentativasAtuais || 0) + 1
     })
-    .eq("id", id)
+    .eq("id", payload.id)
     .select()
     .single();
 
@@ -17,12 +19,12 @@ export async function registrarEnvio(id: number) {
   return data;
 }
 
-export async function registrarTentativa(id: number, atual: number) {
+export async function registrarTentativa(payload: AgendaActionPayload, atual: number) {
   const novo = (atual || 0) + 1;
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("agendamentos")
     .update({ tentativas_contato: novo })
-    .eq("id", id)
+    .eq("id", payload.id)
     .select()
     .single();
 
@@ -30,11 +32,11 @@ export async function registrarTentativa(id: number, atual: number) {
   return data;
 }
 
-export async function registrarSemResposta(id: number) {
-  const { data, error } = await supabase
+export async function registrarSemResposta(payload: AgendaActionPayload) {
+  const { data, error } = await supabaseAdmin
     .from("agendamentos")
     .update({ confirmacao_status: "sem_resposta" })
-    .eq("id", id)
+    .eq("id", payload.id)
     .select()
     .single();
 

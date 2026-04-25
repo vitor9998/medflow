@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabase/server';
 import { confirmacaoAgent } from '@/lib/agents/confirmacaoAgent';
 
 export async function GET(req: Request) {
@@ -17,8 +17,8 @@ export async function GET(req: Request) {
     const dataAmanhaFormatada = amanha.toISOString().split('T')[0];
 
     // Aqui buscamos todos os agendamentos (qualquer doctor) que sao para amanhã e nao tem lembrete enviado.
-    // DICA: Se usar RLS estrito no Supabase, certifique-se de configurar a bypass policy para chamadas de rotas servidor ou usar a service_role_key.
-    const { data: pendentesUnfiltered, error: fError } = await supabase
+    // Usamos supabaseAdmin para garantir permissão de leitura total (bypass RLS).
+    const { data: pendentesUnfiltered, error: fError } = await supabaseAdmin
       .from('agendamentos')
       .select('*')
       .eq('data', dataAmanhaFormatada);

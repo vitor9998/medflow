@@ -1,12 +1,13 @@
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import { AgendaActionPayload } from "@/lib/types";
 
-// MCP handles ALL database operations
+// MCP handles ALL database operations using Server Client
 
-export async function atualizarStatus(id: number, status: string) {
-  const { data, error } = await supabase
+export async function atualizarStatus(payload: AgendaActionPayload, status: string) {
+  const { data, error } = await supabaseAdmin
     .from("agendamentos")
     .update({ status })
-    .eq("id", id)
+    .eq("id", payload.id)
     .select()
     .single();
 
@@ -14,24 +15,11 @@ export async function atualizarStatus(id: number, status: string) {
   return data;
 }
 
-export async function reagendar(id: number, novaData: string, novaHora: string) {
-  const { data, error } = await supabase
+export async function reagendar(payload: AgendaActionPayload, novaData: string, novaHora: string) {
+  const { data, error } = await supabaseAdmin
     .from("agendamentos")
     .update({ data: novaData, hora: novaHora, status: "pendente" })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-export async function registrarTentativa(id: number, atual: number) {
-  const novo = (atual || 0) + 1;
-  const { data, error } = await supabase
-    .from("agendamentos")
-    .update({ tentativas_contato: novo })
-    .eq("id", id)
+    .eq("id", payload.id)
     .select()
     .single();
 

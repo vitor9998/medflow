@@ -1,9 +1,12 @@
 import * as mcp from "@/lib/mcp/confirmacao";
+import { Consulta } from "@/lib/types";
 
 // Agent ONLY orchestrates actions for Confirmation
 
-export async function confirmacaoAgent(consulta: any, baseUrl: string) {
+export async function confirmacaoAgent(consulta: Consulta, baseUrl: string) {
   try {
+    const payload = { id: consulta.id };
+
     // 1. Se status = cancelado → ignorar
     if (consulta.status === 'cancelado') {
       return { success: false, reason: "cancelado" };
@@ -26,8 +29,7 @@ export async function confirmacaoAgent(consulta: any, baseUrl: string) {
 
       if (!res.ok) throw new Error("Erro API lembretes");
 
-      await mcp.registrarEnvio(consulta.id);
-      await mcp.registrarTentativa(consulta.id, tentativas);
+      await mcp.registrarPrimeiroEnvio(payload, tentativas);
       return { success: true, action: "primeiro_envio" };
     }
 
@@ -43,11 +45,11 @@ export async function confirmacaoAgent(consulta: any, baseUrl: string) {
 
         if (!res.ok) throw new Error("Erro API lembretes na re-tentativa");
 
-        await mcp.registrarTentativa(consulta.id, tentativas);
+        await mcp.registrarTentativa(payload, tentativas);
         return { success: true, action: "re-tentativa" };
       } else {
         // Excedeu tentativas
-        await mcp.registrarSemResposta(consulta.id);
+        await mcp.registrarSemResposta(payload);
         return { success: true, action: "marcado_sem_resposta" };
       }
     }
