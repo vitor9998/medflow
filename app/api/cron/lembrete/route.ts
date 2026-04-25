@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     if (fError) throw fError;
 
     // O Agent fará as validações de envio e re-envio, então não filtramos por lembrete_enviado aqui
-    const pendentes = (pendentesUnfiltered || []).filter(c => c.status !== 'cancelado');
+    const pendentes = (pendentesUnfiltered || []).filter((c: any) => c.status !== 'cancelado');
 
     if (!pendentes || pendentes.length === 0) {
       return NextResponse.json({ message: 'Nenhum lembrete para enviar', enviados: 0 });
