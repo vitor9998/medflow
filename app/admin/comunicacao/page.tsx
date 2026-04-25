@@ -64,7 +64,7 @@ export default function ComunicacaoPage() {
 
       if (fError) throw fError;
 
-      const pendentes = (consultasAmanha || []).filter(c => !c.lembrete_enviado);
+      const pendentes = (consultasAmanha || []).filter((c: any) => !c.lembrete_enviado);
 
       if (pendentes.length === 0) {
         alert("Não ha consultas para amanha com lembrete pendente.");
