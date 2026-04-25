@@ -194,7 +194,7 @@ export default function AdminDashboardPage() {
 
   // --- Derived logic for "falta" (no-show) ---
   const agora = new Date();
-  const mappedConsultas = consultas.map(c => {
+  const mappedConsultas = consultas.map((c: any) => {
     if (c.status === 'presente' || c.status === 'cancelado') return c;
     
     const [year, month, day] = c.data.split('-').map(Number);
@@ -232,10 +232,10 @@ export default function AdminDashboardPage() {
   // --- HOJE DETAIL METRICS ---
   const consultasHojeLista = mappedConsultas.filter((c) => c.data === hoje);
   const totalHoje = consultasHojeLista.length;
-  const presentesHoje = consultasHojeLista.filter(c => c.status === 'presente').length;
-  const faltasHoje = consultasHojeLista.filter(c => c.status === 'falta' || (c.data === hoje && c.status === 'cancelado')).length;
-  const confirmadasHoje = consultasHojeLista.filter(c => c.status === 'confirmado').length;
-  const altoRiscoHoje = consultasHojeLista.filter(c => c.status === 'pendente' && (c.confirmacao_status === 'sem_resposta' || (c.tentativas_contato || 0) >= 2)).length;
+  const presentesHoje = consultasHojeLista.filter((c: any) => c.status === 'presente').length;
+  const faltasHoje = consultasHojeLista.filter((c: any) => c.status === 'falta' || (c.data === hoje && c.status === 'cancelado')).length;
+  const confirmadasHoje = consultasHojeLista.filter((c: any) => c.status === 'confirmado').length;
+  const altoRiscoHoje = consultasHojeLista.filter((c: any) => c.status === 'pendente' && (c.confirmacao_status === 'sem_resposta' || (c.tentativas_contato || 0) >= 2)).length;
 
   const taxaPresencaHoje = totalHoje > 0 ? Math.round((presentesHoje / totalHoje) * 100) : 0;
   const taxaFaltaHoje = totalHoje > 0 ? Math.round((faltasHoje / totalHoje) * 100) : 0;

@@ -25,15 +25,15 @@ export default function PortalDashboardPage() {
         
       if (minhas && minhas.length > 0) {
         // Agora buscamos os médicos manualmente pra cruzar os dados na memória (Zero Erros)
-        const medicosIds = minhas.map(m => m.user_id);
+        const medicosIds = minhas.map((m: any) => m.user_id);
         const { data: profilesDocs } = await supabase
           .from("profiles")
           .select("id, nome, especialidade")
           .in("id", medicosIds);
 
-        const minhasMerged = minhas.map(m => ({
+        const minhasMerged = minhas.map((m: any) => ({
           ...m,
-          profiles: profilesDocs?.find(p => p.id === m.user_id) || null
+          profiles: profilesDocs?.find((p: any) => p.id === m.user_id) || null
         }));
         setMinhasConsultas(minhasMerged);
       } else {
@@ -56,8 +56,8 @@ export default function PortalDashboardPage() {
 
   if (loading) return null;
 
-  const proximas = minhasConsultas.filter(c => c.status !== "cancelado" && new Date(`${c.data}T${c.hora}`) >= new Date());
-  const passadas = minhasConsultas.filter(c => c.status === "cancelado" || new Date(`${c.data}T${c.hora}`) < new Date());
+  const proximas = minhasConsultas.filter((c: any) => c.status !== "cancelado" && new Date(`${c.data}T${c.hora}`) >= new Date());
+  const passadas = minhasConsultas.filter((c: any) => c.status === "cancelado" || new Date(`${c.data}T${c.hora}`) < new Date());
 
   return (
     <div className="flex flex-col gap-8 pb-12">

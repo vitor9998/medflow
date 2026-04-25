@@ -289,7 +289,7 @@ export default function PacientePage() {
       setConsultas(data);
 
       // Buscar nomes dos médicos
-      const medicoIds = [...new Set(data.map(c => c.user_id))];
+      const medicoIds = [...new Set(data.map((c: any) => c.user_id))];
       if (medicoIds.length > 0) {
         const { data: docs } = await supabase
           .from("profiles")
@@ -332,15 +332,15 @@ export default function PacientePage() {
 
   // Helpers
   function getMedicoNome(userId: string) {
-    return medicos.find(m => m.id === userId)?.nome || "Médico";
+    return medicos.find((m: any) => m.id === userId)?.nome || "Médico";
   }
   function getMedicoEsp(userId: string) {
-    return medicos.find(m => m.id === userId)?.especialidade || "Clínico";
+    return medicos.find((m: any) => m.id === userId)?.especialidade || "Clínico";
   }
 
   const hoje = new Date().toISOString().split("T")[0];
-  const proximas = consultas.filter(c => c.data >= hoje && c.status !== "cancelado");
-  const historico = consultas.filter(c => c.data < hoje || c.status === "cancelado");
+  const proximas = consultas.filter((c: any) => c.data >= hoje && c.status !== "cancelado");
+  const historico = consultas.filter((c: any) => c.data < hoje || c.status === "cancelado");
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-900 selection:bg-emerald-200">
