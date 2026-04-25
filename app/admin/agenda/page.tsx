@@ -186,7 +186,7 @@ export default function AgendaPage() {
     if (c.status === 'presente') {
       return { 
         className: "event-status-confirmado",
-        label: "Presente", 
+        label: "Paciente presente", 
         description: "Paciente compareceu ao atendimento",
         bg: "bg-emerald-50", text: "text-emerald-600" 
       };
@@ -195,8 +195,8 @@ export default function AgendaPage() {
     if (c.status === 'cancelado') {
       return { 
         className: "event-status-cancelado",
-        label: "Cancelado", 
-        description: "Agendamento cancelado",
+        label: "Agendamento cancelado", 
+        description: "Este agendamento foi cancelado",
         bg: "bg-slate-50", text: "text-slate-600" 
       };
     }
@@ -224,7 +224,7 @@ export default function AgendaPage() {
     if (c.confirmacao_status === 'sem_resposta' || (c.tentativas_contato || 0) >= 2) {
       return { 
         className: "event-status-risco",
-        label: "Alto risco de falta", 
+        label: "Risco de falta", 
         description: "Paciente não respondeu às tentativas de confirmação",
         bg: "bg-red-50", text: "text-red-600" 
       };
@@ -336,10 +336,22 @@ export default function AgendaPage() {
       >
         {selecionada && (
           <div className="space-y-4">
-            <div>
-              <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">Paciente</p>
-              <p className="text-lg font-bold text-slate-800">{selecionada.nome}</p>
-              <p className="text-sm text-slate-500">{selecionada.email || "Sem e-mail"}</p>
+            <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mb-1">Paciente</p>
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-none">{selecionada.nome}</h2>
+                <p className="text-sm text-slate-500 mt-1.5">{selecionada.email || "Sem e-mail cadastrado"}</p>
+              </div>
+              <div className="text-right">
+                 {(() => {
+                    const visual = getStatusVisual(selecionada);
+                    return (
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${visual.bg} ${visual.text} border border-current/20`}>
+                        {visual.label}
+                      </span>
+                    );
+                 })()}
+              </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
@@ -354,19 +366,19 @@ export default function AgendaPage() {
             </div>
 
             {/* PRONTUÁRIO LEVE - VISUALIZAÇÃO DO PACIENTE */}
-            <div className="bg-white border text-left border-slate-200 rounded-2xl p-4 sm:p-5 space-y-5 shadow-sm">
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
-                 <div className="bg-emerald-50 p-1.5 rounded-lg">
-                    <Stethoscope className="w-5 h-5 text-emerald-600" />
+            <div className="bg-white border text-left border-slate-200 rounded-2xl p-6 space-y-6 shadow-sm border-t-4 border-t-emerald-500">
+              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-4 mb-2">
+                 <div className="bg-emerald-50 p-2 rounded-xl">
+                    <Stethoscope className="w-6 h-6 text-emerald-600" />
                  </div>
-                 Prontuário Leve
+                 Resumo Rápido
               </h3>
 
               {/* Resumo do paciente (IA) */}
               {(selecionada.resumo_ia || (selecionada.sintomas && !selecionada.resumo_ia)) && (
                 <div>
-                   <p className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                     <Bot className="w-4 h-4" /> Resumo do Paciente (IA)
+                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-1.5 mb-3">
+                     <Bot className="w-4 h-4" /> Sintese da IA
                    </p>
                    {selecionada.resumo_ia ? (
                      <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-100 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-sm">
@@ -596,10 +608,10 @@ export default function AgendaPage() {
             })()}
 
             {/* EHR AREA */}
-            <div className="border border-blue-200 bg-blue-50 p-4 rounded-xl space-y-4">
-              <h3 className="font-bold text-blue-600 border-b border-blue-200 pb-2 mb-2 flex justify-between items-center">
-                Prontuario Medico
-                <span className="text-[10px] uppercase bg-blue-100 text-blue-500 px-2 py-0.5 rounded-full">Anamnese & Diagnostico</span>
+            <div className="border border-slate-200 bg-slate-50/50 p-5 rounded-2xl space-y-5">
+              <h3 className="font-bold text-slate-700 border-b border-slate-100 pb-3 mb-1 flex justify-between items-center text-sm uppercase tracking-wider">
+                Prontuário Médico
+                <span className="text-[9px] font-black uppercase bg-slate-200/50 text-slate-500 px-2 py-0.5 rounded-full">Anamnese & Diagnóstico</span>
               </h3>
               
               <div>
@@ -652,9 +664,9 @@ export default function AgendaPage() {
               <button
                 onClick={salvarProntuario}
                 disabled={isSavingEhr}
-                className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-3 mt-2 rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-3 rounded-xl transition-all shadow-sm active:scale-[0.98]"
               >
-                <Save className="w-4 h-4" /> {isSavingEhr ? "Salvando..." : "Arquivar Prontuário"}
+                <Save className="w-3.5 h-3.5" /> {isSavingEhr ? "Arquivando..." : "Finalizar Anamnese"}
               </button>
             </div>
 
@@ -678,61 +690,63 @@ export default function AgendaPage() {
                </button>
             </div>
 
-            <div className="pt-2 mt-2">
-              <p className="text-sm text-slate-400 font-medium mb-1">Status de Confirmação</p>
+            <div className="pt-2 px-1">
               {(() => {
                 const visual = getStatusVisual(selecionada);
                 return (
-                  <div className="space-y-2">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-bold shadow-sm ${visual.bg} ${visual.text}`}>
-                      {visual.label.includes("risco") && <AlertCircle className="w-4 h-4" />}
-                      {visual.label === "Confirmado" && <CheckCircle2 className="w-4 h-4" />}
-                      {visual.label.toUpperCase()}
-                    </span>
-                    <p className="text-xs text-slate-500 font-medium ml-1">
-                      {visual.description}
-                    </p>
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className={`mt-0.5 p-1 rounded-full ${visual.bg} ${visual.text}`}>
+                      <AlertCircle className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-700 font-bold leading-none">{visual.description}</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Status atualizado pelo sistema em tempo real</p>
+                    </div>
                   </div>
                 );
               })()}
             </div>
 
-            <div className="pt-4 mt-2 flex flex-col gap-3 border-t border-gray-100">
+            <div className="pt-4 flex flex-col gap-3">
               {selecionada.status !== 'presente' && selecionada.status !== 'cancelado' && (
                 <button
                   onClick={() => atualizarStatus(selecionada.id, "presente")}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-emerald-200/50 flex items-center justify-center gap-2 active:scale-95"
                 >
                   <CheckCircle2 className="w-5 h-5" /> Marcar como PRESENTE
                 </button>
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                {(() => {
-                  const visual = getStatusVisual(selecionada);
-                  const isHighRisk = visual.label.includes("risco");
-                  
-                  return (
-                    <button
-                      onClick={() => enviarWhatsApp(selecionada)}
-                      className={`flex justify-center items-center gap-2 font-semibold py-2.5 rounded-xl transition-all border ${
-                        isHighRisk 
-                          ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100" 
-                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                      }`}
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      {isHighRisk ? "Cobrar Resposta" : "Enviar Lembrete"}
-                    </button>
-                  );
-                })()}
+                {selecionada.status !== 'cancelado' && (
+                  <>
+                    {(() => {
+                      const visual = getStatusVisual(selecionada);
+                      const isHighRisk = visual.label.includes("Risco");
+                      
+                      return (
+                        <button
+                          onClick={() => enviarWhatsApp(selecionada)}
+                          className={`flex justify-center items-center gap-2 font-bold py-3 rounded-2xl transition-all border ${
+                            isHighRisk 
+                              ? "bg-red-50 border-red-100 text-red-600 hover:bg-red-100" 
+                              : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span className="text-xs uppercase tracking-tight">{isHighRisk ? "Cobrar Resposta" : "Enviar Lembrete"}</span>
+                        </button>
+                      );
+                    })()}
 
-                <button
-                  onClick={() => atualizarStatus(selecionada.id, "cancelado")}
-                  className="flex justify-center items-center gap-2 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 text-slate-500 hover:text-red-600 font-medium py-2.5 rounded-xl transition-all"
-                >
-                  <XCircle className="w-4 h-4" /> Cancelar
-                </button>
+                    <button
+                      onClick={() => atualizarStatus(selecionada.id, "cancelado")}
+                      className="flex justify-center items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-slate-600 font-bold py-3 rounded-2xl transition-all text-xs uppercase tracking-tight"
+                    >
+                      <XCircle className="w-4 h-4" /> Cancelar
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
