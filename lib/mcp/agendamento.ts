@@ -28,6 +28,19 @@ export async function reagendar(payload: AgendaActionPayload, novaData: string, 
 }
 
 export async function criarAgendamento(payload: any) {
+  // Buscar clinica_id do medico se nao vier no payload
+  if (!payload.clinica_id && payload.user_id) {
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("clinica_id")
+      .eq("id", payload.user_id)
+      .single();
+    
+    if (prof?.clinica_id) {
+      payload.clinica_id = prof.clinica_id;
+    }
+  }
+
   const { data, error } = await supabaseAdmin
     .from("agendamentos")
     .insert([payload])

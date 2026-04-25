@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -76,70 +76,48 @@ export default function AdminDashboardPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    async function init() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/login");
-        return;
-      }
+  const initialized = useRef(false);
+ 
+   useEffect(() => {
+     async function init() {
+       if (initialized.current) return;
+       initialized.current = true;
+ 
+       const {
+         data: { user },
+       } = await supabase.auth.getUser();
+ 
+       if (!user) {
+         router.push("/login");
+         return;
+       }
 
       const { data: prof } = await supabase
         .from("profiles")
-        .select("role, medicos_ids, clinica_id")
+        .select("role, clinica_id")
         .eq("id", user.id)
         .single();
 
       setUserRole(prof?.role || "doctor");
-
-      if (prof?.role === "secretaria") {
-        if (prof.clinica_id) {
-          const { data: docs } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("clinica_id", prof.clinica_id)
-            .eq("role", "doctor");
-
-          const ids = (docs || []).map((d: any) => d.id);
-          if (ids.length > 0) fetchConsultasMulti(ids);
-          else setIsLoading(false);
-        } else if (prof.medicos_ids?.length > 0) {
-          fetchConsultasMulti(prof.medicos_ids);
-        } else {
-          setIsLoading(false);
-        }
-      } else {
-        fetchConsultas(user.id);
-      }
+      fetchConsultas(user.id, prof?.role, prof?.clinica_id);
     }
 
     init();
   }, []);
 
-  async function fetchConsultas(userId: string) {
-    const { data, error } = await supabase
+  async function fetchConsultas(userId: string, role?: string, clinicaId?: string) {
+    let query = supabase
       .from("agendamentos")
       .select("*")
-      .eq("user_id", userId)
       .order("data", { ascending: true });
 
-    if (error) {
-      console.log("Erro ao buscar:", error);
+    if (role === "secretaria" && clinicaId) {
+      query = query.eq("clinica_id", clinicaId);
     } else {
-      setConsultas(data || []);
+      query = query.eq("user_id", userId);
     }
-    setIsLoading(false);
-  }
 
-  async function fetchConsultasMulti(medicoIds: string[]) {
-    const { data, error } = await supabase
-      .from("agendamentos")
-      .select("*")
-      .in("user_id", medicoIds)
-      .order("data", { ascending: true });
+    const { data, error } = await query;
 
     if (error) {
       console.log("Erro ao buscar:", error);

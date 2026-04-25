@@ -25,17 +25,31 @@ export default function PacientesPage() {
         return;
       }
 
-      fetchAgendamentos(user.id);
+      // Buscar perfil para saber role e clinica
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role, clinica_id")
+        .eq("id", user.id)
+        .single();
+
+      fetchAgendamentos(user.id, prof?.role, prof?.clinica_id);
     }
     init();
   }, []);
 
-  async function fetchAgendamentos(userId: string) {
-    const { data, error } = await supabase
+  async function fetchAgendamentos(userId: string, role?: string, clinicaId?: string) {
+    let query = supabase
       .from("agendamentos")
       .select("*")
-      .eq("user_id", userId)
       .order("data", { ascending: false });
+
+    if (role === "secretaria" && clinicaId) {
+      query = query.eq("clinica_id", clinicaId);
+    } else {
+      query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.log("Erro ao buscar contatos", error);

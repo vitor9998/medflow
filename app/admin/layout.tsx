@@ -1,7 +1,7 @@
 "use client";
 
 import { Sidebar } from "@/components/Sidebar";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Loader2, Lock } from "lucide-react";
@@ -15,13 +15,18 @@ export default function AdminLayout({
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
 
-  useEffect(() => {
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-        return;
-      }
+  const initialized = useRef(false);
+ 
+   useEffect(() => {
+     async function checkAuth() {
+       if (initialized.current) return;
+       initialized.current = true;
+ 
+       const { data: { user } } = await supabase.auth.getUser();
+       if (!user) {
+         router.push("/login");
+         return;
+       }
 
       const { data: prof } = await supabase
         .from("profiles")

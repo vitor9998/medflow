@@ -40,16 +40,21 @@ export default function AgendaPage() {
     }
   }, [selecionada]);
 
-  useEffect(() => {
-    async function init() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/login");
-        return;
-      }
+  const initialized = useRef(false);
+ 
+   useEffect(() => {
+     async function init() {
+       if (initialized.current) return;
+       initialized.current = true;
+ 
+       const {
+         data: { user },
+       } = await supabase.auth.getUser();
+ 
+       if (!user) {
+         router.push("/login");
+         return;
+       }
 
       const currentIsMobile = window.innerWidth < 768;
       setIsMobile(currentIsMobile);
@@ -58,18 +63,32 @@ export default function AgendaPage() {
       if (calendarRef.current) {
         calendarRef.current.getApi().changeView(currentIsMobile ? "timeGridDay" : "timeGridWeek");
       }
+      
+      // Buscar perfil para saber role e clinica
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role, clinica_id")
+        .eq("id", user.id)
+        .single();
 
-      fetchConsultas(user.id);
+      fetchConsultas(user.id, prof?.role, prof?.clinica_id);
     }
     init();
   }, []);
 
-  async function fetchConsultas(userId: string) {
-    const { data, error } = await supabase
+  async function fetchConsultas(userId: string, role?: string, clinicaId?: string) {
+    let query = supabase
       .from("agendamentos")
       .select("*")
-      .eq("user_id", userId)
       .order("data", { ascending: true });
+
+    if (role === "secretaria" && clinicaId) {
+      query = query.eq("clinica_id", clinicaId);
+    } else {
+      query = query.eq("user_id", userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.log("Erro ao buscar agendamentos", error);

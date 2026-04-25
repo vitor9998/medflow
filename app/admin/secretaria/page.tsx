@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Modal } from "@/components/Modal";
@@ -53,10 +53,15 @@ export default function SecretariaPage() {
   const [rescheduleData, setRescheduleData] = useState({ data: "", hora: "" });
 
   // Init
-  useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/login"); return; }
+  const initialized = useRef(false);
+ 
+   useEffect(() => {
+     async function init() {
+       if (initialized.current) return;
+       initialized.current = true;
+ 
+       const { data: { user } } = await supabase.auth.getUser();
+       if (!user) { router.push("/login"); return; }
 
       const { data: prof } = await supabase
         .from("profiles")
