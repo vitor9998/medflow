@@ -43,24 +43,24 @@ export default function PacientesPage() {
       // Agrupar agendamentos por paciente
       const pacMap = new Map();
 
-      (data || []).forEach((c: any) => {
-        const key = `${c.nome?.trim().toLowerCase()}-${c.telefone}`;
+      (data || []).forEach((contato: any) => {
+        const key = `${contato.nome?.trim().toLowerCase()}-${contato.telefone}`;
         if (!pacMap.has(key)) {
           pacMap.set(key, {
-            nome: c.nome,
-            email: c.email,
-            telefone: c.telefone,
-            primeiraConsulta: c.data,
-            ultimaConsulta: c.data,
+            nome: contato.nome,
+            email: contato.email,
+            telefone: contato.telefone,
+            primeiraConsulta: contato.data,
+            ultimaConsulta: contato.data,
             historico: [],
           });
         }
         
         const paciente = pacMap.get(key);
-        paciente.historico.push(c);
+        paciente.historico.push(contato);
         
-        if (c.data > paciente.ultimaConsulta) paciente.ultimaConsulta = c.data;
-        if (c.data < paciente.primeiraConsulta) paciente.primeiraConsulta = c.data;
+        if (contato.data > paciente.ultimaConsulta) paciente.ultimaConsulta = contato.data;
+        if (contato.data < paciente.primeiraConsulta) paciente.primeiraConsulta = contato.data;
       });
 
       setPacientes(Array.from(pacMap.values()));
