@@ -297,7 +297,7 @@ export default function AgendaPage() {
                 const consulta = consultas.find(
                   (c) => String(c.id) === info.event.id
                 );
-                setSelecionada(consulta);
+                setSelecionada({ ...consulta, ia_retries: 0 });
 
                 // Auto-gerar resumo_ia se nao tiver
                 if (consulta && !consulta.resumo_ia && (consulta.sintomas || consulta.observacoes_paciente)) {
@@ -372,14 +372,75 @@ export default function AgendaPage() {
                      <div className="bg-blue-50/70 p-4 rounded-xl border border-blue-100 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed shadow-sm">
                        {selecionada.resumo_ia}
                      </div>
-                   ) : selecionada.ia_error ? (
-                     <div className="bg-red-50 p-3 rounded-xl border border-red-100 flex items-start gap-2 text-red-600 shadow-sm">
-                       <AlertCircle className="w-4 h-4 mt-0.5" />
-                       <p className="text-sm font-medium">{selecionada.ia_error}</p>
-                     </div>
-                   ) : (
+                    ) : selecionada.ia_error ? (
+                      <div className="space-y-3">
+                        <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm transition-all hover:bg-amber-100/50">
+                          <div className="flex items-center gap-2 text-amber-700">
+                            <AlertCircle className="w-5 h-5 shrink-0" />
+                            <p className="text-sm font-semibold tracking-tight">
+                              {(selecionada.ia_retries || 0) >= 3 
+                                ? "IA temporariamente indisponível" 
+                                : "Resumo inteligente falhou"}
+                            </p>
+                          </div>
+                          
+                          {(selecionada.ia_retries || 0) < 3 && (
+                            <button 
+                              onClick={() => {
+                                const nextRetry = (selecionada.ia_retries || 0) + 1;
+                                setSelecionada((prev: any) => ({ ...prev, ia_error: null, ia_retries: nextRetry }));
+                                
+                                fetch('/api/ai/resumo', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    id: selecionada.id,
+                                    sintomas: selecionada.sintomas,
+                                    observacoes_paciente: selecionada.observacoes_paciente
+                                  })
+                                }).then(res => res.json()).then(data => {
+                                  if (data.resumo_ia) {
+                                     setSelecionada((prev: any) => ({ ...prev, resumo_ia: data.resumo_ia }));
+                                     setConsultas((prevList: any) => prevList.map((c: any) => c.id === selecionada.id ? { ...c, resumo_ia: data.resumo_ia } : c));
+                                  } else if (data.error) {
+                                     setSelecionada((prev: any) => ({ ...prev, ia_error: data.error }));
+                                  }
+                                }).catch(err => {
+                                  setSelecionada((prev: any) => ({ ...prev, ia_error: "Erro de conexao" }));
+                                });
+                              }}
+                              className="text-xs bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap"
+                            >
+                              Gerar resumo ({3 - (selecionada.ia_retries || 0)})
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Fallback Summary */}
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-slate-400">
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <FileText className="w-4 h-4" /> Resumo Básico (Extraído da Queixa)
+                          </p>
+                          <ul className="space-y-1">
+                            {(selecionada.sintomas || "")
+                              .split(/[.,\n]/)
+                              .filter((frase: string) => frase.trim().length > 3)
+                              .slice(0, 3)
+                              .map((frase: string, idx: number) => (
+                                <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
+                                  <span className="text-slate-400 mt-1">•</span>
+                                  <span className="capitalize">{frase.trim()}</span>
+                                </li>
+                              ))}
+                            {(!selecionada.sintomas || selecionada.sintomas.length < 5) && (
+                              <li className="text-sm text-slate-500 italic">Informações insuficientes para gerar resumo básico.</li>
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    ) : (
                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-3 text-slate-500 text-sm font-medium shadow-sm">
-                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" /> Organizando informações e gerando síntese...
+                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" /> 🧠 Gerando resumo clínico...
                      </div>
                    )}
                 </div>
