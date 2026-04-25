@@ -9,7 +9,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
-import { Loader2, KeyRound, Wand2, Calendar as CalIcon, MapPin, User, LogOut, CheckCircle2, Bot, Phone, Plus, Map, Mail, Hash, PhoneOutgoing, ShieldCheck, Download, AlertCircle, Edit, Trash2, CalendarDays, X, ChevronRight, Check, MessageCircle, BrainCircuit, Save, Activity, Paperclip, FileText, ClipboardList, Stethoscope } from "lucide-react";
+import { Loader2, KeyRound, Wand2, Calendar as CalIcon, MapPin, User, LogOut, CheckCircle2, Bot, Phone, Plus, Map, Mail, Hash, PhoneOutgoing, ShieldCheck, Download, AlertCircle, Edit, Trash2, CalendarDays, X, ChevronRight, Check, MessageCircle, BrainCircuit, Save, Activity, Paperclip, FileText, ClipboardList, Stethoscope, XCircle } from "lucide-react";
 
 export default function AgendaPage() {
   const router = useRouter();
@@ -177,18 +177,78 @@ export default function AgendaPage() {
     window.open(data.signedUrl, "_blank");
   }
 
-  const eventos = consultas.map((c) => ({
-    id: String(c.id),
-    title: `${c.nome} - ${c.hora}`,
-    date: `${c.data}T${c.hora}`,
-    backgroundColor:
-      c.status === "confirmado"
-        ? "#10b981" // emerald-500
-        : c.status === "cancelado"
-        ? "#ef4444" // red-500
-        : "#eab308", // yellow-500
-    borderColor: "transparent",
-  }));
+  const getStatusVisual = (c: any) => {
+    const agora = new Date();
+    const dataConsulta = new Date(`${c.data}T${c.hora}`);
+    const jaPassou = dataConsulta < agora;
+
+    // 1. ESTADOS EXPLÍCITOS (Prioridade Total)
+    if (c.status === 'presente') {
+      return { 
+        className: "event-status-confirmado",
+        label: "Presente", 
+        description: "Paciente compareceu ao atendimento",
+        bg: "bg-emerald-50", text: "text-emerald-600" 
+      };
+    }
+
+    if (c.status === 'cancelado') {
+      return { 
+        className: "event-status-cancelado",
+        label: "Cancelado", 
+        description: "Agendamento cancelado",
+        bg: "bg-slate-50", text: "text-slate-600" 
+      };
+    }
+
+    // 2. LÓGICA DE CONSULTAS PASSADAS (Faltas)
+    if (jaPassou) {
+      return { 
+        className: "event-status-risco",
+        label: "Falta", 
+        description: "Paciente não compareceu ao horário agendado",
+        bg: "bg-red-50", text: "text-red-600" 
+      };
+    }
+
+    // 3. LÓGICA DE CONSULTAS FUTURAS (Confirmação e Risco)
+    if (c.confirmacao_status === 'confirmado' || c.status === 'confirmado') {
+      return { 
+        className: "event-status-confirmado",
+        label: "Confirmado", 
+        description: "Paciente confirmou presença para este horário",
+        bg: "bg-emerald-50", text: "text-emerald-600" 
+      };
+    }
+
+    if (c.confirmacao_status === 'sem_resposta' || (c.tentativas_contato || 0) >= 2) {
+      return { 
+        className: "event-status-risco",
+        label: "Alto risco de falta", 
+        description: "Paciente não respondeu às tentativas de confirmação",
+        bg: "bg-red-50", text: "text-red-600" 
+      };
+    }
+
+    return { 
+      className: "event-status-aguardando",
+      label: "Aguardando confirmação", 
+      description: "Aguardando resposta do paciente ao lembrete automático",
+      bg: "bg-amber-50", text: "text-amber-600" 
+    };
+  };
+
+  const eventos = consultas.map((c) => {
+    const visual = getStatusVisual(c);
+    return {
+      id: String(c.id),
+      title: `${c.nome} - ${visual.label}`,
+      date: `${c.data}T${c.hora}`,
+      className: visual.className,
+      // Passamos os dados para o modal
+      extendedProps: { ...c }
+    };
+  });
 
   if (isLoading) {
     return (
@@ -558,38 +618,61 @@ export default function AgendaPage() {
             </div>
 
             <div className="pt-2 mt-2">
-              <p className="text-sm text-slate-400 font-medium mb-1">Status Atual</p>
-              <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold ${
-                selecionada.status === "confirmado" ? "bg-emerald-50 text-emerald-600" :
-                selecionada.status === "cancelado" ? "bg-red-50 text-red-600" :
-                "bg-amber-50 text-amber-600"
-              }`}>
-                {selecionada.status?.toUpperCase() || "PENDENTE"}
-              </span>
+              <p className="text-sm text-slate-400 font-medium mb-1">Status de Confirmação</p>
+              {(() => {
+                const visual = getStatusVisual(selecionada);
+                return (
+                  <div className="space-y-2">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-bold shadow-sm ${visual.bg} ${visual.text}`}>
+                      {visual.label.includes("risco") && <AlertCircle className="w-4 h-4" />}
+                      {visual.label === "Confirmado" && <CheckCircle2 className="w-4 h-4" />}
+                      {visual.label.toUpperCase()}
+                    </span>
+                    <p className="text-xs text-slate-500 font-medium ml-1">
+                      {visual.description}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
 
-            <div className="pt-4 mt-2 flex flex-col gap-3 border-t border-gray-800">
-              <button
-                onClick={() => enviarWhatsApp(selecionada)}
-                className="w-full flex justify-center items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-xl transition-colors"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Lembrete via WhatsApp
-              </button>
+            <div className="pt-4 mt-2 flex flex-col gap-3 border-t border-gray-100">
+              {selecionada.status !== 'presente' && selecionada.status !== 'cancelado' && (
+                <button
+                  onClick={() => atualizarStatus(selecionada.id, "presente")}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95"
+                >
+                  <CheckCircle2 className="w-5 h-5" /> Marcar como PRESENTE
+                </button>
+              )}
 
-              <button
-                onClick={() => atualizarStatus(selecionada.id, "confirmado")}
-                className="w-full bg-white hover:bg-slate-50 border border-slate-200 text-emerald-600 font-semibold py-2.5 rounded-xl transition-colors"
-              >
-                Confirmar no Sistema
-              </button>
-              
-              <button
-                onClick={() => atualizarStatus(selecionada.id, "cancelado")}
-                className="w-full bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 text-red-500 font-semibold py-2.5 rounded-xl transition-colors"
-              >
-                Cancelar Agendamento
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                {(() => {
+                  const visual = getStatusVisual(selecionada);
+                  const isHighRisk = visual.label.includes("risco");
+                  
+                  return (
+                    <button
+                      onClick={() => enviarWhatsApp(selecionada)}
+                      className={`flex justify-center items-center gap-2 font-semibold py-2.5 rounded-xl transition-all border ${
+                        isHighRisk 
+                          ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100" 
+                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      {isHighRisk ? "Cobrar Resposta" : "Enviar Lembrete"}
+                    </button>
+                  );
+                })()}
+
+                <button
+                  onClick={() => atualizarStatus(selecionada.id, "cancelado")}
+                  className="flex justify-center items-center gap-2 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 text-slate-500 hover:text-red-600 font-medium py-2.5 rounded-xl transition-all"
+                >
+                  <XCircle className="w-4 h-4" /> Cancelar
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -632,6 +715,79 @@ export default function AgendaPage() {
         .fc-theme-standard td, .fc-theme-standard th { border-color: var(--fc-border-color); }
         .fc .fc-button { border-radius: 0.5rem; text-transform: capitalize; padding: 0.4rem 0.8rem; font-size: 0.875rem;}
         .fc-timegrid-slot-label { font-size: 0.75rem; color: #94a3b8; }
+        
+        /* Custom Event Styling */
+        .fc-event {
+           border-radius: 6px !important;
+           border-width: 0 !important;
+           border-left-width: 4px !important;
+           padding: 2px 4px !important;
+           font-size: 0.75rem !important;
+           font-weight: 600 !important;
+           box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+           cursor: pointer;
+           transition: transform 0.1s ease;
+        }
+
+        .fc-event:hover {
+           transform: scale(1.02);
+           z-index: 50;
+        }
+
+        .fc-v-event .fc-event-main {
+           color: inherit !important;
+        }
+
+        .fc-timegrid-event .fc-event-title {
+           font-weight: 700 !important;
+        }
+
+        /* Status Colors */
+        .event-status-confirmado {
+           background-color: #ecfdf5 !important;
+           border-left-color: #10b981 !important;
+           color: #065f46 !important;
+        }
+        .event-status-confirmado .fc-event-main,
+        .event-status-confirmado .fc-event-title,
+        .event-status-confirmado .fc-event-time {
+           color: #065f46 !important;
+        }
+
+        .event-status-risco {
+           background-color: #fef2f2 !important;
+           border-left-color: #ef4444 !important;
+           color: #991b1b !important;
+        }
+        .event-status-risco .fc-event-main,
+        .event-status-risco .fc-event-title,
+        .event-status-risco .fc-event-time {
+           color: #991b1b !important;
+        }
+
+        .event-status-aguardando {
+           background-color: #fffbeb !important;
+           border-left-color: #f59e0b !important;
+           color: #92400e !important;
+        }
+        .event-status-aguardando .fc-event-main,
+        .event-status-aguardando .fc-event-title,
+        .event-status-aguardando .fc-event-time {
+           color: #92400e !important;
+        }
+
+        .event-status-cancelado {
+           background-color: #f8fafc !important;
+           border-left-color: #94a3b8 !important;
+           color: #475569 !important;
+           opacity: 0.7;
+        }
+        .event-status-cancelado .fc-event-main,
+        .event-status-cancelado .fc-event-title,
+        .event-status-cancelado .fc-event-time {
+           color: #475569 !important;
+           text-decoration: line-through;
+        }
       `}} />
 
     </div>
