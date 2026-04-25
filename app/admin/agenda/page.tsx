@@ -79,23 +79,30 @@ export default function AgendaPage() {
     setIsLoading(false);
   }
 
-  async function atualizarStatus(id: number, status: string) {
-    const { error } = await supabase
-      .from("agendamentos")
-      .update({ status })
-      .eq("id", id);
+  async function atualizarStatus(id: number, action: string) {
+    try {
+      const res = await fetch("/api/agenda/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, id })
+      });
 
-    if (error) {
-      alert("Erro ao atualizar status.");
-      return;
+      if (res.ok) {
+        const { data } = await res.json();
+        setConsultas((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, status: data.status } : item
+          )
+        );
+      } else {
+        alert("Erro ao atualizar status.");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      alert("Erro de conexão.");
+    } finally {
+      setSelecionada(null); // Fecha o modal
     }
-
-    setConsultas((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, status } : item
-      )
-    );
-    setSelecionada(null); // Fecha o modal
   }
 
   const enviarWhatsApp = (consulta: any) => {
@@ -109,17 +116,20 @@ export default function AgendaPage() {
 
   async function salvarProntuario() {
     setIsSavingEhr(true);
-    const { error } = await supabase
-      .from("agendamentos")
-      .update({ 
-         observacoes_medico: obsText, 
-         diagnostico_final: diagnosticoText,
-         resumo_ia: iaSummary
+    const res = await fetch("/api/agenda/record", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selecionada.id,
+        prontuario: obsText,
+        diagnostico: diagnosticoText,
+        resumo_ia: iaSummary
       })
-      .eq("id", selecionada.id);
-      
-    if (error) {
-      alert("Erro ao gravar prontuário no banco.");
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro: ${err.error || "Erro ao gravar prontuário"}`);
     } else {
       // Atualiza o estado local para não perder
       setConsultas((prev) =>
@@ -134,13 +144,18 @@ export default function AgendaPage() {
 
   async function salvarEvolucao() {
     setIsSavingEvolucao(true);
-    const { error } = await supabase
-      .from("agendamentos")
-      .update({ evolucao: evolucaoText })
-      .eq("id", selecionada.id);
-      
-    if (error) {
-      alert("Erro ao gravar evolução.");
+    const res = await fetch("/api/agenda/record", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selecionada.id,
+        evolucao: evolucaoText
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro: ${err.error || "Erro ao gravar evolução"}`);
     } else {
       setConsultas((prev) =>
         prev.map((item) =>
@@ -395,7 +410,7 @@ export default function AgendaPage() {
                   action: { 
                     label: "Confirmar manualmente", 
                     sublabel: "Força a confirmação mesmo sem resposta do paciente",
-                    onClick: () => atualizarStatus(selecionada.id, "confirmado") 
+                    onClick: () => atualizarStatus(selecionada.id, "confirmar") 
                   }
                 });
               }
@@ -840,7 +855,7 @@ export default function AgendaPage() {
                         })()}
 
                         <button
-                          onClick={() => atualizarStatus(selecionada.id, "cancelado")}
+                          onClick={() => atualizarStatus(selecionada.id, "cancelar")}
                           className="flex justify-center items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-400 hover:text-slate-600 font-bold py-3 rounded-2xl transition-all text-xs uppercase tracking-tight"
                         >
                           <XCircle className="w-4 h-4" /> Cancelar

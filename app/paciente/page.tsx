@@ -52,17 +52,25 @@ export default function PacientePage() {
   async function handleConfirmCancelar() {
     if (!cancelandoConsulta) return;
     setCancelarLoading(true);
-    const { error } = await supabase
-      .from("agendamentos")
-      .update({ status: "cancelado" })
-      .eq("id", cancelandoConsulta.id);
     
-    setCancelarLoading(false);
-    if (!error) {
-       setCancelandoConsulta(null);
-       await fetchConsultas(); // Refresh UI
-    } else {
-       alert("Erro ao cancelar consulta. Tente novamente.");
+    try {
+      const res = await fetch("/api/agenda/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancelar", id: cancelandoConsulta.id })
+      });
+
+      if (res.ok) {
+        setCancelandoConsulta(null);
+        await fetchConsultas(); // Refresh UI
+      } else {
+        alert("Erro ao cancelar consulta. Tente novamente.");
+      }
+    } catch (error) {
+      console.error("Erro ao cancelar:", error);
+      alert("Erro de conexão.");
+    } finally {
+      setCancelarLoading(false);
     }
   }
 
@@ -158,16 +166,22 @@ export default function PacientePage() {
     setRemarcarErro("");
     setRemarcarLoading(true);
 
-    const { error } = await supabase
-      .from("agendamentos")
-      .update({ data: novaData, hora: novoHora })
-      .eq("id", remarcandoConsulta.id);
+    const res = await fetch("/api/agenda/reschedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: remarcandoConsulta.id,
+        nova_data: novaData,
+        nova_hora: novoHora
+      })
+    });
     
-    if (!error) {
+    if (res.ok) {
        setRemarcandoConsulta(null);
        await fetchConsultas(); // Refresh UI
     } else {
-       setRemarcarErro("Ocorreu um erro ao remarcar. Tente novamente.");
+       const err = await res.json();
+       setRemarcarErro(err.error || "Ocorreu um erro ao remarcar. Tente novamente.");
     }
     setRemarcarLoading(false);
   }

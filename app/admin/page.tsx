@@ -149,22 +149,29 @@ export default function AdminDashboardPage() {
     setIsLoading(false);
   }
 
-  async function atualizarStatus(id: number, novoStatus: string) {
+  async function atualizarStatus(id: number, action: string) {
     setUpdatingId(id);
-    const { error } = await supabase
-      .from("agendamentos")
-      .update({ status: novoStatus })
-      .eq("id", id);
+    try {
+      const res = await fetch("/api/agenda/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, id }),
+      });
 
-    if (!error) {
-      setConsultas((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, status: novoStatus } : item
-        )
-      );
+      if (res.ok) {
+        const { data } = await res.json();
+        setConsultas((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, status: data.status } : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+    } finally {
+      setUpdatingId(null);
+      setExpandedId(null);
     }
-    setUpdatingId(null);
-    setExpandedId(null);
   }
 
   async function registrarTentativa(id: number, atual: number) {
@@ -610,7 +617,7 @@ export default function AdminDashboardPage() {
                               <div className="flex flex-wrap gap-2 pt-2">
                                 {c.status !== "confirmado" && (
                                   <button
-                                    onClick={() => atualizarStatus(c.id, "confirmado")}
+                                    onClick={() => atualizarStatus(c.id, "confirmar")}
                                     disabled={isUpdating}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-all active:scale-[0.97] disabled:opacity-50"
                                   >
@@ -630,7 +637,7 @@ export default function AdminDashboardPage() {
                                 )}
                                 {c.status !== "cancelado" && (
                                   <button
-                                    onClick={() => atualizarStatus(c.id, "cancelado")}
+                                    onClick={() => atualizarStatus(c.id, "cancelar")}
                                     disabled={isUpdating}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all active:scale-[0.97] disabled:opacity-50"
                                   >

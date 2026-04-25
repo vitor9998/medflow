@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { agendaAgent } from "@/lib/agents/agendaAgent";
 import { Modal } from "@/components/Modal";
 import {
   Loader2, Plus, CalendarRange, Clock, User, Phone, PhoneOutgoing, Mail, FileText,
@@ -135,41 +134,37 @@ export default function SecretariaPage() {
 
   // Ações
   async function atualizarStatus(id: number, status: string) {
-    // NOVA ARQUITETURA: Fluxo isolado via Agent
-    if (status === "confirmado") {
+    const actionMap: Record<string, string> = {
+      confirmado: "confirmar",
+      cancelado: "cancelar",
+      presente: "presente"
+    };
+
+    const action = actionMap[status];
+
+    if (action) {
       try {
-        await agendaAgent("confirmar", { id });
-        setAgendamentos(prev => prev.map(item => item.id === id ? { ...item, status } : item));
-        setSelecionada(null);
+        const res = await fetch("/api/agenda/action", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, id })
+        });
+
+        if (res.ok) {
+          setAgendamentos(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+          setSelecionada(null);
+        } else {
+          alert(`Erro ao atualizar status: ${status}`);
+        }
       } catch (error) {
-        alert("Erro ao confirmar consulta.");
+        console.error("Erro ao atualizar status:", error);
+        alert("Erro de conexão ao atualizar status.");
       }
       return;
     }
 
-    if (status === "cancelado") {
-      try {
-        await agendaAgent("cancelar", { id });
-        setAgendamentos(prev => prev.map(item => item.id === id ? { ...item, status } : item));
-        setSelecionada(null);
-      } catch (error) {
-        alert("Erro ao cancelar consulta.");
-      }
-      return;
-    }
-
-    if (status === "presente") {
-      try {
-        await agendaAgent("presente", { id });
-        setAgendamentos(prev => prev.map(item => item.id === id ? { ...item, status } : item));
-        setSelecionada(null);
-      } catch (error) {
-        alert("Erro ao marcar presença.");
-      }
-      return;
-    }
-
-    // ARQUITETURA ANTIGA: Chamada direta (mantido para outros status)
+    // Para outros status (ex: bloqueado, falta), mantém a lógica direta se necessário,
+    // mas o escopo do usuário pede migração de confirmar, cancelar, presente.
     const { error } = await supabase
       .from("agendamentos")
       .update({ status })
@@ -223,21 +218,26 @@ export default function SecretariaPage() {
     e.preventDefault();
     setIsSaving(true);
 
-    const { error } = await supabase.from("agendamentos").insert([{
-      nome: newForm.nome,
-      email: newForm.email,
-      telefone: newForm.telefone,
-      data: selectedDate,
-      hora: newForm.hora,
-      sintomas: newForm.sintomas,
-      observacoes_paciente: newForm.observacoes_paciente || null,
-      status: "confirmado",
-      user_id: newForm.medicoId,
-      patient_id: null,
-    }]);
+    const res = await fetch("/api/agenda/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome: newForm.nome,
+        email: newForm.email,
+        telefone: newForm.telefone,
+        data: selectedDate,
+        hora: newForm.hora,
+        sintomas: newForm.sintomas,
+        observacoes_paciente: newForm.observacoes_paciente || null,
+        status: "confirmado",
+        user_id: newForm.medicoId,
+        patient_id: null,
+      })
+    });
 
-    if (error) {
-      alert(`Erro: ${error.message}`);
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro: ${err.error || "Erro ao criar consulta"}`);
     } else {
       // Refresh agenda
       setShowNewModal(false);
@@ -259,19 +259,24 @@ export default function SecretariaPage() {
 
   async function bloquearHorario() {
     setIsSaving(true);
-    const { error } = await supabase.from("agendamentos").insert([{
-      nome: "Horário Bloqueado",
-      email: "",
-      telefone: "",
-      data: selectedDate,
-      hora: newForm.hora,
-      status: "bloqueado",
-      user_id: newForm.medicoId,
-      patient_id: null,
-    }]);
+    const res = await fetch("/api/agenda/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome: "Horário Bloqueado",
+        email: "",
+        telefone: "",
+        data: selectedDate,
+        hora: newForm.hora,
+        status: "bloqueado",
+        user_id: newForm.medicoId,
+        patient_id: null,
+      })
+    });
 
-    if (error) {
-      alert(`Erro: ${error.message}`);
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro: ${err.error || "Erro ao bloquear horário"}`);
     } else {
       setShowNewModal(false);
       setNewForm({ nome: "", telefone: "", email: "", sintomas: "", observacoes_paciente: "", medicoId: "", hora: "" });
@@ -296,13 +301,19 @@ export default function SecretariaPage() {
     if (!selecionada) return;
     setIsSaving(true);
 
-    const { error } = await supabase
-      .from("agendamentos")
-      .update({ data: rescheduleData.data, hora: rescheduleData.hora })
-      .eq("id", selecionada.id);
+    const res = await fetch("/api/agenda/reschedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selecionada.id,
+        nova_data: rescheduleData.data,
+        nova_hora: rescheduleData.hora
+      })
+    });
 
-    if (error) {
-      alert("Erro ao reagendar.");
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro: ${err.error || "Erro ao reagendar."}`);
     } else {
       setShowRescheduleModal(false);
       setSelecionada(null);

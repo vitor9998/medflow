@@ -316,8 +316,10 @@ export default function AgendamentoPage() {
 
     const prioridade = calcularPrioridade(sintomas);
 
-    const { error } = await supabase.from("agendamentos").insert([
-      {
+    const res = await fetch("/api/agenda/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         nome,
         email,
         telefone,
@@ -326,15 +328,15 @@ export default function AgendamentoPage() {
         sintomas,
         observacoes_paciente: observacoesPaciente || null,
         status: "pendente",
-        user_id: medico.id, 
-        patient_id: pacienteId, // null para OTP guests
+        user_id: medico.id,
+        patient_id: pacienteId,
         anexo_path: anexoPath
-      },
-    ]);
+      })
+    });
 
-    if (error) {
-      alert(`Erro do Banco de Dados: ${error.message} \n\nDetalhes: ${JSON.stringify(error)}`);
-      console.log(error);
+    if (!res.ok) {
+      const err = await res.json();
+      alert(`Erro: ${err.error || "Ocorreu um erro ao processar seu agendamento."}`);
     } else {
       alert("Consulta solicitada com sucesso!");
       setNome("");
