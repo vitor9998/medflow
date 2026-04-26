@@ -11,9 +11,11 @@ const worker = new WhatsAppWorker();
 
 export async function GET(req: Request) {
   try {
-    // 1. Verificação de Autorização (Opcional - Recomendado)
-    const authHeader = req.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // 1. Verificação de Autorização via Token na URL
+    const url = new URL(req.url);
+    const token = url.searchParams.get('token');
+
+    if (token !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
