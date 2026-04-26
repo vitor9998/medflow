@@ -108,8 +108,8 @@ export default function AgendaPage() {
 
       if (res.ok) {
         const { data } = await res.json();
-        setConsultas((prev) =>
-          prev.map((item) =>
+        setConsultas((prev: any[]) =>
+          prev.map((item: any) =>
             item.id === id ? { ...item, status: data.status } : item
           )
         );
@@ -151,8 +151,8 @@ export default function AgendaPage() {
       alert(`Erro: ${err.error || "Erro ao gravar prontuário"}`);
     } else {
       // Atualiza o estado local para não perder
-      setConsultas((prev) =>
-        prev.map((item) =>
+      setConsultas((prev: any[]) =>
+        prev.map((item: any) =>
           item.id === selecionada.id ? { ...item, observacoes_medico: obsText, diagnostico_final: diagnosticoText, resumo_ia: iaSummary } : item
         )
       );
@@ -176,8 +176,8 @@ export default function AgendaPage() {
       const err = await res.json();
       alert(`Erro: ${err.error || "Erro ao gravar evolução"}`);
     } else {
-      setConsultas((prev) =>
-        prev.map((item) =>
+      setConsultas((prev: any[]) =>
+        prev.map((item: any) =>
           item.id === selecionada.id ? { ...item, evolucao: evolucaoText } : item
         )
       );
@@ -272,7 +272,7 @@ export default function AgendaPage() {
     };
   };
 
-  const eventos = consultas.map((c) => {
+  const eventos = consultas.map((c: any) => {
     const visual = getStatusVisual(c);
     return {
       id: String(c.id),
@@ -456,7 +456,7 @@ export default function AgendaPage() {
                     <AlertCircle className="w-3.5 h-3.5" /> Atenção
                   </p>
                   <div className="space-y-4">
-                    {alertas.slice(0, 2).map((alerta, idx) => (
+                    {alertas.slice(0, 2).map((alerta: any, idx: number) => (
                       <div key={idx} className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-l-2 border-amber-200 pl-3">
                         <p className="text-xs text-amber-900 font-medium pt-1">
                           {alerta.text}

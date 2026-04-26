@@ -57,7 +57,7 @@ export default function PacientesPage() {
       console.log("Erro ao buscar contatos", error);
     } else {
       // Agrupar agendamentos por paciente
-      const pacMap = new Map();
+      const pacMap = new Map<string, any>();
 
       (data || []).forEach((contato: any) => {
         const key = `${contato.nome?.trim().toLowerCase()}-${normalizePhone(contato.telefone)}`;
@@ -84,7 +84,7 @@ export default function PacientesPage() {
     setIsLoading(false);
   }
 
-  const pacientesFiltrados = pacientes.filter(p => 
+  const pacientesFiltrados = pacientes.filter((p: any) => 
     p.nome?.toLowerCase().includes(filtro.toLowerCase()) || 
     p.email?.toLowerCase().includes(filtro.toLowerCase())
   );
@@ -142,7 +142,7 @@ export default function PacientesPage() {
                   </td>
                 </tr>
               ) : (
-                pacientesFiltrados.map((p, i) => (
+                pacientesFiltrados.map((p: any, i: number) => (
                   <tr 
                     key={i} 
                     onClick={() => setSelecionado(p)}

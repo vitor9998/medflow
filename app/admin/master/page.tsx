@@ -119,7 +119,7 @@ export default function MasterPanelPage() {
           {medicos.length === 0 ? (
             <p className="text-slate-400 text-center py-10 text-sm">Nenhum medico encontrado.</p>
           ) : (
-            medicos.map((medico) => (
+            medicos.map((medico: any) => (
               <div key={medico.id} className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 transition-all hover:border-slate-300">
                 <div className="flex flex-col">
                    <div className="flex items-center gap-2.5 mb-0.5">
@@ -171,7 +171,7 @@ export default function MasterPanelPage() {
           {secretarias.length === 0 ? (
             <p className="text-slate-400 text-center py-10 text-sm">Nenhuma secretaria encontrada.</p>
           ) : (
-            secretarias.map((sec) => (
+            secretarias.map((sec: any) => (
               <div key={sec.id} className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 transition-all hover:border-slate-300">
                 <div className="flex flex-col">
                    <div className="flex items-center gap-2.5 mb-0.5">
@@ -280,7 +280,7 @@ export default function MasterPanelPage() {
           {clinicas.length === 0 && !showNewClinic ? (
             <p className="text-slate-400 text-center py-10 text-sm">Nenhuma clinica cadastrada. Clique em "Nova Clinica" para criar.</p>
           ) : (
-            clinicas.map((cl) => (
+            clinicas.map((cl: any) => (
               <div key={cl.id} className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-2 transition-all hover:border-slate-300">
                 <div>
                   <p className="text-sm font-bold text-slate-800">{cl.nome}</p>

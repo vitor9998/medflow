@@ -63,7 +63,7 @@ export default function ComunicacaoPage() {
       const agendamentosRaw = data || [];
       const hojeStr = new Date().toISOString().split('T')[0];
       
-      const pacientesMap = new Map();
+      const pacientesMap = new Map<string, any>();
 
       agendamentosRaw.forEach((ag: any) => {
         const key = ag.telefone || ag.email || ag.id;
@@ -149,7 +149,7 @@ export default function ComunicacaoPage() {
       }
 
       // Prepara o canal para cada um
-      const pendentesComCanal = pendentes.map(p => ({
+      const pendentesComCanal = pendentes.map((p: any) => ({
         ...p,
         canal_utilizado: determinarCanalComunicacao(p)
       }));
@@ -254,7 +254,7 @@ export default function ComunicacaoPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 overflow-y-auto pb-8 pr-2">
-        {agendamentos.map((c) => {
+        {agendamentos.map((c: any) => {
           const hojeStr = new Date().toISOString().split('T')[0];
           const isFutura = c.data >= hojeStr;
           const dataBr = c.data?.split('-').reverse().join('/');
