@@ -16,7 +16,7 @@ export function buildMensagemLembrete(consulta: ConsultaLembrete): string {
  * Determina qual o melhor canal de comunicação para um paciente.
  * Prioridade: Telefone (WhatsApp) > Email.
  */
-export function determinarCanalComunicacao(consulta: { telefone?: string; email?: string }): "whatsapp" | "email" | "sem_canal" {
+export function determinarCanalComunicacao(consulta: { telefone?: string | null; email?: string | null }): "whatsapp" | "email" | "sem_canal" {
   if (consulta.telefone) {
     return "whatsapp";
   }

@@ -108,7 +108,7 @@ export default function AgendamentoSelecaoPage() {
         {!loading && (
           <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-            {medicosFiltrados.map((m, index) => (
+            {medicosFiltrados.map((m: any, index: number) => (
               <div
                 key={m.id}
                 className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-2xl hover:shadow-emerald-900/10 hover:border-emerald-300 transition-all duration-300 group flex flex-col w-full relative overflow-hidden"
