@@ -57,16 +57,23 @@ export default function ComunicacaoPage() {
     const { data, error } = await query;
 
     if (error) {
-      console.log("Erro ao buscar [VERIFY-123]:", error);
+      console.log("Erro ao buscar:", error);
     } else {
-      // AGRUPAMENTO POR PACIENTE (Telefone) - Fix TS v2
-      const agendamentosRaw = data || [];
+      type AgendamentoRaw = {
+        id: number;
+        telefone: string;
+        email: string | null;
+        data: string;
+        hora: string;
+        nome: string;
+      };
+      
+      const agendamentosRaw = (data as any[] as AgendamentoRaw[]) || [];
       const hojeStr = new Date().toISOString().split('T')[0];
       
-      // VERCEL_FORCE_REDEPLOY_3
-      const pacientesMap = new Map<string, any>();
+      const pacientesMap = new Map<string, AgendamentoRaw>();
 
-      for (const ag of (agendamentosRaw as any[])) {
+      for (const ag of agendamentosRaw) {
         const key: string = ag.telefone || ag.email || String(ag.id);
         const existente = pacientesMap.get(key);
 
