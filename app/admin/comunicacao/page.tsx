@@ -57,7 +57,7 @@ export default function ComunicacaoPage() {
     const { data, error } = await query;
 
     if (error) {
-      console.log("Erro ao buscar:", error);
+      console.log("Erro ao buscar [VERIFY-123]:", error);
     } else {
       // AGRUPAMENTO POR PACIENTE (Telefone) - Fix TS v2
       const agendamentosRaw = data || [];
