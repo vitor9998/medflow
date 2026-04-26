@@ -59,7 +59,7 @@ export default function ComunicacaoPage() {
     if (error) {
       console.log("Erro ao buscar:", error);
     } else {
-      // AGRUPAMENTO POR PACIENTE (Telefone)
+      // AGRUPAMENTO POR PACIENTE (Telefone) - Fix TS v2
       const agendamentosRaw = data || [];
       const hojeStr = new Date().toISOString().split('T')[0];
       
