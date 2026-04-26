@@ -68,7 +68,7 @@ export default function ComunicacaoPage() {
         nome: string;
       };
       
-      const agendamentosRaw = (data as any[] as AgendamentoRaw[]) || [];
+      const agendamentosRaw: AgendamentoRaw[] = (data ?? []) as AgendamentoRaw[];
       const hojeStr = new Date().toISOString().split('T')[0];
       
       const pacientesMap = new Map<string, AgendamentoRaw>();
