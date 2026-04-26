@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin as supabase } from '@/lib/supabase/server';
 import { EvolutionProvider } from '@/lib/providers/evolutionProvider';
 
 /**

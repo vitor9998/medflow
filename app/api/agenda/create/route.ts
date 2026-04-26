@@ -15,6 +15,19 @@ export async function POST(req: NextRequest) {
 
     const result = await agendaAgent("criar", payload);
 
+    // Disparar WhatsApp automaticamente (Fire-and-forget)
+    const whatsappService = new (await import("@/lib/services/whatsappService")).WhatsAppService();
+    const telefone = payload.telefone || payload.phone;
+    
+    if (telefone) {
+      const dataFormatada = payload.data.split('-').reverse().join('/');
+      const message = `Olá ${payload.nome}, sua consulta foi agendada para ${dataFormatada} às ${payload.hora}.`;
+      
+      // Enfileira diretamente sem depender de rota externa
+      whatsappService.queueMessage(telefone, message, `new-appt-${result.id}`)
+        .catch(err => console.error("[WhatsApp-Auto] Erro ao enfileirar:", err));
+    }
+
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {
     console.error("[API-Agenda-Create] Erro:", error);
