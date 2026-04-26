@@ -66,7 +66,7 @@ export default function ComunicacaoPage() {
       // VERCEL_FORCE_REDEPLOY_3
       const pacientesMap = new Map<string, any>();
 
-      agendamentosRaw.forEach((ag: any) => {
+      for (const ag of (agendamentosRaw as any[])) {
         const key: string = ag.telefone || ag.email || String(ag.id);
         const existente = pacientesMap.get(key);
 
@@ -92,7 +92,7 @@ export default function ComunicacaoPage() {
             if (agData > exData) pacientesMap.set(key, ag);
           }
         }
-      });
+      }
 
       setAgendamentos(Array.from(pacientesMap.values()));
     }
