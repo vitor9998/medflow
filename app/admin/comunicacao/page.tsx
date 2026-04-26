@@ -63,10 +63,11 @@ export default function ComunicacaoPage() {
       const agendamentosRaw = data || [];
       const hojeStr = new Date().toISOString().split('T')[0];
       
+      // VERCEL_FORCE_REDEPLOY_3
       const pacientesMap = new Map<string, any>();
 
       agendamentosRaw.forEach((ag: any) => {
-        const key = ag.telefone || ag.email || ag.id;
+        const key: string = ag.telefone || ag.email || String(ag.id);
         const existente = pacientesMap.get(key);
 
         if (!existente) {
