@@ -65,7 +65,7 @@ export default function ComunicacaoPage() {
       
       const pacientesMap = new Map();
 
-      agendamentosRaw.forEach((ag) => {
+      agendamentosRaw.forEach((ag: any) => {
         const key = ag.telefone || ag.email || ag.id;
         const existente = pacientesMap.get(key);
 
