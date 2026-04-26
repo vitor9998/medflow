@@ -17,14 +17,38 @@ export async function atualizarStatus(payload: AgendaActionPayload, status: stri
 }
 
 export async function reagendar(payload: AgendaActionPayload, novaData: string, novaHora: string) {
+  // 1. Buscar dados atuais para o histórico
+  const atual = await buscarPorId(payload.id);
+
+  // 2. Atualizar agendamento
   const { data, error } = await supabaseAdmin
     .from("agendamentos")
-    .update({ data: novaData, hora: novaHora, status: "pendente" })
+    .update({ 
+      data: novaData, 
+      hora: novaHora, 
+      status: "pendente",
+      rescheduled_at: new Date().toISOString(),
+      reschedule_count: (atual.reschedule_count || 0) + 1
+    })
     .eq("id", payload.id)
     .select()
     .single();
 
   if (error) throw new Error(error.message);
+
+  // 3. Tentar registrar no histórico (falha silenciosa se a tabela não existir)
+  try {
+    await supabaseAdmin.from("appointment_history").insert({
+      appointment_id: payload.id,
+      old_data: atual.data,
+      old_hora: atual.hora,
+      new_data: novaData,
+      new_hora: novaHora
+    });
+  } catch (e) {
+    console.warn("[MCP] Tabela appointment_history não encontrada ou erro ao inserir.");
+  }
+
   return data;
 }
 
