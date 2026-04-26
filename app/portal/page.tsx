@@ -88,7 +88,7 @@ export default function PortalDashboardPage() {
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                {proximas.map(consulta => (
+                {proximas.map((consulta: any) => (
                   <div key={consulta.id} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                      <div className="absolute top-0 right-0 w-2 h-full bg-emerald-500"></div>
                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -126,7 +126,7 @@ export default function PortalDashboardPage() {
               <p className="text-sm text-slate-500 italic">Nenhuma consulta antiga no radar.</p>
             ) : (
               <div className="flex flex-col gap-3">
-                {passadas.map(consulta => (
+                {passadas.map((consulta: any) => (
                   <div key={consulta.id} className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center bg-opacity-60">
                      <div>
                        <h3 className="font-semibold text-slate-700 text-sm">{consulta.profiles?.nome || "Clínica Geral"}</h3>
@@ -155,7 +155,7 @@ export default function PortalDashboardPage() {
                   Nenhum médico aberto para captação hoje.
                 </div>
               ) : (
-                medicosDisponiveis.map(doc => (
+                medicosDisponiveis.map((doc: any) => (
                   <Link 
                     key={doc.slug} 
                     href={`/agendamento/${doc.slug}`}

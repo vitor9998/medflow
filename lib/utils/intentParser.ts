@@ -41,17 +41,17 @@ export function parseIntent(message: string): Intent {
   const normalized = normalizeText(message);
 
   // 1. Verificar Remarcação (Prioridade alta pois geralmente contém "não" ou "não posso")
-  if (KEYWORDS.remarcar.some(k => normalized.includes(normalizeText(k)))) {
+  if (KEYWORDS.remarcar.some((k: string) => normalized.includes(normalizeText(k)))) {
     return "remarcar";
   }
 
   // 2. Verificar Cancelamento
-  if (KEYWORDS.cancelar.some(k => normalized.includes(normalizeText(k)))) {
+  if (KEYWORDS.cancelar.some((k: string) => normalized.includes(normalizeText(k)))) {
     return "cancelar";
   }
 
   // 3. Verificar Confirmação
-  if (KEYWORDS.confirmar.some(k => normalized.includes(normalizeText(k)))) {
+  if (KEYWORDS.confirmar.some((k: string) => normalized.includes(normalizeText(k)))) {
     return "confirmar";
   }
 

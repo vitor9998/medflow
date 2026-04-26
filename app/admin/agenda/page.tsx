@@ -414,7 +414,7 @@ export default function AgendaPage() {
                 });
               }
               
-              const temFaltas = consultas.some(c => 
+              const temFaltas = consultas.some((c: any) => 
                 (c.paciente_id === selecionada.paciente_id || c.telefone === selecionada.telefone) && 
                 c.id !== selecionada.id &&
                 (new Date(`${c.data}T${c.hora}`) < agora) && 

@@ -55,13 +55,13 @@ export default function Dashboard() {
   const hoje = new Date().toISOString().split("T")[0];
 
   const consultasHoje = consultas.filter(
-    (c) => c.data === hoje
+    (c: any) => c.data === hoje
   ).length;
 
   const totalConsultas = consultas.length;
 
   const faltas = consultas.filter(
-    (c) => c.status === "cancelado"
+    (c: any) => c.status === "cancelado"
   ).length;
 
   const taxaFalta = totalConsultas
@@ -172,7 +172,7 @@ export default function Dashboard() {
             Últimas consultas
           </h2>
 
-          {consultas.slice(0, 5).map((c) => (
+          {consultas.slice(0, 5).map((c: any) => (
             <div
               key={c.id}
               className="flex justify-between border-b border-slate-800 py-3"

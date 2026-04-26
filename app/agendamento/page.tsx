@@ -30,7 +30,7 @@ export default function AgendamentoSelecaoPage() {
     load();
   }, []);
 
-  const medicosFiltrados = medicos.filter(m => 
+  const medicosFiltrados = medicos.filter((m: any) => 
     m.nome?.toLowerCase().includes(filtro.toLowerCase()) || 
     m.especialidade?.toLowerCase().includes(filtro.toLowerCase())
   );

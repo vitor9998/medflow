@@ -154,10 +154,10 @@ export default function AgendamentoPage() {
     if (!data) return [];
     
     const occupiedTimes = agendamentosOcupados
-      .filter((a) => a.data === data)
-      .map((a) => a.hora.substring(0, 5));
+      .filter((a: any) => a.data === data)
+      .map((a: any) => a.hora.substring(0, 5));
 
-    return generateSlots().map((slot) => ({
+    return generateSlots().map((slot: any) => ({
       time: slot,
       isOccupied: occupiedTimes.includes(slot),
     }));
@@ -535,7 +535,7 @@ export default function AgendamentoPage() {
 
               {/* OTP Input Grid */}
               <div className="flex justify-center gap-2 sm:gap-3" onPaste={handleOtpPaste}>
-                {otpCode.map((digit, i) => (
+                {otpCode.map((digit: any, i: number) => (
                   <input
                     key={i}
                     ref={(el) => { otpInputRefs.current[i] = el; }}

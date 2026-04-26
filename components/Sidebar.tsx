@@ -119,7 +119,7 @@ export function Sidebar({ role }: { role?: string }) {
 
         {/* Navigation */}
         <nav className="flex flex-col gap-0.5 px-3 mt-1 md:mt-0">
-          {links.map((link) => {
+          {links.map((link: any) => {
             const isActive = pathname === link.href;
             const Icon = link.icon;
             return (

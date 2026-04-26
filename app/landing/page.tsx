@@ -66,7 +66,7 @@ export default function LandingPage() {
           </p>
         ) : (
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {medicos.map((medico) => (
+            {medicos.map((medico: any) => (
               <div
                 key={medico.id}
                 className="bg-[#0B1120] p-6 rounded-xl border border-gray-800 hover:border-gray-600 transition"

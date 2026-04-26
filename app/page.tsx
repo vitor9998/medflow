@@ -186,7 +186,7 @@ export default function Home() {
                     <div className="flex-1 bg-slate-800/30 border border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-4">
                       <div className="flex gap-4 h-full">
                         <div className="flex-1 flex items-end gap-1.5 pb-2">
-                          {[35, 55, 40, 70, 50, 85, 65, 90, 75, 95, 80].map((h, i) => (
+                          {[35, 55, 40, 70, 50, 85, 65, 90, 75, 95, 80].map((h: number, i: number) => (
                             <div key={i} className="flex-1 rounded-t-sm transition-all" style={{ height: `${h}%`, background: h > 70 ? 'linear-gradient(to top, #059669, #10b981)' : '#1e293b' }}></div>
                           ))}
                         </div>
@@ -352,7 +352,7 @@ export default function Home() {
                <div>
                   <h3 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-6">Software feito para quem cuida de vidas.</h3>
                   <div className="flex gap-2 mb-6">
-                     {[1,2,3,4,5].map(i => <Star key={i} className="w-6 h-6 text-amber-400 fill-amber-400" />)}
+                     {[1,2,3,4,5].map((i: number) => <Star key={i} className="w-6 h-6 text-amber-400 fill-amber-400" />)}
                   </div>
                   <p className="text-xl text-slate-600 font-medium italic mb-8 leading-relaxed">
                      "Depois que integramos o Medsys no consultório, não precisamos mais de três atendentes faturando guias e marcando papel. Os pacientes marcam de madrugada e a gente só abre a tela para ver quem será atendido."

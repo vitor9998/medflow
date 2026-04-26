@@ -138,8 +138,8 @@ export default function AdminDashboardPage() {
 
       if (res.ok) {
         const { data } = await res.json();
-        setConsultas((prev) =>
-          prev.map((item) =>
+        setConsultas((prev: any[]) =>
+          prev.map((item: any) =>
             item.id === id ? { ...item, status: data.status } : item
           )
         );
@@ -161,8 +161,8 @@ export default function AdminDashboardPage() {
       .eq("id", id);
 
     if (!error) {
-      setConsultas((prev) =>
-        prev.map((item) =>
+      setConsultas((prev: any[]) =>
+        prev.map((item: any) =>
           item.id === id ? { ...item, tentativas_contato: novo } : item
         )
       );
@@ -191,15 +191,15 @@ export default function AdminDashboardPage() {
   // --- Metrics using mapped data ---
   const hoje = new Date().toLocaleDateString('en-CA'); // Garante formato YYYY-MM-DD local
 
-  const consultasHoje = mappedConsultas.filter((c) => c.data === hoje).length;
+  const consultasHoje = mappedConsultas.filter((c: any) => c.data === hoje).length;
   const totalConsultas = mappedConsultas.length;
-  const canceladas = mappedConsultas.filter((c) => c.status === "cancelado").length;
-  const faltas = mappedConsultas.filter((c) => c.status === "falta").length;
+  const canceladas = mappedConsultas.filter((c: any) => c.status === "cancelado").length;
+  const faltas = mappedConsultas.filter((c: any) => c.status === "falta").length;
   const pendentes = mappedConsultas.filter(
-    (c) => c.status === "pendente"
+    (c: any) => c.status === "pendente"
   ).length;
   const confirmadas = mappedConsultas.filter(
-    (c) => c.status === "confirmado"
+    (c: any) => c.status === "confirmado"
   ).length;
 
   const taxaFalta =
@@ -208,7 +208,7 @@ export default function AdminDashboardPage() {
       : "0.0";
 
   // --- HOJE DETAIL METRICS ---
-  const consultasHojeLista = mappedConsultas.filter((c) => c.data === hoje);
+  const consultasHojeLista = mappedConsultas.filter((c: any) => c.data === hoje);
   const totalHoje = consultasHojeLista.length;
   const presentesHoje = consultasHojeLista.filter((c: any) => c.status === 'presente').length;
   const faltasHoje = consultasHojeLista.filter((c: any) => c.status === 'falta' || (c.data === hoje && c.status === 'cancelado')).length;
@@ -227,7 +227,7 @@ export default function AdminDashboardPage() {
   const dataHojeFormatada = dataHoje.charAt(0).toUpperCase() + dataHoje.slice(1);
 
   // Chart data
-  const dadosPorDiaMap = mappedConsultas.reduce((acc, c) => {
+  const dadosPorDiaMap = mappedConsultas.reduce((acc: any, c: any) => {
     const datePart = c.data.split("-").slice(1).join("/");
     acc[datePart] = (acc[datePart] || 0) + 1;
     return acc;
@@ -235,7 +235,7 @@ export default function AdminDashboardPage() {
 
   const dadosGrafico = Object.keys(dadosPorDiaMap)
     .sort()
-    .map((k) => ({ name: k, consultas: dadosPorDiaMap[k] }))
+    .map((k: any) => ({ name: k, consultas: dadosPorDiaMap[k] }))
     .slice(-14);
 
   const dadosStatus = [
@@ -246,7 +246,7 @@ export default function AdminDashboardPage() {
 
   // Split appointments and sort by priority
   const consultasAtivas = mappedConsultas
-    .filter((c) => c.status !== "cancelado" && c.data >= hoje)
+    .filter((c: any) => c.status !== "cancelado" && c.data >= hoje)
     .sort((a, b) => {
       // Helper para prioridade
       const getPriority = (c: any) => {
@@ -522,7 +522,7 @@ export default function AdminDashboardPage() {
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
-                {consultasAtivas.map((c) => {
+                {consultasAtivas.map((c: any) => {
                   const isExpanded = expandedId === c.id;
                   const isUpdating = updatingId === c.id;
 

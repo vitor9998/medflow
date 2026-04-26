@@ -110,7 +110,7 @@ export default function SecretariaPage() {
     if (medicos.length === 0 || !selectedDate) return;
 
     async function fetchAgendamentos() {
-      const medicoIds = medicos.map(m => m.id);
+      const medicoIds = medicos.map((m: any) => m.id);
       const { data, error } = await supabase
         .from("agendamentos")
         .select("*")
@@ -156,7 +156,7 @@ export default function SecretariaPage() {
         });
 
         if (res.ok) {
-          setAgendamentos(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+          setAgendamentos((prev: any[]) => prev.map((item: any) => item.id === id ? { ...item, status } : item));
           setSelecionada(null);
         } else {
           alert(`Erro ao atualizar status: ${status}`);
@@ -181,7 +181,7 @@ export default function SecretariaPage() {
     }
 
     setAgendamentos(prev =>
-      prev.map(item => item.id === id ? { ...item, status } : item)
+      prev.map((item: any) => item.id === id ? { ...item, status } : item)
     );
     setSelecionada(null);
   }
@@ -195,7 +195,7 @@ export default function SecretariaPage() {
 
     if (!error) {
       setAgendamentos(prev =>
-        prev.map(item => item.id === id ? { ...item, tentativas_contato: novo } : item)
+        prev.map((item: any) => item.id === id ? { ...item, tentativas_contato: novo } : item)
       );
       if (selecionada?.id === id) {
         setSelecionada({ ...selecionada, tentativas_contato: novo });
@@ -211,7 +211,7 @@ export default function SecretariaPage() {
 
     if (!error) {
       setAgendamentos(prev =>
-        prev.map(item => item.id === id ? { ...item, confirmacao_status } : item)
+        prev.map((item: any) => item.id === id ? { ...item, confirmacao_status } : item)
       );
       if (selecionada?.id === id) {
         setSelecionada({ ...selecionada, confirmacao_status });
@@ -249,7 +249,7 @@ export default function SecretariaPage() {
       setNewForm({ nome: "", telefone: "", email: "", sintomas: "", observacoes_paciente: "", medicoId: "", hora: "" });
 
       // Re-fetch
-      const medicoIds = medicos.map(m => m.id);
+      const medicoIds = medicos.map((m: any) => m.id);
       const { data } = await supabase
         .from("agendamentos")
         .select("*")
@@ -287,7 +287,7 @@ export default function SecretariaPage() {
       setNewForm({ nome: "", telefone: "", email: "", sintomas: "", observacoes_paciente: "", medicoId: "", hora: "" });
 
       // Re-fetch
-      const medicoIds = medicos.map(m => m.id);
+      const medicoIds = medicos.map((m: any) => m.id);
       const { data } = await supabase
         .from("agendamentos")
         .select("*")
@@ -324,7 +324,7 @@ export default function SecretariaPage() {
       setSelecionada(null);
 
       // Re-fetch
-      const medicoIds = medicos.map(m => m.id);
+      const medicoIds = medicos.map((m: any) => m.id);
       const { data } = await supabase
         .from("agendamentos")
         .select("*")
@@ -411,7 +411,7 @@ export default function SecretariaPage() {
             Todos os Médicos
           </button>
 
-          {medicos.map(m => (
+          {medicos.map((m: any) => (
             <button
               key={m.id}
               onClick={() => setSelectedMedicoId(m.id)}
@@ -461,7 +461,7 @@ export default function SecretariaPage() {
           <div className="w-20 sm:w-24 shrink-0 p-3 border-r border-slate-200 flex items-center justify-center">
             <Clock className="w-4 h-4 text-slate-400" />
           </div>
-          {medicosVisiveis.map(m => (
+          {medicosVisiveis.map((m: any) => (
             <div key={m.id} className="flex-1 min-w-[140px] sm:min-w-[180px] p-3 border-r border-slate-200 last:border-r-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center font-bold text-sm shrink-0">
@@ -480,7 +480,7 @@ export default function SecretariaPage() {
 
         {/* Grid de horários */}
         <div className="flex-1 overflow-y-auto overflow-x-auto">
-          {slots.map(slot => (
+          {slots.map((slot: string) => (
             <div key={slot} className="flex border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
               {/* Horario */}
               <div className="w-20 sm:w-24 shrink-0 p-2 sm:p-3 border-r border-slate-200 flex items-center justify-center">
@@ -488,7 +488,7 @@ export default function SecretariaPage() {
               </div>
 
               {/* Celulas por medico */}
-              {medicosVisiveis.map(m => {
+              {medicosVisiveis.map((m: any) => {
                 const ag = getAgendamento(m.id, slot);
                 return (
                   <div
@@ -794,7 +794,7 @@ export default function SecretariaPage() {
               className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 focus:border-blue-400 outline-none transition-colors text-sm"
             >
               <option value="">Selecione o médico</option>
-              {medicos.map(m => (
+              {medicos.map((m: any) => (
                 <option key={m.id} value={m.id}>{m.nome} — {m.especialidade || "Clínico"}</option>
               ))}
             </select>
@@ -824,7 +824,7 @@ export default function SecretariaPage() {
                 className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 focus:border-blue-400 outline-none transition-colors text-sm"
               >
                 <option value="">Selecionar</option>
-                {generateSlots().map(s => (
+                {generateSlots().map((s: string) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
@@ -912,7 +912,7 @@ export default function SecretariaPage() {
                   className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 focus:border-amber-400 outline-none transition-colors text-sm"
                 >
                   <option value="">Selecionar</option>
-                  {generateSlots().map(s => (
+                  {generateSlots().map((s: string) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>

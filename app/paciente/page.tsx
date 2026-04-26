@@ -142,10 +142,10 @@ export default function PacientePage() {
     
     // Filtra agendamentos do dia, ignorando a própria consulta atual
     const occupiedTimes = agendamentosOcupados
-      .filter((a) => a.data === novaData && a.id !== remarcandoConsulta.id)
-      .map((a) => a.hora.substring(0, 5));
+      .filter((a: any) => a.data === novaData && a.id !== remarcandoConsulta.id)
+      .map((a: any) => a.hora.substring(0, 5));
 
-    return generateSlots().map((slot) => ({
+    return generateSlots().map((slot: any) => ({
       time: slot,
       isOccupied: occupiedTimes.includes(slot),
     }));
@@ -558,7 +558,7 @@ export default function PacientePage() {
                     <span className="bg-emerald-100 text-emerald-700 text-xs font-black px-2 py-0.5 rounded-md">{proximas.length}</span>
                   </div>
                   <div className="flex flex-col gap-4">
-                    {proximas.map(c => (
+                    {proximas.map((c: any) => (
                       <div key={c.id} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500 rounded-l"></div>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -651,7 +651,7 @@ export default function PacientePage() {
                     <Clock className="w-4 h-4" /> Histórico
                   </h2>
                   <div className="flex flex-col gap-3">
-                    {historico.map(c => (
+                    {historico.map((c: any) => (
                       <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center">
                         <div>
                           <h3 className="font-semibold text-slate-700 text-sm">{getMedicoNome(c.user_id)}</h3>
@@ -715,7 +715,7 @@ export default function PacientePage() {
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-3">Horários disponíveis para {novaData.split("-").reverse().join("/")}:</label>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {getDaySlots().map((slot) => (
+                    {getDaySlots().map((slot: any) => (
                       <button
                         key={slot.time}
                         onClick={() => !slot.isOccupied && setNovoHora(slot.time)}
