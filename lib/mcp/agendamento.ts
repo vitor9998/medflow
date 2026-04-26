@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { AgendaActionPayload } from "@/lib/types";
+import { normalizePhone } from "@/lib/utils/phone";
 
 // MCP handles ALL database operations using Server Client
 
@@ -40,6 +41,10 @@ export async function criarAgendamento(payload: any) {
       payload.clinica_id = prof.clinica_id;
     }
   }
+
+  // Normalizar telefones
+  if (payload.telefone) payload.telefone = normalizePhone(payload.telefone);
+  if (payload.phone) payload.phone = normalizePhone(payload.phone);
 
   const { data, error } = await supabaseAdmin
     .from("agendamentos")

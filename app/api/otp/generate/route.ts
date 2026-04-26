@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
+import { normalizePhone } from "@/lib/utils/phone";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const cleanPhone = telefone.replace(/\D/g, "");
+    const cleanPhone = normalizePhone(telefone);
 
     // Gerar código de 6 dígitos
     const code = Math.floor(100000 + Math.random() * 900000).toString();

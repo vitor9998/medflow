@@ -1,5 +1,5 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase/server';
-import { formatPhone } from '@/lib/whatsapp';
+import { normalizePhone } from '../utils/phone';
 
 /**
  * Serviço de Mensageria WhatsApp.
@@ -14,7 +14,7 @@ export class WhatsAppService {
    * - Salva como 'pending'.
    */
   async queueMessage(phone: string, message: string, idempotencyKey?: string) {
-    const cleanPhone = formatPhone(phone);
+    const cleanPhone = normalizePhone(phone);
     
     // 1. Persistência na tabela whatsapp_messages
     // O status padrão é 'pending', que será capturado pelo Worker.

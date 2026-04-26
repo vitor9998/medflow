@@ -1,6 +1,8 @@
 import { supabaseAdmin as supabase } from '@/lib/supabase/server';
 import { EvolutionProvider } from '@/lib/providers/evolutionProvider';
 
+import { normalizePhone } from '@/lib/utils/phone';
+
 /**
  * Worker Service para processamento de fila de mensagens WhatsApp.
  * Gerencia concorrência, travamento de mensagens e métricas.
@@ -40,7 +42,8 @@ export class WhatsAppWorker {
           await new Promise(resolve => setTimeout(resolve, 1000));
 
           const sendStartTime = Date.now();
-          await this.provider.sendMessage(msg.phone, msg.message);
+          const normalizedPhone = normalizePhone(msg.phone);
+          await this.provider.sendMessage(normalizedPhone, msg.message);
           const latency = Date.now() - sendStartTime;
 
           // Sucesso

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { normalizePhone } from "@/lib/utils/phone";
 import { MedsysLogo } from "@/components/Logo";
 import {
   Phone, KeyRound, Loader2, Calendar, Clock, ChevronRight,
@@ -85,7 +86,7 @@ export default function PacientePage() {
     
     const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const folderPath = `${telefone.replace(/\D/g, "")}/${fileName}`;
+    const folderPath = `${normalizePhone(telefone)}/${fileName}`;
 
     const { error: uploadErr } = await supabase.storage
       .from('exames')
@@ -276,7 +277,7 @@ export default function PacientePage() {
   async function fetchConsultas(phoneOverride?: string) {
     setDashLoading(true);
     const phoneToUse = phoneOverride || telefone;
-    const cleanPhone = phoneToUse.replace(/\D/g, "");
+    const cleanPhone = normalizePhone(phoneToUse);
 
     // Buscar por telefone — funciona para agendamentos com e sem conta
     const { data, error } = await supabase

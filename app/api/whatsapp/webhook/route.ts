@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { WhatsAppService } from '@/lib/services/whatsappService';
 import { parseReschedule } from '@/lib/ai/whatsappParser';
 import { agendaAgent } from '@/lib/agents/agendaAgent';
+import { normalizePhone } from '@/lib/utils/phone';
 
 /**
  * Webhook avançado para processar conversas de WhatsApp.
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     const remoteJid = messageData.key.remoteJid;
-    const phone = remoteJid.split('@')[0];
+    const phone = normalizePhone(remoteJid.split('@')[0]);
     const text = messageData.message?.conversation || 
                  messageData.message?.extendedTextMessage?.text || 
                  "";
@@ -126,7 +127,7 @@ async function findUpcomingAppointment(phone: string) {
   const { data } = await supabaseAdmin
     .from('agendamentos')
     .select('id, data, hora')
-    .or(`telefone.eq.${phone},phone.eq.${phone}`)
+    .or(`telefone.eq.${normalizePhone(phone)},phone.eq.${normalizePhone(phone)}`)
     .gte('data', today)
     .neq('status', 'cancelado')
     .order('data', { ascending: true })

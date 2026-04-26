@@ -7,6 +7,8 @@ import { Modal } from "@/components/Modal";
 import { Card } from "@/components/Card";
 import { Users, Search, ChevronRight, FileText, Phone, Mail } from "lucide-react";
 
+import { normalizePhone } from "@/lib/utils/phone";
+
 export default function PacientesPage() {
   const router = useRouter();
   const [pacientes, setPacientes] = useState<any[]>([]);
@@ -58,7 +60,7 @@ export default function PacientesPage() {
       const pacMap = new Map();
 
       (data || []).forEach((contato: any) => {
-        const key = `${contato.nome?.trim().toLowerCase()}-${contato.telefone}`;
+        const key = `${contato.nome?.trim().toLowerCase()}-${normalizePhone(contato.telefone)}`;
         if (!pacMap.has(key)) {
           pacMap.set(key, {
             nome: contato.nome,

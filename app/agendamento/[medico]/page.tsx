@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { normalizePhone } from "@/lib/utils/phone";
 import Link from "next/link";
 import { MedsysLogo } from "@/components/Logo";
 import { ArrowLeft, Calendar, Loader2, Hospital, Clock, Phone, Mail, FileText, User, Paperclip, X, Stethoscope, ChevronLeft, Upload, CheckCircle2, Shield, KeyRound, RefreshCw } from "lucide-react";
@@ -172,7 +173,7 @@ export default function AgendamentoPage() {
       const res = await fetch("/api/otp/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telefone }),
+        body: JSON.stringify({ telefone: normalizePhone(telefone) }),
       });
 
       const result = await res.json();
@@ -322,7 +323,7 @@ export default function AgendamentoPage() {
       body: JSON.stringify({
         nome,
         email,
-        telefone,
+        telefone: normalizePhone(telefone),
         data,
         hora,
         sintomas,

@@ -1,3 +1,5 @@
+import { normalizePhone } from './utils/phone';
+
 /**
  * Utilitários para integração com WhatsApp (Evolution API).
  */
@@ -8,15 +10,7 @@
  * - Garante que comece com o prefixo do Brasil (55).
  */
 export function formatPhone(phone: string): string {
-  // Remove tudo que não é dígito
-  let cleaned = phone.replace(/\D/g, '');
-
-  // Se não começa com 55, assume que é um número brasileiro sem DDI e adiciona
-  if (!cleaned.startsWith('55')) {
-    cleaned = `55${cleaned}`;
-  }
-
-  return cleaned;
+  return normalizePhone(phone);
 }
 
 /**
