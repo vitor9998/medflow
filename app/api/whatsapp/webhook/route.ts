@@ -7,11 +7,6 @@ import { normalizePhone } from '@/lib/utils/phone';
 import { parseIntent } from '@/lib/utils/intentParser';
 import { AIService } from '@/lib/services/aiService';
 
-/**
- * Webhook avançado para processar conversas de WhatsApp.
- * Gerencia Confirmação, Cancelamento e Reagendamento Inteligente.
- */
-
 const whatsappService = new WhatsAppService();
 const aiService = new AIService();
 const QUESTION_RESCHEDULE = 'Sem problemas! Qual dia e horário você prefere?';
@@ -19,55 +14,53 @@ const QUESTION_RESCHEDULE = 'Sem problemas! Qual dia e horário você prefere?';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    console.log("[Webhook WhatsApp] Payload recebido:", JSON.stringify(body, null, 2));
 
-    if (body.event !== 'messages.upsert') {
-      return NextResponse.json({ status: 'ignored_event' });
+    // 1. Extração de Dados
+    const data = body?.data || body?.messages?.[0];
+    
+    if (!data) {
+      return NextResponse.json({ status: 'ignored_no_data' });
     }
 
-    const messageData = body.data;
-    if (!messageData || messageData.key.fromMe) {
+    // O destino REAL da mensagem é o remoteJid da conversa
+    const chatJid = data?.key?.remoteJid;
+    const fromMe = data?.key?.fromMe;
+
+    if (fromMe) {
       return NextResponse.json({ status: 'ignored_own_message' });
     }
 
-    const remoteJid = messageData.key.remoteJid;
-    const phone = normalizePhone(remoteJid.split('@')[0]);
-    const text = messageData.message?.conversation || 
-                 messageData.message?.extendedTextMessage?.text || 
-                 "";
+    // O sender (quem enviou) pode vir no payload da Evolution ou tentamos extrair do JID
+    // Se o JID for @lid, o 'sender' costuma vir na raiz do body como o número real
+    const rawSender = body?.sender || chatJid;
+    const phone = normalizePhone(rawSender.split('@')[0]);
 
-    // --- 0. VALIDAÇÕES INICIAIS ---
-    if (!text || text.trim().length < 2) {
-      await whatsappService.queueMessage(phone, "Pode me enviar mais detalhes? 😊");
-      return NextResponse.json({ status: 'message_too_short' });
+    const msgContent = data?.message;
+    const text = 
+      msgContent?.conversation || 
+      msgContent?.extendedTextMessage?.text || 
+      msgContent?.imageMessage?.caption || 
+      "";
+
+    if (!text || text.trim().length < 1) {
+      return NextResponse.json({ status: 'ignored_empty_message' });
     }
 
-    if (text.length > 300) {
-      await whatsappService.queueMessage(phone, "Mensagem muito longa, pode resumir? 😊");
-      return NextResponse.json({ status: 'message_too_long' });
-    }
+    console.log(`[Webhook WhatsApp] Processando - Chat: ${chatJid}, Fone: ${phone}, Texto: "${text}"`);
 
-    let source = "rule";
+    // --- 2. LÓGICA DE INTENÇÕES ---
     const intent = parseIntent(text);
-    
-    console.log({
-      phone,
-      message: text,
-      intent,
-      source,
-      timestamp: new Date().toISOString()
-    });
 
-    // --- 1. LÓGICA DE CONFIRMAÇÃO / CANCELAMENTO ---
     if (intent === 'confirmar') {
-      return await handleStatusUpdate(phone, 'confirmado', 'Perfeito! Sua presença foi confirmada. Te esperamos 😊');
+      return await handleStatusUpdate(phone, 'confirmado', 'Perfeito! Sua presença foi confirmada. Te esperamos 😊', chatJid);
     }
 
     if (intent === 'cancelar') {
-      return await handleStatusUpdate(phone, 'cancelado', 'Sem problemas! Sua consulta foi cancelada. Se precisar reagendar, estamos à disposição.');
+      return await handleStatusUpdate(phone, 'cancelado', 'Sem problemas! Sua consulta foi cancelada. Se precisar reagendar, estamos à disposição.', chatJid);
     }
 
-    // --- 2. LÓGICA DE REAGENDAMENTO ---
-    // Verifica se é uma intenção explícita de remarcar ou uma resposta à pergunta anterior
+    // --- 3. LÓGICA DE REAGENDAMENTO ---
     const { data: lastMessages } = await supabaseAdmin
       .from('whatsapp_messages')
       .select('message')
@@ -76,24 +69,22 @@ export async function POST(req: Request) {
       .limit(1);
 
     const isReplyingToReschedule = lastMessages && lastMessages[0]?.message === QUESTION_RESCHEDULE;
-    const hasRescheduleIntent = intent === 'remarcar';
-
-    if (hasRescheduleIntent || isReplyingToReschedule) {
-      // Tentar extrair data e hora via IA
-      const { data: newDate, hora: newTime } = await parseReschedule(text);
-
-      if (newDate && newTime) {
-        return await handleReschedule(phone, newDate, newTime);
-      } else {
-        // Não encontrou data/hora na mensagem, pergunta ao paciente
-        await whatsappService.queueMessage(phone, QUESTION_RESCHEDULE);
-        return NextResponse.json({ success: true, action: 'asked_reschedule_details' });
+    
+    if (intent === 'remarcar' || isReplyingToReschedule) {
+      try {
+        const { data: newDate, hora: newTime } = await parseReschedule(text);
+        if (newDate && newTime) {
+          return await handleReschedule(phone, newDate, newTime, chatJid);
+        } else {
+          await sendImmediate(chatJid, QUESTION_RESCHEDULE);
+          return NextResponse.json({ success: true, action: 'asked_reschedule_details' });
+        }
+      } catch (e) {
+        console.warn("[Webhook] Falha no parseReschedule, continuando para IA...");
       }
     }
 
-    // --- 3. LÓGICA DE INTELIGÊNCIA ARTIFICIAL (FALLBACK) ---
-    // Se chegamos aqui, o parser de regras não identificou a intenção.
-    // Chamamos a OpenAI para lidar com a conversa de forma natural.
+    // --- 4. FALLBACK INTELIGENTE (OpenAI) ---
     const appointment = await findUpcomingAppointment(phone);
     
     if (appointment) {
@@ -106,182 +97,95 @@ export async function POST(req: Request) {
       };
 
       const aiResult = await aiService.handleConversation(text, aiContext);
-      const source = "ai";
-      const intent = aiResult.intent;
-
-      console.log({
-        phone,
-        message: text,
-        intent,
-        source,
-        timestamp: new Date().toISOString()
-      });
-
-      // Agir com base na intenção da IA
-      if (aiResult.intent === 'confirm') {
-        return await handleStatusUpdate(phone, 'confirmado', aiResult.response);
-      }
       
-      if (aiResult.intent === 'cancel') {
-        return await handleStatusUpdate(phone, 'cancelado', aiResult.response);
-      }
-
-      if (aiResult.intent === 'reschedule') {
-        // Se a IA detectou que o paciente quer reagendar, podemos usar a resposta dela
-        // ou disparar o fluxo de perguntas de reagendamento.
-        await whatsappService.queueMessage(phone, aiResult.response);
-        return NextResponse.json({ success: true, action: 'ai_reschedule_flow' });
-      }
-
-      // Se for uma pergunta ou desconhecido, apenas enviamos a resposta da IA
-      await whatsappService.queueMessage(phone, aiResult.response);
-      return NextResponse.json({ success: true, action: 'ai_replied', intent: aiResult.intent });
+      if (aiResult.intent === 'confirm') return await handleStatusUpdate(phone, 'confirmado', aiResult.response, chatJid);
+      if (aiResult.intent === 'cancel') return await handleStatusUpdate(phone, 'cancelado', aiResult.response, chatJid);
+      
+      await sendImmediate(chatJid, aiResult.response);
+      return NextResponse.json({ success: true, action: 'ai_handled', intent: aiResult.intent });
     } else {
-      // Caso não tenha agendamento, fallback de segurança
-      await whatsappService.queueMessage(phone, "Desculpe, não consegui entender agora. Pode reformular? 😊");
-      return NextResponse.json({ success: true, action: 'fallback_no_context' });
+      console.log(`[Webhook] Nenhuma consulta encontrada para o fone: ${phone}`);
+      await sendImmediate(chatJid, "Olá! Não encontrei uma consulta agendada para este número no momento. Como posso te ajudar?");
+      return NextResponse.json({ status: 'no_appointment_found' });
     }
-
-    return NextResponse.json({ success: true, status: 'no_intent_matched' });
 
   } catch (err: any) {
     console.error('[WhatsApp Webhook] Erro crítico:', err.message);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: err.message }, { status: 200 });
   }
 }
 
-/**
- * Auxiliar para atualizar status de agendamento e responder de forma segura.
- * Garante que agendamentos já processados não sejam duplicados.
- */
-async function handleStatusUpdate(phone: string, newStatus: string, reply: string) {
-  const appointment = await findUpcomingAppointment(phone);
+// Funções Auxiliares com Envio para o Chat de Origem
+async function sendImmediate(chatJid: string, text: string) {
+  const url = process.env.EVOLUTION_API_URL;
+  const key = process.env.EVOLUTION_API_KEY;
+  const instance = process.env.EVOLUTION_INSTANCE;
+
+  console.log(`📤 Enviando resposta imediata para o chat ${chatJid}...`);
   
+  try {
+    const response = await fetch(`${url}/message/sendText/${instance}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": key || "" },
+      body: JSON.stringify({
+        number: chatJid,
+        textMessage: { text }
+      })
+    });
+    
+    const resData = await response.text();
+    console.log("📡 Resposta da Evolution:", resData);
+  } catch (err) {
+    console.error("❌ Falha no envio imediato:", err);
+  }
+}
+
+async function handleStatusUpdate(phone: string, newStatus: string, reply: string, chatJid: string) {
+  const appointment = await findUpcomingAppointment(phone);
   if (!appointment) {
+    await sendImmediate(chatJid, "Desculpe, não encontrei nenhuma consulta pendente para este número.");
     return NextResponse.json({ success: true, status: 'no_appointment_found' });
   }
 
-  const previousStatus = appointment.status;
-
-  // --- 1. BLOQUEIO DE DUPLICIDADE ---
-  // Só permitimos transição a partir do estado 'pending'
-  if (previousStatus !== 'pending') {
-    console.log({
-      appointmentId: appointment.id,
-      previousStatus,
-      attemptedAction: newStatus,
-      result: "skipped",
-      reason: "already_processed"
-    });
-    
-    return NextResponse.json({ 
-      success: true, 
-      action: 'skipped_already_processed',
-      currentStatus: previousStatus 
-    });
-  }
-
-  // --- 2. ATUALIZAÇÃO CONDICIONAL (ATÔMICA) ---
-  const { error, count } = await supabaseAdmin
+  await supabaseAdmin
     .from('agendamentos')
     .update({ status: newStatus })
-    .eq('id', appointment.id)
-    .eq('status', 'pending') // Garantia extra de concorrência
-    .select();
+    .eq('id', appointment.id);
 
-  if (error || !count) {
-    console.warn(`[Webhook] Falha ao atualizar status ou já atualizado por outro processo.`);
-    return NextResponse.json({ success: false, error: 'update_failed_or_concurrency_issue' });
-  }
-
-  // --- 3. ENVIO DE MENSAGEM (SÓ SE ATUALIZOU) ---
-  await whatsappService.queueMessage(phone, reply, `reply-${appointment.id}-${newStatus}`);
-
-  console.log({
-    appointmentId: appointment.id,
-    previousStatus,
-    attemptedAction: newStatus,
-    result: "updated",
-    timestamp: new Date().toISOString()
-  });
-
+  await sendImmediate(chatJid, reply);
   return NextResponse.json({ success: true, action: `updated_to_${newStatus}` });
 }
 
-/**
- * Auxiliar para reagendamento seguro e idempotente.
- */
-async function handleReschedule(phone: string, newDate: string, newTime: string) {
+async function handleReschedule(phone: string, newDate: string, newTime: string, chatJid: string) {
   const appointment = await findUpcomingAppointment(phone);
-  
-  if (!appointment) {
-    await whatsappService.queueMessage(phone, 'Não encontrei nenhum agendamento pendente para reagendar. Como posso ajudar?');
-    return NextResponse.json({ status: 'no_appointment_found' });
-  }
+  if (!appointment) return NextResponse.json({ status: 'no_appt' });
 
-  // --- 1. VALIDAÇÃO DE STATUS ---
-  if (appointment.status === 'cancelado') {
-    await whatsappService.queueMessage(phone, 'Essa consulta já foi cancelada. Se quiser, posso te ajudar a agendar uma nova 😊');
-    return NextResponse.json({ success: true, action: 'reschedule_denied_cancelled' });
-  }
-
-  // --- 2. VALIDAÇÃO DE MESMO HORÁRIO (IDEMPOTÊNCIA) ---
-  if (appointment.data === newDate && appointment.hora === newTime) {
-    await whatsappService.queueMessage(phone, 'Esse já é o horário atual da sua consulta 😊');
-    console.log({
-      appointmentId: appointment.id,
-      action: "reschedule",
-      result: "skipped",
-      reason: "same_slot"
-    });
-    return NextResponse.json({ success: true, action: 'reschedule_skipped_same_slot' });
-  }
-
-  // --- 3. EXECUÇÃO VIA AGENT (COM VALIDAÇÃO DE DISPONIBILIDADE) ---
   try {
-    await agendaAgent('reagendar', {
-      id: appointment.id,
-      novaData: newDate,
-      novaHora: newTime
-    });
-
-    const dataFormatada = newDate.split('-').reverse().join('/');
-    await whatsappService.queueMessage(phone, `Feito! Sua consulta foi reagendada para ${dataFormatada} às ${newTime}. Até lá!`);
-
-    console.log({
-      appointmentId: appointment.id,
-      previousDate: appointment.data,
-      previousTime: appointment.hora,
-      newDate,
-      newTime,
-      action: "reschedule",
-      result: "updated",
-      timestamp: new Date().toISOString()
-    });
-
+    await agendaAgent('reagendar', { id: appointment.id, novaData: newDate, novaHora: newTime });
+    const df = newDate.split('-').reverse().join('/');
+    await sendImmediate(chatJid, `Feito! Consulta reagendada para ${df} às ${newTime}.`);
     return NextResponse.json({ success: true, action: 'rescheduled' });
-
-  } catch (err: any) {
-    // Erro de disponibilidade ou outro
-    await whatsappService.queueMessage(phone, `Desculpe, esse horário não está disponível. Poderia sugerir outro dia ou horário?`);
-    return NextResponse.json({ success: true, action: 'reschedule_conflict' });
+  } catch (err) {
+    await sendImmediate(chatJid, `Desculpe, esse horário não está disponível. Poderia sugerir outro?`);
+    return NextResponse.json({ status: 'conflict' });
   }
 }
 
-/**
- * Busca o agendamento mais próximo para um telefone.
- */
 async function findUpcomingAppointment(phone: string) {
   const today = new Date().toISOString().split('T')[0];
+  
+  // Pega os últimos 11 dígitos (DDD + Número) para ser seguro e evitar colisões entre estados
+  const last11 = phone.slice(-11);
+
   const { data } = await supabaseAdmin
     .from('agendamentos')
-    .select('id, data, hora, nome, status, user_id, profiles(nome, especialidade)')
-    .or(`telefone.eq.${normalizePhone(phone)},phone.eq.${normalizePhone(phone)}`)
+    .select('id, data, hora, nome, status, profiles(nome, especialidade)')
+    .or(`telefone.ilike.%${last11}%,phone.ilike.%${last11}%`)
     .gte('data', today)
     .neq('status', 'cancelado')
     .order('data', { ascending: true })
     .limit(1)
     .maybeSingle();
-  
-  return data as any;
+    
+  return data;
 }

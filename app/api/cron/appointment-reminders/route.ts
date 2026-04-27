@@ -18,10 +18,16 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    // 2. Determinar a data de amanhã (padrão YYYY-MM-DD)
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    // 2. Determinar a data de amanhã (Fuso Horário Local / Brasil)
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+    
+    // Converte para YYYY-MM-DD no fuso de SP
+    const tomorrowStr = tomorrow.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+      .split('/')
+      .reverse()
+      .join('-');
 
     console.log(`[Reminders] Buscando consultas para amanhã (${tomorrowStr})...`);
 
