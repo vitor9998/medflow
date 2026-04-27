@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { agendaAgent } from "@/lib/agents/agendaAgent";
+import { normalizePhone, isValidBrazilPhone } from "@/lib/utils/phone";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,6 +13,21 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Validação de Telefone
+    const rawTelefone = payload.telefone || payload.phone;
+    const phoneNormalized = normalizePhone(rawTelefone || "");
+
+    if (rawTelefone && !isValidBrazilPhone(phoneNormalized)) {
+      return NextResponse.json(
+        { error: "Telefone inválido. Por favor, informe um número válido com DDD. Ex: 11999998888" },
+        { status: 400 }
+      );
+    }
+
+    // Atualiza o payload com o telefone normalizado
+    if (payload.telefone) payload.telefone = phoneNormalized;
+    if (payload.phone) payload.phone = phoneNormalized;
 
     const result = await agendaAgent("criar", payload);
 

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { normalizePhone } from "@/lib/utils/phone";
+import { normalizePhone, isValidBrazilPhone } from "@/lib/utils/phone";
 import Link from "next/link";
 import { MedsysLogo } from "@/components/Logo";
 import { ArrowLeft, Calendar, Loader2, Hospital, Clock, Phone, Mail, FileText, User, Paperclip, X, Stethoscope, ChevronLeft, Upload, CheckCircle2, Shield, KeyRound, RefreshCw } from "lucide-react";
@@ -165,15 +165,19 @@ export default function AgendamentoPage() {
 
   // 🔐 STEP 1: Enviar OTP
   async function handleSendOTP(e: React.FormEvent) {
-    e.preventDefault();
-    setOtpLoading(true);
-    setOtpError("");
+    const phoneNormalized = normalizePhone(telefone);
+
+    if (!isValidBrazilPhone(phoneNormalized)) {
+      setOtpError("Telefone inválido. Por favor, informe um número válido com DDD. Ex: 11999998888");
+      setOtpLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/otp/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telefone: normalizePhone(telefone) }),
+        body: JSON.stringify({ telefone: phoneNormalized }),
       });
 
       const result = await res.json();

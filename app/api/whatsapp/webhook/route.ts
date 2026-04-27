@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { WhatsAppService } from '@/lib/services/whatsappService';
 import { parseReschedule } from '@/lib/ai/whatsappParser';
 import { agendaAgent } from '@/lib/agents/agendaAgent';
-import { normalizePhone } from '@/lib/utils/phone';
+import { normalizePhone, isValidBrazilPhone } from '@/lib/utils/phone';
 import { parseIntent } from '@/lib/utils/intentParser';
 import { AIService } from '@/lib/services/aiService';
 
@@ -23,9 +23,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: 'ignored_no_data' });
     }
 
-    // O destino REAL da mensagem é o remoteJid da conversa
-    const chatJid = data?.key?.remoteJid;
     const fromMe = data?.key?.fromMe;
+    const sender = body?.sender || data?.key?.remoteJid;
+    const phone = normalizePhone(sender?.split('@')[0] || "");
+
+    if (!isValidBrazilPhone(phone)) {
+      console.warn("⚠️ Telefone inválido recebido no webhook:", phone);
+      return NextResponse.json({ status: 'ignored_invalid_phone' });
+    }
 
     if (fromMe && process.env.ALLOW_SELF_TEST !== "true") {
       console.log("⛔ Ignorando mensagem própria (produção)");
@@ -36,10 +41,8 @@ export async function POST(req: Request) {
       console.log("⚠️ Modo teste ativo: processando mensagem própria");
     }
 
-    // O sender (quem enviou) pode vir no payload da Evolution ou tentamos extrair do JID
-    // Se o JID for @lid, o 'sender' costuma vir na raiz do body como o número real
-    const rawSender = body?.sender || chatJid;
-    const phone = normalizePhone(rawSender.split('@')[0]);
+    // O sender (quem enviou) pode vir no payload da Evolution
+    // const phone já foi extraído acima
 
     const msgContent = data?.message;
     const text = 
@@ -69,17 +72,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: 'ignored_bot_loop' });
     }
 
-    console.log(`[Webhook WhatsApp] Processando - Chat: ${chatJid}, Fone: ${phone}, Texto: "${text}"`);
+    console.log(`[Webhook WhatsApp] Processando - Fone: ${phone}, Texto: "${text}"`);
 
     // --- 2. LÓGICA DE INTENÇÕES ---
     const intent = parseIntent(text);
 
     if (intent === 'confirmar') {
-      return await handleStatusUpdate(phone, 'confirmado', 'Perfeito! Sua presença foi confirmada. Te esperamos 😊', chatJid);
+      return await handleStatusUpdate(phone, 'confirmado', 'Perfeito! Sua presença foi confirmada. Te esperamos 😊', phone);
     }
 
     if (intent === 'cancelar') {
-      return await handleStatusUpdate(phone, 'cancelado', 'Sem problemas! Sua consulta foi cancelada. Se precisar reagendar, estamos à disposição.', chatJid);
+      return await handleStatusUpdate(phone, 'cancelado', 'Sem problemas! Sua consulta foi cancelada. Se precisar reagendar, estamos à disposição.', phone);
     }
 
     // --- 3. LÓGICA DE REAGENDAMENTO ---
@@ -96,9 +99,9 @@ export async function POST(req: Request) {
       try {
         const { data: newDate, hora: newTime } = await parseReschedule(text);
         if (newDate && newTime) {
-          return await handleReschedule(phone, newDate, newTime, chatJid);
+          return await handleReschedule(phone, newDate, newTime, phone);
         } else {
-          await sendImmediate(chatJid, QUESTION_RESCHEDULE);
+          await sendImmediate(phone, QUESTION_RESCHEDULE);
           return NextResponse.json({ success: true, action: 'asked_reschedule_details' });
         }
       } catch (e) {
@@ -120,14 +123,14 @@ export async function POST(req: Request) {
 
       const aiResult = await aiService.handleConversation(text, aiContext);
       
-      if (aiResult.intent === 'confirm') return await handleStatusUpdate(phone, 'confirmado', aiResult.response, chatJid);
-      if (aiResult.intent === 'cancel') return await handleStatusUpdate(phone, 'cancelado', aiResult.response, chatJid);
+      if (aiResult.intent === 'confirm') return await handleStatusUpdate(phone, 'confirmado', aiResult.response, phone);
+      if (aiResult.intent === 'cancel') return await handleStatusUpdate(phone, 'cancelado', aiResult.response, phone);
       
-      await sendImmediate(chatJid, aiResult.response);
+      await sendImmediate(phone, aiResult.response);
       return NextResponse.json({ success: true, action: 'ai_handled', intent: aiResult.intent });
     } else {
       console.log(`[Webhook] Nenhuma consulta encontrada para o fone: ${phone}`);
-      await sendImmediate(chatJid, "Olá! Não encontrei uma consulta agendada para este número no momento. Como posso te ajudar?");
+      await sendImmediate(phone, "Olá! Não encontrei uma consulta agendada para este número no momento. Como posso te ajudar?");
       return NextResponse.json({ status: 'no_appointment_found' });
     }
 
@@ -137,20 +140,20 @@ export async function POST(req: Request) {
   }
 }
 
-// Funções Auxiliares com Envio para o Chat de Origem
-async function sendImmediate(chatJid: string, text: string) {
+// Funções Auxiliares com Envio para o Telefone de Origem
+async function sendImmediate(phoneNumber: string, text: string) {
   const url = process.env.EVOLUTION_API_URL;
   const key = process.env.EVOLUTION_API_KEY;
   const instance = process.env.EVOLUTION_INSTANCE;
 
-  console.log(`📤 Enviando resposta imediata para o chat ${chatJid}...`);
+  console.log(`📤 ENVIANDO PARA: ${phoneNumber}`);
   
   try {
     const response = await fetch(`${url}/message/sendText/${instance}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": key || "" },
       body: JSON.stringify({
-        number: chatJid,
+        number: phoneNumber,
         textMessage: { text }
       })
     });
@@ -162,10 +165,10 @@ async function sendImmediate(chatJid: string, text: string) {
   }
 }
 
-async function handleStatusUpdate(phone: string, newStatus: string, reply: string, chatJid: string) {
+async function handleStatusUpdate(phone: string, newStatus: string, reply: string, destinationNumber: string) {
   const appointment = await findUpcomingAppointment(phone);
   if (!appointment) {
-    await sendImmediate(chatJid, "Desculpe, não encontrei nenhuma consulta pendente para este número.");
+    await sendImmediate(destinationNumber, "Desculpe, não encontrei nenhuma consulta pendente para este número.");
     return NextResponse.json({ success: true, status: 'no_appointment_found' });
   }
 
@@ -174,21 +177,21 @@ async function handleStatusUpdate(phone: string, newStatus: string, reply: strin
     .update({ status: newStatus })
     .eq('id', appointment.id);
 
-  await sendImmediate(chatJid, reply);
+  await sendImmediate(destinationNumber, reply);
   return NextResponse.json({ success: true, action: `updated_to_${newStatus}` });
 }
 
-async function handleReschedule(phone: string, newDate: string, newTime: string, chatJid: string) {
+async function handleReschedule(phone: string, newDate: string, newTime: string, destinationNumber: string) {
   const appointment = await findUpcomingAppointment(phone);
   if (!appointment) return NextResponse.json({ status: 'no_appt' });
 
   try {
     await agendaAgent('reagendar', { id: appointment.id, novaData: newDate, novaHora: newTime });
     const df = newDate.split('-').reverse().join('/');
-    await sendImmediate(chatJid, `Feito! Consulta reagendada para ${df} às ${newTime}.`);
+    await sendImmediate(destinationNumber, `Feito! Consulta reagendada para ${df} às ${newTime}.`);
     return NextResponse.json({ success: true, action: 'rescheduled' });
   } catch (err) {
-    await sendImmediate(chatJid, `Desculpe, esse horário não está disponível. Poderia sugerir outro?`);
+    await sendImmediate(destinationNumber, `Desculpe, esse horário não está disponível. Poderia sugerir outro?`);
     return NextResponse.json({ status: 'conflict' });
   }
 }
