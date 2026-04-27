@@ -27,8 +27,13 @@ export async function POST(req: Request) {
     const chatJid = data?.key?.remoteJid;
     const fromMe = data?.key?.fromMe;
 
-    if (fromMe) {
-      return NextResponse.json({ status: 'ignored_own_message' });
+    if (fromMe && process.env.ALLOW_SELF_TEST !== "true") {
+      console.log("⛔ Ignorando mensagem própria (produção)");
+      return NextResponse.json({ status: "ignored_own_message" });
+    }
+
+    if (fromMe && process.env.ALLOW_SELF_TEST === "true") {
+      console.log("⚠️ Modo teste ativo: processando mensagem própria");
     }
 
     // O sender (quem enviou) pode vir no payload da Evolution ou tentamos extrair do JID
@@ -45,6 +50,23 @@ export async function POST(req: Request) {
 
     if (!text || text.trim().length < 1) {
       return NextResponse.json({ status: 'ignored_empty_message' });
+    }
+
+    // --- PREVENÇÃO DE LOOP ---
+    // Ignorar mensagens que contenham respostas padrão do bot para evitar ciclos infinitos
+    const botPhrases = [
+      QUESTION_RESCHEDULE,
+      "Sua presença foi confirmada",
+      "Sua consulta foi cancelada",
+      "Consulta reagendada para",
+      "horário não está disponível",
+      "Não encontrei uma consulta agendada",
+      "não encontrei nenhuma consulta pendente"
+    ];
+
+    if (botPhrases.some(phrase => text.includes(phrase))) {
+      console.log("🤖 Ignorando mensagem gerada pelo próprio bot para evitar loop");
+      return NextResponse.json({ status: 'ignored_bot_loop' });
     }
 
     console.log(`[Webhook WhatsApp] Processando - Chat: ${chatJid}, Fone: ${phone}, Texto: "${text}"`);
