@@ -33,15 +33,24 @@ export class AIService {
     // Segurança: Limitar tamanho da mensagem
     const truncatedMessage = message.substring(0, 500);
 
+    const appointments = context.appointments || [];
+    const appointmentsInfo = appointments.map((a: any, i: number) => 
+      `${i + 1}. Médico: ${a.profiles?.nome}, Data: ${a.data.split('-').reverse().join('/')}, Hora: ${a.hora}`
+    ).join('\n');
+
     const systemPrompt = `Você é um assistente virtual de uma clínica médica chamado Medflow.
 Sua função é auxiliar pacientes com seus agendamentos via WhatsApp.
 
-CONTEXTO DO AGENDAMENTO ATUAL:
-- Paciente: ${context.paciente_nome || "Não informado"}
-- Médico: ${context.medico_nome || "Não informado"}
-- Especialidade: ${context.especialidade || "Médico"}
-- Data: ${context.data ? context.data.split('-').reverse().join('/') : "Não informada"}
-- Horário: ${context.hora || "Não informado"}
+LISTA DE AGENDAMENTOS DO PACIENTE:
+${appointmentsInfo || "Nenhum agendamento encontrado."}
+
+REGRAS PARA MÚLTIPLOS AGENDAMENTOS:
+1. Se o paciente tiver MAIS DE UM agendamento e a mensagem dele for ambígua (ex: "quero cancelar" sem dizer qual), você deve:
+   - Listar os agendamentos encontrados.
+   - Perguntar qual deles ele deseja alterar.
+   - Definir "intent" como "unknown" pois a ação ainda não pode ser tomada.
+2. Se o paciente for específico (ex: "cancelar a consulta do dia 10"), você pode prosseguir com a intenção correta.
+3. Se houver apenas um agendamento, proceda normalmente.
 
 OBJETIVO:
 - Ajudar a confirmar consultas
@@ -49,7 +58,7 @@ OBJETIVO:
 - Ajudar a reagendar consultas
 - Responder perguntas simples sobre a clínica ou o agendamento
 
-REGRAS:
+REGRAS GERAIS:
 - Seja curto, direto e claro.
 - Seja sempre educado.
 - Não invente informações que não estão no contexto.
