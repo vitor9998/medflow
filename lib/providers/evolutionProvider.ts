@@ -39,4 +39,28 @@ export class EvolutionProvider {
 
     return data;
   }
+
+  /**
+   * Verifica se a instância está conectada.
+   */
+  async isConnected(): Promise<boolean> {
+    if (!this.apiUrl || !this.apiKey || !this.instance) return false;
+
+    try {
+      const url = `${this.apiUrl}/instance/connectionState/${this.instance}`;
+      const response = await fetch(url, {
+        headers: { 'apikey': this.apiKey }
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      // O status esperado é "open" ou "CONNECTED" dependendo da versão da Evolution API
+      // Geralmente retorna { instance: { state: "open" } } ou similar
+      return data.instance?.state === 'open' || data.instance?.connectionStatus === 'CONNECTED';
+    } catch (error) {
+      console.error('[EvolutionProvider] Erro ao verificar conexão:', error);
+      return false;
+    }
+  }
 }
