@@ -24,26 +24,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: 'ignored_no_data' });
     }
 
-    const fromMe = data?.key?.fromMe;
-    const sender = body?.sender || data?.key?.remoteJid;
-    const phone = normalizePhone(sender?.split('@')[0] || "");
+    // A Evolution API pode enviar a 'key' em diferentes níveis dependendo da versão
+    const key = data?.key || data?.message?.key || body?.key;
+    
+    const fromMe = key?.fromMe;
+    console.log("FROM ME:", fromMe);
 
-    if (!isValidBrazilPhone(phone)) {
-      console.warn("⚠️ Telefone inválido recebido no webhook:", phone);
-      return NextResponse.json({ status: 'ignored_invalid_phone' });
-    }
-
-    if (fromMe && process.env.ALLOW_SELF_TEST !== "true") {
-      console.log("⛔ Ignorando mensagem própria (produção)");
+    if (fromMe) {
+      console.log("⛔ Ignoring own message");
       return NextResponse.json({ status: "ignored_own_message" });
     }
 
-    if (fromMe && process.env.ALLOW_SELF_TEST === "true") {
-      console.log("⚠️ Modo teste ativo: processando mensagem própria");
+    // --- IDEMPOTÊNCIA (Prevenir processamento duplicado) ---
+    const messageId = key?.id;
+    if (messageId) {
+      const { error: duplicateError } = await supabaseAdmin
+        .from('processed_messages')
+        .insert([{ message_id: messageId }]);
+
+      if (duplicateError && duplicateError.code === '23505') {
+        console.log("⛔ Duplicate message ignored:", messageId);
+        return NextResponse.json({ status: 'ignored_duplicate' });
+      }
     }
 
-    // O sender (quem enviou) pode vir no payload da Evolution
-    // const phone já foi extraído acima
+    // Priorizar o remoteJid (telefone do paciente) extraído da key
+    const rawSender = key?.remoteJid || body?.sender || "";
+    const isLid = rawSender.includes('@lid');
+    const pushName = data?.pushName || "";
+    
+    let phone = "";
+    if (isLid) {
+      phone = rawSender; // Mantém o @lid intacto
+      console.log(`⚠️ Paciente usando @lid detectado. Nome: ${pushName}. Tentaremos fallback por nome.`);
+    } else {
+      phone = normalizePhone(rawSender.split('@')[0] || "");
+      if (!isValidBrazilPhone(phone)) {
+        console.warn("⚠️ Telefone inválido recebido no webhook:", phone);
+        return NextResponse.json({ status: 'ignored_invalid_phone' });
+      }
+    }
 
     const msgContent = data?.message;
     const text = 
@@ -70,7 +90,7 @@ export async function POST(req: Request) {
       const selectionIndex = parseSelection(text);
       if (selectionIndex !== null) {
         console.log(`🎯 Seleção detectada: ${selectionIndex + 1}`);
-        const appointments = await findUpcomingAppointments(phone);
+        const appointments = await findUpcomingAppointments(phone, pushName);
         
         if (appointments[selectionIndex]) {
           const selected = appointments[selectionIndex];
@@ -83,7 +103,7 @@ export async function POST(req: Request) {
           } else {
             return await handleStatusUpdate(phone, action, 
               action === 'confirmado' ? 'Perfeito! Sua presença foi confirmada. Te esperamos 😊' : 'Sem problemas! Sua consulta foi cancelada.', 
-              phone, text, selected.id);
+              phone, text, selected.id, pushName);
           }
         }
       } else if (text.length < 5 || /^\d+$/.test(text.trim())) {
@@ -116,11 +136,11 @@ export async function POST(req: Request) {
     const intent = parseIntent(text);
 
     if (intent === 'confirmar') {
-      return await handleStatusUpdate(phone, 'confirmado', 'Perfeito! Sua presença foi confirmada. Te esperamos 😊', phone, text);
+      return await handleStatusUpdate(phone, 'confirmado', 'Perfeito! Sua presença foi confirmada. Te esperamos 😊', phone, text, undefined, pushName);
     }
 
     if (intent === 'cancelar') {
-      return await handleStatusUpdate(phone, 'cancelado', 'Sem problemas! Sua consulta foi cancelada. Se precisar reagendar, estamos à disposição.', phone, text);
+      return await handleStatusUpdate(phone, 'cancelado', 'Sem problemas! Sua consulta foi cancelada. Se precisar reagendar, estamos à disposição.', phone, text, undefined, pushName);
     }
 
     // --- 3. LÓGICA DE REAGENDAMENTO ---
@@ -137,7 +157,7 @@ export async function POST(req: Request) {
       try {
         const { data: newDate, hora: newTime } = await parseReschedule(text);
         if (newDate && newTime) {
-          return await handleReschedule(phone, newDate, newTime, phone, text);
+          return await handleReschedule(phone, newDate, newTime, phone, text, undefined, pushName);
         } else {
           await sendImmediate(phone, QUESTION_RESCHEDULE);
           return NextResponse.json({ success: true, action: 'asked_reschedule_details' });
@@ -148,7 +168,7 @@ export async function POST(req: Request) {
     }
 
     // --- 4. FALLBACK INTELIGENTE (OpenAI) ---
-    const appointments = await findUpcomingAppointments(phone);
+    const appointments = await findUpcomingAppointments(phone, pushName);
     
     if (appointments.length > 0) {
       const aiContext = {
@@ -158,8 +178,8 @@ export async function POST(req: Request) {
 
       const aiResult = await aiService.handleConversation(text, aiContext);
       
-      if (aiResult.intent === 'confirm') return await handleStatusUpdate(phone, 'confirmado', aiResult.response, phone, text);
-      if (aiResult.intent === 'cancel') return await handleStatusUpdate(phone, 'cancelado', aiResult.response, phone, text);
+      if (aiResult.intent === 'confirm') return await handleStatusUpdate(phone, 'confirmado', aiResult.response, phone, text, undefined, pushName);
+      if (aiResult.intent === 'cancel') return await handleStatusUpdate(phone, 'cancelado', aiResult.response, phone, text, undefined, pushName);
       
       await sendImmediate(phone, aiResult.response);
       return NextResponse.json({ success: true, action: 'ai_handled', intent: aiResult.intent });
@@ -222,8 +242,8 @@ async function sendImmediate(phoneNumber: string, text: string) {
   }
 }
 
-async function handleStatusUpdate(phone: string, newStatus: string, reply: string, destinationNumber: string, originalText?: string, specificId?: string) {
-  const appointments = await findUpcomingAppointments(phone);
+async function handleStatusUpdate(phone: string, newStatus: string, reply: string, destinationNumber: string, originalText?: string, specificId?: string, pushNameFallback?: string) {
+  const appointments = await findUpcomingAppointments(phone, pushNameFallback);
   
   if (appointments.length === 0) {
     await sendImmediate(destinationNumber, "Desculpe, não encontrei nenhuma consulta pendente para este número.");
@@ -265,8 +285,8 @@ async function handleStatusUpdate(phone: string, newStatus: string, reply: strin
   return NextResponse.json({ success: true, action: `updated_to_${newStatus}` });
 }
 
-async function handleReschedule(phone: string, newDate: string, newTime: string, destinationNumber: string, originalText?: string, specificId?: string) {
-  const appointments = await findUpcomingAppointments(phone);
+async function handleReschedule(phone: string, newDate: string, newTime: string, destinationNumber: string, originalText?: string, specificId?: string, pushNameFallback?: string) {
+  const appointments = await findUpcomingAppointments(phone, pushNameFallback);
   
   if (appointments.length === 0) return NextResponse.json({ status: 'no_appt' });
 
@@ -306,13 +326,30 @@ async function handleReschedule(phone: string, newDate: string, newTime: string,
   }
 }
 
-async function findUpcomingAppointments(phone: string) {
+async function findUpcomingAppointments(phone: string, pushNameFallback?: string) {
   // Ajuste de data: Pegamos a data de "hoje" subtraindo 24h para garantir que consultas do dia atual 
   // (no fuso do Brasil) não sejam filtradas por causa do UTC do servidor.
   const yesterdayDate = new Date();
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);
   const dateFilter = yesterdayDate.toISOString().split('T')[0];
   
+  if (phone.includes('@lid') && pushNameFallback) {
+    const firstName = pushNameFallback.trim().split(' ')[0];
+    console.log(`🔍 Buscando consultas pelo NOME (fallback para @lid): ${firstName} (Data >= ${dateFilter})`);
+    
+    const { data, error } = await supabaseAdmin
+      .from('agendamentos')
+      .select('id, data, hora, nome, status, profiles(nome, especialidade)')
+      .ilike('nome', `%${firstName}%`)
+      .gte('data', dateFilter)
+      .neq('status', 'cancelado')
+      .order('data', { ascending: true });
+      
+    if (error) console.error(`❌ Erro na busca de agendamentos por nome:`, error);
+    console.log(`📊 Consultas encontradas (por nome): ${data?.length || 0}`);
+    return data || [];
+  }
+
   const cleaned = phone.replace(/\D/g, "");
   const last10 = cleaned.slice(-10);
 

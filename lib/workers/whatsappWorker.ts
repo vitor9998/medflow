@@ -92,11 +92,9 @@ export class WhatsAppWorker {
 
               // Handle PENDING status
               if (lastResponse?.status === 'PENDING' || lastResponse?.status === 'SENDING') {
-                console.log(`⏳ [WhatsAppWorker] Mensagem ${msg.id} está em status PENDING. Aguardando...`);
-                if (attempt < maxAttempts) {
-                  attempt++;
-                  continue; 
-                }
+                console.log(`✅ [WhatsAppWorker] Mensagem ${msg.id} aceita (status ${lastResponse.status}) pela Evolution API.`);
+                // Não devemos retentar aqui. PENDING significa que a Evolution API enfileirou com sucesso.
+                // Fazer 'continue' causaria reenvio da mesma mensagem, gerando duplicidade.
               }
 
               // Task 4: UPDATE IMMEDIATELY AFTER SEND
