@@ -165,6 +165,10 @@ export default function AgendamentoPage() {
 
   // 🔐 STEP 1: Enviar OTP
   async function handleSendOTP(e: React.FormEvent) {
+    e.preventDefault();
+    setOtpLoading(true);
+    setOtpError("");
+    
     const phoneNormalized = normalizePhone(telefone);
 
     if (!isValidBrazilPhone(phoneNormalized)) {

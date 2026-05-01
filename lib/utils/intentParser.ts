@@ -8,16 +8,15 @@ export type Intent = "confirmar" | "cancelar" | "remarcar" | "desconhecido";
 
 const KEYWORDS = {
   confirmar: [
-    "sim", "ok", "confirmo", "vou", "blz", "pode confirmar", "confirmado", 
-    "claro", "com certeza", "estarei la", "estarei lá", "confirmar", "pode ser"
+    "sim", "ok", "confirmo", "blz", "pode confirmar", "confirmado", 
+    "com certeza", "estarei la", "estarei lá", "confirmar"
   ],
   cancelar: [
     "nao", "não", "cancelar", "nao posso", "não posso", "desistir", 
     "infelizmente nao", "infelizmente não", "cancela", "cancelado"
   ],
   remarcar: [
-    "remarcar", "outro horario", "outro horário", "outro dia", "mudar", 
-    "trocar", "alterar", "posso mudar", "consegue mudar", "tem outro horario"
+    "remarcar", "outro horario", "outro horário", "outro dia", "reagendar"
   ]
 };
 

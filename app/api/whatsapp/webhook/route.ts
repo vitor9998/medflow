@@ -71,6 +71,11 @@ export async function POST(req: Request) {
       msgContent?.extendedTextMessage?.text || 
       msgContent?.imageMessage?.caption || 
       "";
+      
+    const quotedText = 
+      msgContent?.extendedTextMessage?.contextInfo?.quotedMessage?.conversation ||
+      msgContent?.extendedTextMessage?.contextInfo?.quotedMessage?.extendedTextMessage?.text ||
+      "";
 
     if (!text || text.trim().length < 1) {
       return NextResponse.json({ status: 'ignored_empty_message' });
@@ -90,7 +95,7 @@ export async function POST(req: Request) {
       const selectionIndex = parseSelection(text);
       if (selectionIndex !== null) {
         console.log(`🎯 Seleção detectada: ${selectionIndex + 1}`);
-        const appointments = await findUpcomingAppointments(phone, pushName);
+        const appointments = await findUpcomingAppointments(phone, pushName, quotedText);
         
         if (appointments[selectionIndex]) {
           const selected = appointments[selectionIndex];
@@ -136,11 +141,11 @@ export async function POST(req: Request) {
     const intent = parseIntent(text);
 
     if (intent === 'confirmar') {
-      return await handleStatusUpdate(phone, 'confirmado', 'Perfeito! Sua presença foi confirmada. Te esperamos 😊', phone, text, undefined, pushName);
+      return await handleStatusUpdate(phone, 'confirmado', 'Perfeito! Sua presença foi confirmada. Te esperamos 😊', phone, text, undefined, pushName, quotedText);
     }
 
     if (intent === 'cancelar') {
-      return await handleStatusUpdate(phone, 'cancelado', 'Sem problemas! Sua consulta foi cancelada. Se precisar reagendar, estamos à disposição.', phone, text, undefined, pushName);
+      return await handleStatusUpdate(phone, 'cancelado', 'Sem problemas! Sua consulta foi cancelada. Se precisar reagendar, estamos à disposição.', phone, text, undefined, pushName, quotedText);
     }
 
     // --- 3. LÓGICA DE REAGENDAMENTO ---
@@ -157,7 +162,7 @@ export async function POST(req: Request) {
       try {
         const { data: newDate, hora: newTime } = await parseReschedule(text);
         if (newDate && newTime) {
-          return await handleReschedule(phone, newDate, newTime, phone, text, undefined, pushName);
+          return await handleReschedule(phone, newDate, newTime, phone, text, undefined, pushName, quotedText);
         } else {
           await sendImmediate(phone, QUESTION_RESCHEDULE);
           return NextResponse.json({ success: true, action: 'asked_reschedule_details' });
@@ -168,7 +173,7 @@ export async function POST(req: Request) {
     }
 
     // --- 4. FALLBACK INTELIGENTE (OpenAI) ---
-    const appointments = await findUpcomingAppointments(phone, pushName);
+    const appointments = await findUpcomingAppointments(phone, pushName, quotedText);
     
     if (appointments.length > 0) {
       const aiContext = {
@@ -178,10 +183,15 @@ export async function POST(req: Request) {
 
       const aiResult = await aiService.handleConversation(text, aiContext);
       
-      if (aiResult.intent === 'confirm') return await handleStatusUpdate(phone, 'confirmado', aiResult.response, phone, text, undefined, pushName);
-      if (aiResult.intent === 'cancel') return await handleStatusUpdate(phone, 'cancelado', aiResult.response, phone, text, undefined, pushName);
+      if (aiResult.intent === 'confirm') return await handleStatusUpdate(phone, 'confirmado', aiResult.response, phone, text, undefined, pushName, quotedText);
+      if (aiResult.intent === 'cancel') return await handleStatusUpdate(phone, 'cancelado', aiResult.response, phone, text, undefined, pushName, quotedText);
       
-      await sendImmediate(phone, aiResult.response);
+      // Para respostas livres da IA que não geram status update, se usarmos @lid e achamos o appointment:
+      let finalDest = phone;
+      if (phone.includes('@lid') && appointments.length > 0 && appointments[0].telefone) {
+        finalDest = appointments[0].telefone;
+      }
+      await sendImmediate(finalDest, aiResult.response);
       return NextResponse.json({ success: true, action: 'ai_handled', intent: aiResult.intent });
     } else {
       console.log(`[Webhook] Nenhuma consulta encontrada para o fone: ${phone}`);
@@ -242,8 +252,8 @@ async function sendImmediate(phoneNumber: string, text: string) {
   }
 }
 
-async function handleStatusUpdate(phone: string, newStatus: string, reply: string, destinationNumber: string, originalText?: string, specificId?: string, pushNameFallback?: string) {
-  const appointments = await findUpcomingAppointments(phone, pushNameFallback);
+async function handleStatusUpdate(phone: string, newStatus: string, reply: string, destinationNumber: string, originalText?: string, specificId?: string, pushNameFallback?: string, quotedText?: string) {
+  const appointments = await findUpcomingAppointments(phone, pushNameFallback, quotedText);
   
   if (appointments.length === 0) {
     await sendImmediate(destinationNumber, "Desculpe, não encontrei nenhuma consulta pendente para este número.");
@@ -281,12 +291,17 @@ async function handleStatusUpdate(phone: string, newStatus: string, reply: strin
     .update({ status: newStatus })
     .eq('id', appointment.id);
 
-  await sendImmediate(destinationNumber, reply);
+  let finalDest = destinationNumber;
+  if (destinationNumber.includes('@lid') && appointment.telefone) {
+    finalDest = appointment.telefone;
+  }
+
+  await sendImmediate(finalDest, reply);
   return NextResponse.json({ success: true, action: `updated_to_${newStatus}` });
 }
 
-async function handleReschedule(phone: string, newDate: string, newTime: string, destinationNumber: string, originalText?: string, specificId?: string, pushNameFallback?: string) {
-  const appointments = await findUpcomingAppointments(phone, pushNameFallback);
+async function handleReschedule(phone: string, newDate: string, newTime: string, destinationNumber: string, originalText?: string, specificId?: string, pushNameFallback?: string, quotedText?: string) {
+  const appointments = await findUpcomingAppointments(phone, pushNameFallback, quotedText);
   
   if (appointments.length === 0) return NextResponse.json({ status: 'no_appt' });
 
@@ -315,13 +330,18 @@ async function handleReschedule(phone: string, newDate: string, newTime: string,
     }
   }
 
+  let finalDest = destinationNumber;
+  if (destinationNumber.includes('@lid') && appointment.telefone) {
+    finalDest = appointment.telefone;
+  }
+
   try {
     await agendaAgent('reagendar', { id: appointment.id, novaData: newDate, novaHora: newTime });
     const df = newDate.split('-').reverse().join('/');
-    await sendImmediate(destinationNumber, `Feito! Consulta reagendada para ${df} às ${newTime}.`);
+    await sendImmediate(finalDest, `Feito! Consulta reagendada para ${df} às ${newTime}.`);
     return NextResponse.json({ success: true, action: 'rescheduled' });
   } catch (err) {
-    await sendImmediate(destinationNumber, `Desculpe, esse horário não está disponível. Poderia sugerir outro?`);
+    await sendImmediate(finalDest, `Desculpe, esse horário não está disponível. Poderia sugerir outro?`);
     return NextResponse.json({ status: 'conflict' });
   }
 }
@@ -333,13 +353,34 @@ async function findUpcomingAppointments(phone: string, pushNameFallback?: string
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);
   const dateFilter = yesterdayDate.toISOString().split('T')[0];
   
+  if (quotedText) {
+    // Tenta extrair data e hora do texto original da Medflow: "AMANHÃ (01/05/2026) às 12:30"
+    const match = quotedText.match(/(\d{2}\/\d{2}\/\d{4}) às (\d{2}:\d{2})/);
+    if (match) {
+      const dateStr = match[1].split('/').reverse().join('-'); // YYYY-MM-DD
+      const timeStr = match[2];
+      console.log(`🔍 Buscando por data e hora extraídas do quotedText: ${dateStr} ${timeStr}`);
+      const { data, error } = await supabaseAdmin
+        .from('agendamentos')
+        .select('id, data, hora, nome, status, telefone, profiles(nome, especialidade)')
+        .eq('data', dateStr)
+        .ilike('hora', `${timeStr}%`)
+        .neq('status', 'cancelado');
+      
+      if (!error && data && data.length > 0) {
+        console.log(`✅ Consulta encontrada via quotedText: ${data[0].id}`);
+        return data;
+      }
+    }
+  }
+  
   if (phone.includes('@lid') && pushNameFallback) {
     const firstName = pushNameFallback.trim().split(' ')[0];
     console.log(`🔍 Buscando consultas pelo NOME (fallback para @lid): ${firstName} (Data >= ${dateFilter})`);
     
     const { data, error } = await supabaseAdmin
       .from('agendamentos')
-      .select('id, data, hora, nome, status, profiles(nome, especialidade)')
+      .select('id, data, hora, nome, status, telefone, profiles(nome, especialidade)')
       .ilike('nome', `%${firstName}%`)
       .gte('data', dateFilter)
       .neq('status', 'cancelado')
@@ -357,7 +398,7 @@ async function findUpcomingAppointments(phone: string, pushNameFallback?: string
 
   const { data, error } = await supabaseAdmin
     .from('agendamentos')
-    .select('id, data, hora, nome, status, profiles(nome, especialidade)')
+    .select('id, data, hora, nome, status, telefone, profiles(nome, especialidade)')
     .ilike('telefone', `%${last10}%`)
     .gte('data', dateFilter)
     .neq('status', 'cancelado')
