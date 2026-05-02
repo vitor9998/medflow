@@ -10,6 +10,9 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import { Loader2, KeyRound, Wand2, Calendar as CalIcon, MapPin, User, LogOut, CheckCircle2, Bot, Phone, Plus, Map, Mail, Hash, PhoneOutgoing, ShieldCheck, Download, AlertCircle, Edit, Trash2, CalendarDays, X, ChevronRight, Check, MessageCircle, BrainCircuit, Save, Activity, Paperclip, FileText, ClipboardList, Stethoscope, XCircle } from "lucide-react";
+import { Playfair_Display } from "next/font/google";
+
+const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
 
 export default function AgendaPage() {
   const router = useRouter();
@@ -222,7 +225,7 @@ export default function AgendaPage() {
         className: "event-status-confirmado",
         label: "Paciente presente", 
         description: "Paciente compareceu ao atendimento",
-        bg: "bg-emerald-50", text: "text-emerald-600" 
+        bg: "bg-emerald-50", text: "text-emerald-700" 
       };
     }
 
@@ -231,7 +234,7 @@ export default function AgendaPage() {
         className: "event-status-cancelado",
         label: "Agendamento cancelado", 
         description: "Este agendamento foi cancelado",
-        bg: "bg-slate-50", text: "text-slate-600" 
+        bg: "bg-stone-50", text: "text-stone-600" 
       };
     }
 
@@ -241,7 +244,7 @@ export default function AgendaPage() {
         className: "event-status-risco",
         label: "Falta", 
         description: "Paciente não compareceu ao horário agendado",
-        bg: "bg-red-50", text: "text-red-600" 
+        bg: "bg-rose-50", text: "text-rose-700" 
       };
     }
 
@@ -251,7 +254,7 @@ export default function AgendaPage() {
         className: "event-status-confirmado",
         label: "Confirmado", 
         description: "Paciente confirmou presença para este horário",
-        bg: "bg-emerald-50", text: "text-emerald-600" 
+        bg: "bg-emerald-50", text: "text-emerald-700" 
       };
     }
 
@@ -260,7 +263,7 @@ export default function AgendaPage() {
         className: "event-status-risco",
         label: "Risco de falta", 
         description: "Paciente não respondeu às tentativas de confirmação",
-        bg: "bg-red-50", text: "text-red-600" 
+        bg: "bg-rose-50", text: "text-rose-700" 
       };
     }
 
@@ -268,7 +271,7 @@ export default function AgendaPage() {
       className: "event-status-aguardando",
       label: "Aguardando confirmação", 
       description: "Aguardando resposta do paciente ao lembrete automático",
-      bg: "bg-amber-50", text: "text-amber-600" 
+      bg: "bg-amber-50", text: "text-amber-700" 
     };
   };
 
@@ -287,17 +290,17 @@ export default function AgendaPage() {
   if (isLoading) {
     return (
       <div className="p-8 flex justify-center items-center h-full">
-        <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+        <Loader2 className="w-8 h-8 text-emerald-900 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-10 flex flex-col h-full max-w-7xl mx-auto w-full overflow-hidden">
+    <div className="p-4 sm:p-6 md:p-10 flex flex-col h-full max-w-[1400px] mx-auto w-full overflow-hidden">
       
-      <div className="mb-4 sm:mb-6 shrink-0 mt-2 sm:mt-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Agenda</h1>
-        <p className="text-slate-500 mt-1 text-sm sm:text-base">Gerencie os agendamentos e horarios da clinica.</p>
+      <div className="mb-6 sm:mb-8 shrink-0 mt-2 sm:mt-0">
+        <h1 className={`${playfair.className} text-3xl sm:text-4xl font-semibold text-stone-900 tracking-tight`}>Minha Agenda</h1>
+        <p className="text-stone-500 font-light mt-1 text-sm sm:text-base">Gerencie seus horários e acompanhe os pacientes.</p>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-2 sm:p-4 shadow-sm flex-1 flex flex-col min-h-0 w-full">
@@ -756,7 +759,7 @@ export default function AgendaPage() {
                  <div className="relative z-10">
                    <div className="flex items-center justify-between mb-3">
                      <p className="text-sm font-semibold text-blue-600 flex items-center gap-2">
-                       <BrainCircuit className="w-4 h-4" /> Resumo Clinico (Medsys AI)
+                       <BrainCircuit className="w-4 h-4" /> Resumo Clinico (ZyntraMed AI)
                      </p>
                      <button 
                        onClick={gerarResumoIA}

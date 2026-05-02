@@ -15,7 +15,7 @@ import {
   CalendarRange
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { MedsysLogo } from "@/components/Logo";
+import { ZyntraLogo } from "@/components/Logo";
 import { supabase } from "@/lib/supabaseClient";
 
 export function Sidebar({ role }: { role?: string }) {
@@ -36,19 +36,19 @@ export function Sidebar({ role }: { role?: string }) {
   }, [isOpen]);
 
   const baseLinks = [
-    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin", label: "Visão Geral", icon: LayoutDashboard },
   ];
 
   // Secretária vê agenda multi-médicos, médico vê agenda própria
   if (role === "secretaria") {
-    baseLinks.push({ href: "/admin/secretaria", label: "Agenda Multi-Médicos", icon: CalendarRange });
+    baseLinks.push({ href: "/admin/secretaria", label: "Agenda Central", icon: CalendarRange });
   } else {
-    baseLinks.push({ href: "/admin/agenda", label: "Agenda", icon: CalendarDays });
+    baseLinks.push({ href: "/admin/agenda", label: "Minha Agenda", icon: CalendarDays });
   }
 
   baseLinks.push(
     { href: "/admin/pacientes", label: "Pacientes", icon: Users },
-    { href: "/admin/comunicacao", label: "Comunicação", icon: MessageCircle },
+    { href: "/admin/comunicacao", label: "Comunicações", icon: MessageCircle },
   );
 
   // Só médico vê configurações do perfil
@@ -72,16 +72,13 @@ export function Sidebar({ role }: { role?: string }) {
   return (
     <>
       {/* Mobile Topbar */}
-      <div className="md:hidden flex items-center justify-between px-5 py-3.5 bg-white border-b border-slate-100 shrink-0">
-        <div className="flex items-center gap-2.5 text-slate-900 font-semibold text-base tracking-tight">
-          <div className="w-8 h-8 bg-blue-50 rounded-lg border border-blue-100 flex items-center justify-center">
-             <MedsysLogo className="h-4 w-auto" />
-          </div>
-          Medsys
+      <div className="md:hidden flex items-center justify-between px-6 py-4 bg-[#FDFCF8] border-b border-stone-200/50 shrink-0">
+        <div className="flex items-center gap-3 text-stone-900 font-semibold tracking-tight">
+          <ZyntraLogo className="h-5 w-auto text-emerald-900" />
         </div>
         <button 
           onClick={() => setIsOpen(!isOpen)} 
-          className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-colors"
         >
           {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -90,35 +87,32 @@ export function Sidebar({ role }: { role?: string }) {
       {/* Backdrop for Mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-[2px] z-40 md:hidden" 
+          className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-40 md:hidden" 
           onClick={closeSidebar}
         />
       )}
 
       {/* Sidebar Content */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-[260px] bg-white md:border-r border-slate-200/80
-        transform transition-transform duration-200 ease-in-out md:static md:translate-x-0
+        fixed inset-y-0 left-0 z-50 w-[280px] bg-[#FDFCF8] md:border-r border-stone-200/50
+        transform transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] md:static md:translate-x-0
         flex flex-col overflow-y-auto overscroll-contain
-        ${isOpen ? "translate-x-0 shadow-xl shadow-slate-900/5" : "-translate-x-full"}
+        ${isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}
       `}>
         {/* Logo */}
-        <div className="hidden md:flex items-center gap-3 px-6 pt-7 pb-8">
-          <div className="w-9 h-9 bg-blue-50 rounded-xl border border-blue-100 flex items-center justify-center">
-            <MedsysLogo className="h-5 w-auto" />
-          </div>
-          <span className="font-semibold text-lg tracking-tight text-slate-800">Medsys</span>
+        <div className="hidden md:flex items-center gap-3 px-8 pt-8 pb-10">
+          <ZyntraLogo className="h-6 w-auto text-emerald-900" />
         </div>
 
         {/* Section label */}
-        <div className="px-6 mb-2">
-          <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-300">
-            Menu
+        <div className="px-8 mb-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+            Navegação
           </p>
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-0.5 px-3 mt-1 md:mt-0">
+        <nav className="flex flex-col gap-1 px-4 mt-1 md:mt-0">
           {links.map((link: any) => {
             const isActive = pathname === link.href;
             const Icon = link.icon;
@@ -128,48 +122,34 @@ export function Sidebar({ role }: { role?: string }) {
                 href={link.href}
                 onClick={closeSidebar}
                 className={`
-                  group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
-                  transition-all duration-150 ease-out
+                  group flex items-center gap-4 px-4 py-3 rounded-2xl text-[13px] font-medium
+                  transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
                   ${isActive 
-                    ? "bg-blue-50/80 text-blue-600" 
-                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50/80"
+                    ? "bg-emerald-900/5 text-emerald-900 font-bold" 
+                    : "text-stone-500 hover:text-stone-900 hover:bg-stone-100/50"
                   }
                 `}
               >
-                <div className={`
-                  w-8 h-8 rounded-lg flex items-center justify-center shrink-0
-                  transition-colors duration-150
-                  ${isActive 
-                    ? "bg-blue-100/60 text-blue-600" 
-                    : "bg-transparent text-slate-400 group-hover:bg-slate-100/80 group-hover:text-slate-600"
-                  }
-                `}>
-                  <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2 : 1.5} />
-                </div>
+                <Icon className={`w-5 h-5 ${isActive ? "text-emerald-900" : "text-stone-400 group-hover:text-stone-900"} transition-colors`} strokeWidth={isActive ? 2 : 1.5} />
                 {link.label}
-                {isActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />
-                )}
               </Link>
             )
           })}
         </nav>
          
         {/* Footer */}
-        <div className="mt-auto px-3 pb-4 pt-4">
-          <div className="border-t border-slate-100 pt-3">
+        <div className="mt-auto px-4 pb-6 pt-6">
+          <div className="border-t border-stone-200/50 pt-4 px-2">
             <button 
               onClick={handleLogout}
               className="
-                group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
-                transition-all duration-150 ease-out w-full text-left
-                text-slate-400 hover:text-red-500 hover:bg-red-50/60
+                group flex items-center gap-4 py-3 rounded-2xl text-[13px] font-semibold tracking-wide
+                transition-all duration-300 ease-out w-full text-left
+                text-stone-400 hover:text-red-700
               "
             >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-transparent group-hover:bg-red-100/50 transition-colors duration-150">
-                <LogOut className="w-[18px] h-[18px]" strokeWidth={1.5} />
-              </div>
-              Sair da Conta
+              <LogOut className="w-5 h-5 text-stone-300 group-hover:text-red-700 transition-colors" strokeWidth={1.5} />
+              Encerrar Sessão
             </button>
           </div>
         </div>

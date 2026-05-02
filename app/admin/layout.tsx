@@ -5,6 +5,10 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Loader2, Lock } from "lucide-react";
+import { Playfair_Display, Inter } from "next/font/google";
+
+const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
+const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600"] });
 
 export default function AdminLayout({
   children,
@@ -42,7 +46,7 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-blue-500">
+      <div className={`min-h-screen bg-[#FDFCF8] flex items-center justify-center text-emerald-900 ${inter.className}`}>
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
@@ -51,18 +55,18 @@ export default function AdminLayout({
   // Se for bloqueado ou pendente
   if (profile?.status === "pending" || profile?.status === "suspended") {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-700">
-        <div className="bg-white p-10 rounded-3xl border border-slate-200 text-center max-w-md shadow-lg flex flex-col items-center">
-           <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-6 border border-amber-200">
+      <div className={`min-h-screen bg-[#FDFCF8] flex items-center justify-center text-stone-700 ${inter.className}`}>
+        <div className="bg-white p-12 rounded-[2rem] border border-stone-200/60 text-center max-w-md shadow-2xl shadow-stone-200/50 flex flex-col items-center">
+           <div className="w-20 h-20 bg-emerald-50 text-emerald-900 rounded-full flex items-center justify-center mb-8 border border-emerald-100">
              <Lock className="w-10 h-10" />
            </div>
-           <h2 className="text-2xl font-bold text-slate-900 mb-3">Conta em Analise</h2>
-           <p className="text-slate-500 leading-relaxed mb-6">
-             Seu perfil medico foi recebido com sucesso. Nosso time esta verificando suas credenciais. Voce recebera um e-mail em breve assim que sua agenda for liberada para captacao de pacientes.
+           <h2 className={`${playfair.className} text-3xl font-semibold text-stone-900 mb-4`}>Conta em Análise</h2>
+           <p className="text-stone-500 font-light leading-relaxed mb-8">
+             Seu perfil médico foi recebido com sucesso. Nosso time está verificando suas credenciais. Você receberá um e-mail em breve assim que sua agenda for liberada para captação de pacientes.
            </p>
            <button 
              onClick={() => {supabase.auth.signOut(); router.push('/login');}}
-             className="text-blue-500 font-semibold hover:text-blue-600"
+             className="text-emerald-900 font-bold hover:text-emerald-700 text-sm tracking-widest uppercase"
            >
              Sair e voltar depois
            </button>
@@ -72,7 +76,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 text-slate-800 font-sans">
+    <div className={`flex flex-col md:flex-row min-h-screen bg-[#FDFCF8] text-stone-800 ${inter.className}`}>
       <Sidebar role={profile?.role} />
       <main className="flex-1 flex flex-col min-h-0 h-screen overflow-hidden overflow-y-auto w-full">
         {children}

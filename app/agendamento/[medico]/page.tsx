@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { normalizePhone, isValidBrazilPhone } from "@/lib/utils/phone";
 import Link from "next/link";
-import { MedsysLogo } from "@/components/Logo";
+import { ZyntraLogo } from "@/components/Logo";
 import { ArrowLeft, Calendar, Loader2, Hospital, Clock, Phone, Mail, FileText, User, Paperclip, X, Stethoscope, ChevronLeft, Upload, CheckCircle2, Shield, KeyRound, RefreshCw } from "lucide-react";
 
 // 🔥 PRIORIDADE
@@ -390,7 +390,7 @@ export default function AgendamentoPage() {
              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" /> Voltar
            </Link>
            <Link href="/" className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 flex items-center gap-2">
-             <MedsysLogo className="h-6 sm:h-8 w-auto text-emerald-600 drop-shadow-sm" /> Medsys
+             <ZyntraLogo className="h-6 sm:h-8 w-auto text-emerald-600 drop-shadow-sm" /> ZyntraMed
            </Link>
         </div>
       </nav>

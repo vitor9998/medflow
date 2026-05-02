@@ -3,7 +3,7 @@ import { AIService } from "@/lib/services/aiService";
 
 /**
  * Endpoint de teste para validar a resposta da IA (OpenAI).
- * Acesse via navegador ou Postman para ver como a Medflow interpreta as mensagens.
+ * Acesse via navegador ou Postman para ver como a ZyntraMed interpreta as mensagens.
  * 
  * Exemplo de uso:
  * GET /api/test/ai?message=Quero+confirmar+minha+consulta+de+amanha

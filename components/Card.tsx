@@ -1,5 +1,5 @@
 /**
- * Card — Medsys surface component.
+ * Card — ZyntraMed surface component.
  * Uses a diffuse shadow instead of generic `shadow-sm` so elevation
  * communicates hierarchy without boxing everything in.
  */

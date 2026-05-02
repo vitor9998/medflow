@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { Stethoscope, Calendar } from "lucide-react";
-import { MedsysLogo } from "@/components/Logo";
+import { ZyntraLogo } from "@/components/Logo";
 
 export default function Navbar() {
   const [user, setUser] = useState<any>(null);
@@ -52,7 +52,7 @@ export default function Navbar() {
 
       {/* LOGO */}
       <h1 className="font-bold text-lg text-white flex items-center gap-2">
-        <MedsysLogo className="h-6 w-auto" /> Medsys
+        <ZyntraLogo className="h-6 w-auto" /> ZyntraMed
       </h1>
 
       {/* MENU */}

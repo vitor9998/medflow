@@ -29,21 +29,24 @@ import {
   Cell,
   LabelList,
 } from "recharts";
+import { Playfair_Display } from "next/font/google";
+
+const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
 
 // --- Status config ---
 const STATUS_MAP: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  pendente:   { label: "Pendente",   bg: "bg-amber-50",   text: "text-amber-600",   dot: "bg-amber-400" },
-  confirmado: { label: "Confirmado", bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
-  cancelado:  { label: "Cancelado",  bg: "bg-red-50",     text: "text-red-600",     dot: "bg-red-400" },
-  presente:   { label: "Presente",   bg: "bg-sky-50",     text: "text-sky-600",     dot: "bg-sky-400" },
-  falta:      { label: "Falta",      bg: "bg-red-50",     text: "text-red-600",     dot: "bg-red-500" },
-  bloqueado:  { label: "Bloqueado",  bg: "bg-slate-100",  text: "text-slate-500",   dot: "bg-slate-300" },
+  pendente:   { label: "Pendente",   bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-400" },
+  confirmado: { label: "Confirmado", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-400" },
+  cancelado:  { label: "Cancelado",  bg: "bg-rose-50",    text: "text-rose-700",    dot: "bg-rose-400" },
+  presente:   { label: "Presente",   bg: "bg-sky-50",     text: "text-sky-700",     dot: "bg-sky-400" },
+  falta:      { label: "Falta",      bg: "bg-rose-50",    text: "text-rose-700",    dot: "bg-rose-500" },
+  bloqueado:  { label: "Bloqueado",  bg: "bg-stone-100",  text: "text-stone-500",   dot: "bg-stone-300" },
 };
 
 function StatusBadge({ status }: { status: string }) {
   const s = STATUS_MAP[status] || STATUS_MAP.pendente;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-bold tracking-wide ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold tracking-widest uppercase ${s.bg} ${s.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
       {s.label}
     </span>
@@ -53,15 +56,15 @@ function StatusBadge({ status }: { status: string }) {
 // --- Skeleton loader ---
 function ListSkeleton() {
   return (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-stone-100/60">
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="flex items-center gap-4 py-4 px-5">
-          <div className="w-11 h-11 rounded-xl skeleton shrink-0" />
+          <div className="w-11 h-11 rounded-xl bg-stone-100 shrink-0 animate-pulse" />
           <div className="flex-1 space-y-2">
-            <div className="h-3 skeleton rounded w-40" />
-            <div className="h-2.5 skeleton rounded w-24" />
+            <div className="h-3 bg-stone-100 rounded w-40 animate-pulse" />
+            <div className="h-2.5 bg-stone-50 rounded w-24 animate-pulse" />
           </div>
-          <div className="h-6 skeleton rounded-md w-20" />
+          <div className="h-6 bg-stone-100 rounded-md w-20 animate-pulse" />
         </div>
       ))}
     </div>
@@ -239,9 +242,9 @@ export default function AdminDashboardPage() {
     .slice(-14);
 
   const dadosStatus = [
-    { name: "Confirmado", value: confirmadasHoje, fill: "#34d399" },
-    { name: "Falta", value: faltasHoje, fill: "#f87171" },
-    { name: "Pendente", value: totalHoje - presentesHoje - faltasHoje, fill: "#fbbf24" },
+    { name: "Confirmado", value: confirmadasHoje, fill: "#065f46" }, // emerald-800
+    { name: "Falta", value: faltasHoje, fill: "#be123c" }, // rose-700
+    { name: "Pendente", value: totalHoje - presentesHoje - faltasHoje, fill: "#b45309" }, // amber-700
   ];
 
   // Split appointments and sort by priority
@@ -274,29 +277,29 @@ export default function AdminDashboardPage() {
       label: "Consultas hoje",
       value: consultasHoje,
       icon: CalendarDays,
-      accent: "text-blue-600",
-      iconBg: "bg-blue-50",
+      accent: "text-emerald-900",
+      iconBg: "bg-emerald-900/5",
     },
     {
       label: "Total geral",
       value: totalConsultas,
       icon: Clock,
-      accent: "text-slate-600",
-      iconBg: "bg-slate-100",
+      accent: "text-stone-700",
+      iconBg: "bg-stone-100",
     },
     {
       label: "Confirmados",
       value: confirmadas,
       icon: CheckCircle2,
-      accent: "text-emerald-600",
+      accent: "text-emerald-700",
       iconBg: "bg-emerald-50",
     },
     {
       label: "Cancelamentos",
       value: `${taxaFalta}%`,
       icon: XCircle,
-      accent: "text-red-500",
-      iconBg: "bg-red-50",
+      accent: "text-rose-700",
+      iconBg: "bg-rose-50",
     },
   ];
 
@@ -306,27 +309,27 @@ export default function AdminDashboardPage() {
     mensagensDecisao.push({
       text: `${altoRiscoHoje} ${altoRiscoHoje === 1 ? 'risco de falta' : 'riscos de falta'}`,
       icon: AlertCircle,
-      color: 'text-amber-500'
+      color: 'text-amber-700'
     });
   }
   if (faltasHoje > 0) {
     mensagensDecisao.push({
       text: `${faltasHoje} ${faltasHoje === 1 ? 'não compareceu' : 'não compareceram'}`,
       icon: XCircle,
-      color: 'text-red-500'
+      color: 'text-rose-700'
     });
   }
   if (taxaPresencaHoje >= 80 && totalHoje >= 3) {
      mensagensDecisao.push({
       text: "Alta presença",
       icon: CheckCircle2,
-      color: 'text-emerald-500'
+      color: 'text-emerald-700'
     });
   } else if (taxaPresencaHoje < 50 && totalHoje >= 3) {
      mensagensDecisao.push({
       text: "Muitas faltas",
       icon: AlertCircle,
-      color: 'text-red-500'
+      color: 'text-rose-700'
     });
   }
 
@@ -335,29 +338,29 @@ export default function AdminDashboardPage() {
     mensagensDecisao.push({
       text: totalHoje === 0 ? "Agenda livre" : "Operação estável",
       icon: Sparkles,
-      color: 'text-slate-400'
+      color: 'text-stone-400'
     });
   }
   
   const resumoExibido = mensagensDecisao.slice(0, 2);
 
   return (
-    <div className="p-6 md:p-10 space-y-7 w-full max-w-7xl mx-auto">
+    <div className="p-6 md:p-10 space-y-10 w-full max-w-[1400px] mx-auto">
       {/* HEADER */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{dataHojeFormatada}</p>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">
+          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">{dataHojeFormatada}</p>
+          <h1 className={`${playfair.className} text-4xl font-semibold text-stone-900 tracking-tight leading-none`}>
             {saudacao}
           </h1>
-          <p className="text-slate-500 mt-1.5 text-sm">
+          <p className="text-stone-500 font-light mt-2 text-sm tracking-wide">
             {userRole === "secretaria"
-              ? "Visao consolidada de todos os medicos."
-              : "Resumo das atividades do consultorio."}
+              ? "Visão consolidada de todos os médicos."
+              : "Resumo das atividades do consultório."}
           </p>
         </div>
         {userRole === "secretaria" && (
-          <span className="text-[11px] font-bold uppercase bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-100 tracking-wide shrink-0 mt-1">
+          <span className="text-[10px] font-bold uppercase bg-stone-100 text-stone-600 px-3 py-1.5 rounded-lg border border-stone-200/60 tracking-widest shrink-0 mt-1">
             Secretaria
           </span>
         )}
@@ -365,21 +368,21 @@ export default function AdminDashboardPage() {
 
       {/* ALERTAS OPERACIONAIS */}
       {altoRiscoHoje > 0 && (
-        <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-3">
-            <div className="bg-amber-100 p-2 rounded-xl">
-              <AlertCircle className="w-5 h-5 text-amber-600" />
+        <div className="bg-amber-50/50 border border-amber-200/40 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center gap-4">
+            <div className="bg-amber-100/50 p-2.5 rounded-xl">
+              <AlertCircle className="w-5 h-5 text-amber-700" />
             </div>
             <div>
-              <p className="text-sm font-bold text-amber-900 leading-none">
+              <p className={`${playfair.className} text-lg font-semibold text-amber-900 leading-none`}>
                 Atenção: {altoRiscoHoje} {altoRiscoHoje === 1 ? 'paciente com alto risco' : 'pacientes com alto risco'} hoje
               </p>
-              <p className="text-[11px] text-amber-700 mt-1.5 font-medium">Aguardando confirmação ou sem resposta às tentativas de contato.</p>
+              <p className="text-xs text-amber-700/80 mt-1.5 font-medium tracking-wide">Aguardando confirmação ou sem resposta às tentativas de contato.</p>
             </div>
           </div>
           <button 
             onClick={() => router.push('/admin/agenda')}
-            className="text-[10px] font-black uppercase tracking-widest bg-white text-amber-700 px-4 py-2 rounded-xl border border-amber-200 hover:bg-amber-100 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            className="text-[10px] font-bold uppercase tracking-widest bg-white text-amber-700 px-4 py-2.5 rounded-xl border border-amber-200/50 hover:bg-amber-50 transition-all shadow-sm active:scale-95 whitespace-nowrap"
           >
             Ver na agenda
           </button>
@@ -390,73 +393,73 @@ export default function AdminDashboardPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Painel Operacional (Hoje)</h2>
+            <span className="w-1.5 h-1.5 bg-emerald-700 rounded-full animate-pulse" />
+            <h2 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Painel Operacional (Hoje)</h2>
           </div>
 
           {/* RESUMO EXECUTIVO (Sinalização Rápida) */}
           {resumoExibido.length > 0 && (
             <div className="flex items-center gap-3">
               {resumoExibido.map((msg, idx) => (
-                <div key={idx} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-slate-100 shadow-sm animate-in fade-in zoom-in duration-700">
+                <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200/60 shadow-sm animate-in fade-in zoom-in duration-700">
                   <msg.icon className={`w-3 h-3 ${msg.color}`} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{msg.text}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-stone-600">{msg.text}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
         
-        <div className="bg-white rounded-[32px] p-8 md:p-10 border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full -mr-24 -mt-24 blur-3xl group-hover:bg-emerald-500/10 transition-all duration-1000" />
+        <div className="bg-white rounded-3xl p-8 md:p-12 border border-stone-200/60 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-900/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-emerald-900/10 transition-all duration-1000" />
           
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Agenda de hoje</p>
-              <div className="flex items-baseline gap-4">
-                 <span className="text-7xl font-black tabular-nums text-slate-900 tracking-tighter">{totalHoje}</span>
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-12">
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">Agenda de hoje</p>
+              <div className="flex items-baseline gap-5">
+                 <span className={`${playfair.className} text-7xl font-semibold tabular-nums text-emerald-900 tracking-tighter`}>{totalHoje}</span>
                  <div className="flex flex-col">
-                   <span className="text-slate-900 font-black text-xl leading-tight">Agendamentos</span>
-                   <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Total confirmados</span>
+                   <span className={`${playfair.className} text-stone-900 font-semibold text-2xl leading-tight`}>Agendamentos</span>
+                   <span className="text-stone-400 font-medium text-xs uppercase tracking-widest mt-1">Total previstos</span>
                  </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 lg:gap-16 pt-8 lg:pt-0 border-t lg:border-t-0 lg:border-l border-slate-100 lg:pl-16">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 lg:gap-16 pt-8 lg:pt-0 border-t lg:border-t-0 lg:border-l border-stone-100 lg:pl-16">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Presentes</p>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-700" />
+                  <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Presentes</p>
                 </div>
-                <p className="text-3xl font-black tabular-nums text-slate-900">{presentesHoje}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{taxaPresencaHoje}% presença</p>
+                <p className={`${playfair.className} text-3xl font-semibold tabular-nums text-stone-900`}>{presentesHoje}</p>
+                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">{taxaPresencaHoje}% presença</p>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
-                  <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Faltas</p>
+                  <div className="w-1.5 h-1.5 rounded-full bg-rose-700" />
+                  <p className="text-[10px] font-bold text-rose-700 uppercase tracking-widest">Faltas</p>
                 </div>
-                <p className="text-3xl font-black tabular-nums text-slate-900">{faltasHoje}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{taxaFaltaHoje}% falta</p>
+                <p className={`${playfair.className} text-3xl font-semibold tabular-nums text-stone-900`}>{faltasHoje}</p>
+                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">{taxaFaltaHoje}% falta</p>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
-                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Confirmadas</p>
+                  <div className="w-1.5 h-1.5 rounded-full bg-sky-700" />
+                  <p className="text-[10px] font-bold text-sky-700 uppercase tracking-widest">Confirmadas</p>
                 </div>
-                <p className="text-3xl font-black tabular-nums text-slate-900">{confirmadasHoje}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Em espera</p>
+                <p className={`${playfair.className} text-3xl font-semibold tabular-nums text-stone-900`}>{confirmadasHoje}</p>
+                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Em espera</p>
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)] animate-pulse" />
-                  <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Alto Risco</p>
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-700 animate-pulse" />
+                  <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">Alto Risco</p>
                 </div>
-                <p className="text-3xl font-black tabular-nums text-slate-900">{altoRiscoHoje}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Críticos</p>
+                <p className={`${playfair.className} text-3xl font-semibold tabular-nums text-stone-900`}>{altoRiscoHoje}</p>
+                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Críticos</p>
               </div>
             </div>
           </div>
@@ -464,28 +467,28 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* SEÇÃO 2: RESUMO GERAL */}
-      <div className="pt-4 space-y-5">
+      <div className="pt-6 space-y-5">
         <div className="flex items-center gap-2">
-           <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Desempenho e Histórico Geral</h2>
+           <h2 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Desempenho Geral</h2>
         </div>
 
       {/* METRICS — borderless row, divide-x */}
-      <div className="grid grid-cols-2 md:grid-cols-4 bg-white rounded-2xl border border-slate-200/70 shadow-[0_2px_8px_-2px_rgba(15,23,42,0.06)] overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-4 bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
         {metricas.map((m, i) => (
           <div
             key={m.label}
-            className={`flex items-center gap-3.5 p-5 ${
-              i < metricas.length - 1 ? "border-r border-slate-100" : ""
-            } ${i >= 2 ? "border-t border-slate-100 md:border-t-0" : ""}`}
+            className={`flex items-center gap-4 p-6 ${
+              i < metricas.length - 1 ? "border-r border-stone-100" : ""
+            } ${i >= 2 ? "border-t border-stone-100 md:border-t-0" : ""}`}
           >
-            <div className={`p-2.5 rounded-xl shrink-0 ${m.iconBg}`}>
-              <m.icon className={`w-[17px] h-[17px] ${m.accent}`} />
+            <div className={`p-3 rounded-xl shrink-0 ${m.iconBg}`}>
+              <m.icon className={`w-5 h-5 ${m.accent}`} />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5">
+              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest leading-none mb-2">
                 {m.label}
               </p>
-              <p className={`text-xl font-bold tabular-nums leading-none font-mono ${m.accent}`}>
+              <p className={`text-xl font-semibold tabular-nums leading-none ${m.accent}`}>
                 {m.value}
               </p>
             </div>
@@ -494,34 +497,34 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* MAIN CONTENT — List + Charts side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 pt-4">
         {/* APPOINTMENT LIST — 3 cols */}
-        <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <h2 className="text-sm font-bold text-slate-800 tracking-tight">
-              Agendamentos
+        <div className="lg:col-span-3 bg-white border border-stone-200/60 rounded-3xl overflow-hidden flex flex-col shadow-sm">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-stone-100/80 bg-stone-50/30">
+            <h2 className={`${playfair.className} text-xl font-semibold text-stone-900 tracking-tight`}>
+              Agendamentos Ativos
             </h2>
-            <span className="text-xs text-slate-500 font-mono tabular-nums">
-              {consultasAtivas.length} ativos
+            <span className="text-[10px] text-stone-400 uppercase tracking-widest font-bold bg-white px-3 py-1 rounded-full border border-stone-200">
+              {consultasAtivas.length} registros
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto max-h-[540px]">
+          <div className="flex-1 overflow-y-auto max-h-[600px]">
             {isLoading ? (
               <ListSkeleton />
             ) : consultasAtivas.length === 0 ? (
               /* Empty state */
-              <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-                  <CalendarDays className="w-6 h-6 text-slate-400" />
+              <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-stone-50 flex items-center justify-center mb-4 border border-stone-100">
+                  <CalendarDays className="w-6 h-6 text-stone-300" />
                 </div>
-                <p className="text-sm font-bold text-slate-500 mb-1">Nenhum agendamento</p>
-                <p className="text-xs text-slate-600 max-w-[240px] leading-relaxed">
-                  Quando pacientes agendarem consultas, elas aparecerao aqui em tempo real.
+                <p className={`${playfair.className} text-xl font-semibold text-stone-500 mb-2`}>Nenhum agendamento</p>
+                <p className="text-sm text-stone-400 max-w-[260px] leading-relaxed font-light">
+                  A agenda está livre. Novas consultas aparecerão aqui automaticamente.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-stone-100/60">
                 {consultasAtivas.map((c: any) => {
                   const isExpanded = expandedId === c.id;
                   const isUpdating = updatingId === c.id;
@@ -533,27 +536,27 @@ export default function AdminDashboardPage() {
                         onClick={() =>
                           setExpandedId(isExpanded ? null : c.id)
                         }
-                        className="w-full flex items-center gap-3.5 py-3.5 px-5 text-left hover:bg-slate-50 transition-colors active:scale-[0.995]"
+                        className="w-full flex items-center gap-4 py-4 px-6 text-left hover:bg-stone-50 transition-colors active:scale-[0.995]"
                       >
                         {/* Time block */}
-                        <div className="w-11 h-11 rounded-xl bg-slate-50 flex flex-col items-center justify-center shrink-0 border border-slate-200">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase leading-none">
+                        <div className="w-12 h-12 rounded-xl bg-white flex flex-col items-center justify-center shrink-0 border border-stone-200/60 shadow-sm">
+                          <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider leading-none mb-0.5">
                             {c.data?.split("-")[2]}/{c.data?.split("-")[1]}
                           </span>
-                          <span className="text-xs font-bold text-slate-700 leading-tight font-mono">
+                          <span className="text-xs font-bold text-emerald-900 leading-tight">
                             {c.hora?.substring(0, 5)}
                           </span>
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-800 truncate">
+                          <p className="text-[15px] font-semibold text-stone-900 truncate">
                             {c.nome}
                           </p>
-                          <div className="flex items-center gap-2 mt-0.5">
+                          <div className="flex items-center gap-2 mt-1">
                             {c.telefone && (
-                              <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                                <Phone className="w-3 h-3" />
+                              <span className="text-[11px] font-medium tracking-wide text-stone-500 flex items-center gap-1.5">
+                                <Phone className="w-3 h-3 text-stone-400" />
                                 {c.telefone}
                               </span>
                             )}
@@ -562,13 +565,13 @@ export default function AdminDashboardPage() {
 
                         {/* Attempts + Badge + chevron */}
                         {(c.tentativas_contato || 0) > 0 && (
-                          <span className="text-[10px] font-mono text-slate-400 tabular-nums border border-slate-200 rounded px-1.5 py-0.5">
+                          <span className="text-[10px] font-bold text-stone-400 border border-stone-200 rounded px-2 py-0.5 uppercase tracking-widest">
                             {c.tentativas_contato}x
                           </span>
                         )}
                         <StatusBadge status={c.status || "pendente"} />
                         <ChevronRight
-                          className={`w-4 h-4 text-slate-600 transition-transform ${
+                          className={`w-4 h-4 text-stone-400 transition-transform ${
                             isExpanded ? "rotate-90" : ""
                           }`}
                         />
@@ -576,7 +579,7 @@ export default function AdminDashboardPage() {
 
                       {/* Expanded actions */}
                       {isExpanded && (
-                        <div className="px-5 pb-4 pt-1 bg-slate-50/50 border-t border-slate-100">
+                        <div className="px-6 pb-5 pt-2 bg-stone-50/50 border-t border-stone-100/60">
                           {(() => {
                             const agora = new Date();
                             const dataConsulta = new Date(`${c.data}T${c.hora}`);
@@ -584,20 +587,20 @@ export default function AdminDashboardPage() {
 
                             if (isPassado) {
                               return (
-                                <div className="py-2 flex items-center gap-2 text-slate-500 italic">
+                                <div className="py-2 flex items-center gap-2 text-stone-400 italic">
                                   <CalendarDays className="w-3.5 h-3.5" />
-                                  <span className="text-[11px] font-medium">Agendamento finalizado. Ações desabilitadas.</span>
+                                  <span className="text-xs tracking-wide">Agendamento finalizado. Ações desabilitadas.</span>
                                 </div>
                               );
                             }
 
                             return (
-                              <div className="flex flex-wrap gap-2 pt-2">
+                              <div className="flex flex-wrap gap-2.5 pt-2">
                                 {c.status !== "confirmado" && (
                                   <button
                                     onClick={() => atualizarStatus(c.id, "confirmar")}
                                     disabled={isUpdating}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-all active:scale-[0.97] disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] tracking-widest uppercase font-bold bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50 transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
                                   >
                                     <CheckCircle2 className="w-3.5 h-3.5" />
                                     Confirmar
@@ -607,7 +610,7 @@ export default function AdminDashboardPage() {
                                   <button
                                     onClick={() => atualizarStatus(c.id, "presente")}
                                     disabled={isUpdating}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-50 text-sky-600 border border-sky-200 hover:bg-sky-100 transition-all active:scale-[0.97] disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] tracking-widest uppercase font-bold bg-white text-sky-700 border border-sky-200 hover:bg-sky-50 transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
                                   >
                                     <UserCheck className="w-3.5 h-3.5" />
                                     Presente
@@ -617,7 +620,7 @@ export default function AdminDashboardPage() {
                                   <button
                                     onClick={() => atualizarStatus(c.id, "cancelar")}
                                     disabled={isUpdating}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-all active:scale-[0.97] disabled:opacity-50"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] tracking-widest uppercase font-bold bg-white text-rose-700 border border-rose-200 hover:bg-rose-50 transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm"
                                   >
                                     <XCircle className="w-3.5 h-3.5" />
                                     Cancelar
@@ -626,7 +629,7 @@ export default function AdminDashboardPage() {
                                 <button
                                   onClick={() => registrarTentativa(c.id, c.tentativas_contato || 0)}
                                   disabled={isUpdating}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 transition-all active:scale-[0.97] disabled:opacity-50 ml-auto"
+                                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] tracking-widest uppercase font-bold bg-white text-stone-500 border border-stone-200 hover:bg-stone-50 transition-all active:scale-[0.97] disabled:opacity-50 shadow-sm ml-auto"
                                 >
                                   <PhoneOutgoing className="w-3.5 h-3.5" />
                                   Tentativa ({c.tentativas_contato || 0})
@@ -635,19 +638,25 @@ export default function AdminDashboardPage() {
                             );
                           })()}
                           {c.sintomas && (
-                            <div className="w-full mt-2 flex items-start gap-2 px-1">
-                              <AlertCircle className="w-3.5 h-3.5 text-amber-500/70 mt-0.5 shrink-0" />
-                              <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                                {c.sintomas}
-                              </p>
+                            <div className="w-full mt-4 flex items-start gap-2.5 px-1 bg-white p-3 rounded-xl border border-stone-100">
+                              <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                              <div>
+                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Motivo / Sintomas</p>
+                                <p className="text-xs text-stone-600 leading-relaxed">
+                                  {c.sintomas}
+                                </p>
+                              </div>
                             </div>
                           )}
                           {c.observacoes_paciente && (
-                            <div className="w-full mt-1 flex items-start gap-2 px-1">
-                              <Stethoscope className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
-                              <p className="text-[11px] text-slate-400 leading-relaxed">
-                                {c.observacoes_paciente}
-                              </p>
+                            <div className="w-full mt-2 flex items-start gap-2.5 px-1 bg-white p-3 rounded-xl border border-stone-100">
+                              <Stethoscope className="w-4 h-4 text-emerald-700 mt-0.5 shrink-0" />
+                              <div>
+                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1">Observações</p>
+                                <p className="text-xs text-stone-600 leading-relaxed">
+                                  {c.observacoes_paciente}
+                                </p>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -663,11 +672,11 @@ export default function AdminDashboardPage() {
         {/* CHARTS — 2 cols */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* LINE CHART */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col">
-            <h2 className="text-sm font-bold text-slate-800 mb-4 tracking-tight">
+          <div className="bg-white border border-stone-200/60 rounded-3xl p-6 flex flex-col shadow-sm">
+            <h2 className={`${playfair.className} text-xl font-semibold text-stone-900 mb-6 tracking-tight`}>
               Volume por dia
             </h2>
-            <div className="h-[200px] w-full text-xs">
+            <div className="h-[220px] w-full text-xs">
               {dadosGrafico.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
@@ -677,41 +686,42 @@ export default function AdminDashboardPage() {
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
-                      stroke="#e2e8f0"
+                      stroke="#f5f5f4"
                     />
                     <XAxis
                       dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 10 }}
+                      tick={{ fill: "#a8a29e", fontSize: 10, fontFamily: "Inter" }}
                       dy={8}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 10 }}
+                      tick={{ fill: "#a8a29e", fontSize: 10, fontFamily: "Inter" }}
                     />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "#ffffff",
-                        borderColor: "#e2e8f0",
-                        borderRadius: "8px",
+                        borderColor: "#e7e5e4",
+                        borderRadius: "12px",
                         fontSize: "12px",
+                        fontFamily: "Inter"
                       }}
-                      itemStyle={{ color: "#334155" }}
+                      itemStyle={{ color: "#1c1917", fontWeight: 600 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="consultas"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: "#3b82f6", strokeWidth: 0 }}
+                      stroke="#064e3b" // emerald-900
+                      strokeWidth={2.5}
+                      dot={{ r: 3, fill: "#064e3b", strokeWidth: 0 }}
                       activeDot={{ r: 5 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-600 text-xs">
+                <div className="h-full flex items-center justify-center text-stone-400 text-xs font-light tracking-wide">
                   Sem dados suficientes.
                 </div>
               )}
@@ -719,47 +729,47 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* BAR CHART */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col">
-            <h2 className="text-sm font-black text-slate-800 mb-5 uppercase tracking-wider flex items-center gap-2">
-              <div className="w-1 h-3 bg-blue-500 rounded-full" />
-              Status das Consultas (Hoje)
+          <div className="bg-white border border-stone-200/60 rounded-3xl p-6 flex flex-col shadow-sm">
+            <h2 className={`${playfair.className} text-xl font-semibold text-stone-900 mb-6 tracking-tight`}>
+              Status Diário
             </h2>
-            <div className="h-[200px] w-full text-xs">
+            <div className="h-[220px] w-full text-xs">
               {totalConsultas > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dadosStatus} margin={{ top: 20, right: 0, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f4" />
                     <XAxis
                       dataKey="name"
-                      tick={{ fill: "#64748b", fontSize: 10, fontWeight: 600 }}
+                      tick={{ fill: "#78716c", fontSize: 10, fontWeight: 600, fontFamily: "Inter" }}
                       axisLine={false}
                       tickLine={false}
                       dy={10}
                     />
                     <YAxis
-                      tick={{ fill: "#94a3b8", fontSize: 10 }}
+                      tick={{ fill: "#a8a29e", fontSize: 10, fontFamily: "Inter" }}
                       axisLine={false}
                       tickLine={false}
                     />
                     <Tooltip
-                      cursor={{ fill: "#f8fafc" }}
+                      cursor={{ fill: "#fafaf9" }}
                       contentStyle={{
                         backgroundColor: "#ffffff",
-                        borderColor: "#e2e8f0",
+                        borderColor: "#e7e5e4",
                         borderRadius: "12px",
                         fontSize: "11px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                        padding: "8px 12px"
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
+                        padding: "8px 12px",
+                        fontFamily: "Inter"
                       }}
                     />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={40}>
+                    <Bar dataKey="value" radius={[8, 8, 0, 0]} barSize={46}>
                       {dadosStatus.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                       <LabelList 
                         dataKey="value" 
                         position="top" 
-                        fill="#64748b" 
+                        fill="#78716c" 
                         fontSize={11} 
                         fontWeight={700}
                         offset={10}
@@ -768,7 +778,7 @@ export default function AdminDashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-600 text-xs">
+                <div className="h-full flex items-center justify-center text-stone-400 text-xs font-light tracking-wide">
                   Sem dados para exibir.
                 </div>
               )}

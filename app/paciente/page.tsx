@@ -4,18 +4,20 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { normalizePhone } from "@/lib/utils/phone";
-import { MedsysLogo } from "@/components/Logo";
+import { ZyntraLogo } from "@/components/Logo";
+import { Playfair_Display, Inter } from "next/font/google";
 import {
   Phone, KeyRound, Loader2, Calendar, Clock, ChevronRight,
-  RefreshCw, CheckCircle2, Shield, Stethoscope, Activity,
-  ArrowLeft, Search, X, AlertCircle, Upload, Paperclip
+  RefreshCw, CheckCircle2, ShieldCheck, Stethoscope, Activity,
+  ChevronLeft, Search, X, AlertCircle, Upload
 } from "lucide-react";
 
-export default function PacientePage() {
-  // Steps
+const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
+const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600"] });
+
+export default function PacienteEditorial() {
   const [step, setStep] = useState<"phone" | "otp" | "dashboard">("phone");
 
-  // Phone & OTP
   const [telefone, setTelefone] = useState("");
   const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
   const [otpLoading, setOtpLoading] = useState(false);
@@ -23,7 +25,6 @@ export default function PacientePage() {
   const [otpTimer, setOtpTimer] = useState(300);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Restore session
   useEffect(() => {
     const savedPhone = localStorage.getItem("medsys_paciente_auth");
     if (savedPhone) {
@@ -33,12 +34,10 @@ export default function PacientePage() {
     }
   }, []);
 
-  // Dashboard data
   const [consultas, setConsultas] = useState<any[]>([]);
   const [medicos, setMedicos] = useState<any[]>([]);
   const [dashLoading, setDashLoading] = useState(false);
 
-  // Remarcar Consulta logic
   const [remarcandoConsulta, setRemarcandoConsulta] = useState<any | null>(null);
   const [novaData, setNovaData] = useState("");
   const [novoHora, setNovoHora] = useState("");
@@ -46,65 +45,52 @@ export default function PacientePage() {
   const [remarcarLoading, setRemarcarLoading] = useState(false);
   const [remarcarErro, setRemarcarErro] = useState("");
 
-  // Cancelar Consulta logic
   const [cancelandoConsulta, setCancelandoConsulta] = useState<any | null>(null);
   const [cancelarLoading, setCancelarLoading] = useState(false);
+
+  const [uploadingId, setUploadingId] = useState<string|null>(null);
 
   async function handleConfirmCancelar() {
     if (!cancelandoConsulta) return;
     setCancelarLoading(true);
-    
     try {
       const res = await fetch("/api/agenda/action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "cancelar", id: cancelandoConsulta.id })
       });
-
       if (res.ok) {
         setCancelandoConsulta(null);
-        await fetchConsultas(); // Refresh UI
+        await fetchConsultas();
       } else {
         alert("Erro ao cancelar consulta. Tente novamente.");
       }
     } catch (error) {
-      console.error("Erro ao cancelar:", error);
       alert("Erro de conexão.");
     } finally {
       setCancelarLoading(false);
     }
   }
 
-  // Upload de Exames logic
-  const [uploadingId, setUploadingId] = useState<string|null>(null);
-
   async function handleUploadExame(e: React.ChangeEvent<HTMLInputElement>, agendamentoId: string) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploadingId(agendamentoId);
-    
     const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const folderPath = `${normalizePhone(telefone)}/${fileName}`;
 
-    const { error: uploadErr } = await supabase.storage
-      .from('exames')
-      .upload(folderPath, file, { cacheControl: '3600', upsert: false });
-
+    const { error: uploadErr } = await supabase.storage.from('exames').upload(folderPath, file, { cacheControl: '3600', upsert: false });
     if (uploadErr) {
       alert("Erro no upload do exame: " + uploadErr.message);
       setUploadingId(null);
       return;
     }
 
-    const { error: updateError } = await supabase
-      .from("agendamentos")
-      .update({ anexo_path: folderPath })
-      .eq("id", agendamentoId);
-    
+    const { error: updateError } = await supabase.from("agendamentos").update({ anexo_path: folderPath }).eq("id", agendamentoId);
     if (!updateError) {
-       await fetchConsultas(); // refresh para receber data com anexo_path atualizado
+       await fetchConsultas();
     } else {
        alert("O upload foi feito, mas ocorreu um erro ao salvar na consulta.");
     }
@@ -117,13 +103,7 @@ export default function PacientePage() {
     setNovoHora("");
     setRemarcarErro("");
     setRemarcarLoading(true);
-    // Busca os horários ocupados daquele médico
-    const { data } = await supabase
-      .from("agendamentos")
-      .select("id, data, hora, status")
-      .eq("user_id", consulta.user_id)
-      .neq("status", "cancelado");
-    
+    const { data } = await supabase.from("agendamentos").select("id, data, hora, status").eq("user_id", consulta.user_id).neq("status", "cancelado");
     setAgendamentosOcupados(data || []);
     setRemarcarLoading(false);
   }
@@ -139,21 +119,12 @@ export default function PacientePage() {
 
   const getDaySlots = () => {
     if (!novaData || !remarcandoConsulta) return [];
-    
-    // Filtra agendamentos do dia, ignorando a própria consulta atual
-    const occupiedTimes = agendamentosOcupados
-      .filter((a: any) => a.data === novaData && a.id !== remarcandoConsulta.id)
-      .map((a: any) => a.hora.substring(0, 5));
-
-    return generateSlots().map((slot: any) => ({
-      time: slot,
-      isOccupied: occupiedTimes.includes(slot),
-    }));
+    const occupiedTimes = agendamentosOcupados.filter((a: any) => a.data === novaData && a.id !== remarcandoConsulta.id).map((a: any) => a.hora.substring(0, 5));
+    return generateSlots().map((slot: any) => ({ time: slot, isOccupied: occupiedTimes.includes(slot) }));
   };
 
   async function handleConfirmRemarcar() {
     if (!novaData || !novoHora || !remarcandoConsulta) return;
-    
     const hojeObj = new Date();
     hojeObj.setHours(0,0,0,0);
     const splitData = novaData.split("-");
@@ -163,31 +134,25 @@ export default function PacientePage() {
       setRemarcarErro("A nova data precisa ser hoje ou no futuro.");
       return;
     }
-
     setRemarcarErro("");
     setRemarcarLoading(true);
 
     const res = await fetch("/api/agenda/reschedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: remarcandoConsulta.id,
-        nova_data: novaData,
-        nova_hora: novoHora
-      })
+      body: JSON.stringify({ id: remarcandoConsulta.id, nova_data: novaData, nova_hora: novoHora })
     });
     
     if (res.ok) {
        setRemarcandoConsulta(null);
-       await fetchConsultas(); // Refresh UI
+       await fetchConsultas();
     } else {
        const err = await res.json();
-       setRemarcarErro(err.error || "Ocorreu um erro ao remarcar. Tente novamente.");
+       setRemarcarErro(err.error || "Erro ao remarcar.");
     }
     setRemarcarLoading(false);
   }
 
-  // Timer
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function startTimer() {
@@ -210,12 +175,10 @@ export default function PacientePage() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  // Send OTP
   async function handleSendOTP(e: React.FormEvent) {
     e.preventDefault();
     setOtpLoading(true);
     setOtpError("");
-
     try {
       const res = await fetch("/api/otp/generate", {
         method: "POST",
@@ -223,11 +186,8 @@ export default function PacientePage() {
         body: JSON.stringify({ telefone }),
       });
       const result = await res.json();
-
       if (result.success) {
-        if (result._dev_code) {
-          alert(`🔐 [MODO TESTE] Seu código: ${result._dev_code}\n\nEm produção, enviado via SMS/WhatsApp.`);
-        }
+        if (result._dev_code) alert(`🔐 [MODO TESTE] Seu código: ${result._dev_code}`);
         setStep("otp");
         setOtpCode(["", "", "", "", "", ""]);
         startTimer();
@@ -241,14 +201,11 @@ export default function PacientePage() {
     setOtpLoading(false);
   }
 
-  // Verify OTP
   async function handleVerifyOTP() {
     const code = otpCode.join("");
     if (code.length < 6) return;
-
     setOtpLoading(true);
     setOtpError("");
-
     try {
       const res = await fetch("/api/otp/verify", {
         method: "POST",
@@ -256,7 +213,6 @@ export default function PacientePage() {
         body: JSON.stringify({ telefone, code }),
       });
       const result = await res.json();
-
       if (result.valid) {
         if (timerRef.current) clearInterval(timerRef.current);
         localStorage.setItem("medsys_paciente_auth", telefone);
@@ -273,36 +229,23 @@ export default function PacientePage() {
     setOtpLoading(false);
   }
 
-  // Fetch appointments by phone
   async function fetchConsultas(phoneOverride?: string) {
     setDashLoading(true);
     const phoneToUse = phoneOverride || telefone;
     const cleanPhone = normalizePhone(phoneToUse);
-
-    // Buscar por telefone — funciona para agendamentos com e sem conta
-    const { data, error } = await supabase
-      .from("agendamentos")
-      .select("*")
-      .eq("telefone", cleanPhone)
-      .order("data", { ascending: false });
+    const { data, error } = await supabase.from("agendamentos").select("*").eq("telefone", cleanPhone).order("data", { ascending: false });
 
     if (!error && data) {
       setConsultas(data);
-
-      // Buscar nomes dos médicos
       const medicoIds = [...new Set(data.map((c: any) => c.user_id))];
       if (medicoIds.length > 0) {
-        const { data: docs } = await supabase
-          .from("profiles")
-          .select("id, nome, especialidade")
-          .in("id", medicoIds);
+        const { data: docs } = await supabase.from("profiles").select("id, nome, especialidade").in("id", medicoIds);
         setMedicos(docs || []);
       }
     }
     setDashLoading(false);
   }
 
-  // OTP input handlers
   function handleOtpChange(index: number, value: string) {
     if (!/^\d*$/.test(value)) return;
     const newCode = [...otpCode];
@@ -331,12 +274,12 @@ export default function PacientePage() {
     if (pasted.length === 6) setTimeout(() => handleVerifyOTP(), 200);
   }
 
-  // Helpers
   function getMedicoNome(userId: string) {
-    return medicos.find((m: any) => m.id === userId)?.nome || "Médico";
+    const nome = medicos.find((m: any) => m.id === userId)?.nome || "Médico";
+    return nome.startsWith('Dr') ? nome : `Dr. ${nome}`;
   }
   function getMedicoEsp(userId: string) {
-    return medicos.find((m: any) => m.id === userId)?.especialidade || "Clínico";
+    return medicos.find((m: any) => m.id === userId)?.especialidade || "Especialista";
   }
 
   const hoje = new Date().toISOString().split("T")[0];
@@ -344,390 +287,343 @@ export default function PacientePage() {
   const historico = consultas.filter((c: any) => c.data < hoje || c.status === "cancelado");
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans text-slate-900 selection:bg-emerald-200">
+    <div className={`min-h-screen bg-[#FDFCF8] text-stone-900 ${inter.className} selection:bg-emerald-900 selection:text-emerald-50`}>
 
-      {/* NAVBAR */}
-      <nav className="w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-          <Link href="/" className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 flex items-center gap-2">
-            <MedsysLogo className="h-6 sm:h-8 w-auto text-emerald-600 drop-shadow-sm" /> Medsys
-          </Link>
-          {step === "dashboard" && (
-            <button
-              onClick={() => { localStorage.removeItem("medsys_paciente_auth"); setStep("phone"); setConsultas([]); setOtpCode(["","","","","",""]); }}
-              className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-4 h-4" /> Sair
-            </button>
-          )}
+      {/* HEADER */}
+      <header className="fixed top-0 w-full z-40 bg-[#FDFCF8]/90 backdrop-blur-md border-b border-stone-200/50 px-6 py-5 transition-all">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+           <Link href="/" className="group flex items-center gap-3 hover:opacity-70 transition-opacity">
+             <ZyntraLogo className="h-6 w-auto text-emerald-900" /> 
+           </Link>
+           {step === "dashboard" ? (
+             <button
+               onClick={() => { localStorage.removeItem("medsys_paciente_auth"); setStep("phone"); setConsultas([]); setOtpCode(["","","","","",""]); }}
+               className="text-xs tracking-widest uppercase font-semibold flex items-center gap-2 hover:opacity-70 transition-opacity text-stone-500"
+             >
+               Sair do Portal
+             </button>
+           ) : (
+             <Link href="/" className="text-xs tracking-widest uppercase font-semibold flex items-center gap-2 hover:opacity-70 transition-opacity text-stone-500">
+                <ChevronLeft className="w-4 h-4" /> Voltar
+             </Link>
+           )}
         </div>
-      </nav>
+      </header>
 
-      {/* ===== STEP 1: PHONE ===== */}
-      {step === "phone" && (
-        <div className="max-w-md mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16">
-          <div className="text-center mb-10">
-            <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-sm">
-              <Search className="w-10 h-10 text-emerald-600" />
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
-              Minhas Consultas
-            </h1>
-            <p className="text-slate-500 font-medium text-base sm:text-lg leading-relaxed">
-              Digite seu telefone para acessar suas consultas
-            </p>
-          </div>
-
-          <form onSubmit={handleSendOTP} className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-2xl shadow-slate-200/50 space-y-6">
-            <div>
-              <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2 ml-1">
-                <Phone className="w-4 h-4 text-emerald-600" /> Telefone / WhatsApp
-              </label>
-              <input
-                placeholder="(11) 99999-9999"
-                className="w-full px-5 py-4 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold shadow-sm text-lg"
-                value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-                required
-                autoFocus
-              />
+      {/* CONTENT */}
+      <main className="max-w-4xl mx-auto px-6 pt-40 pb-32 w-full relative">
+        
+        {/* STEP 1: PHONE */}
+        {step === "phone" && (
+          <div className="w-full flex flex-col items-center">
+            <div className="text-center mb-12">
+               <h1 className={`${playfair.className} text-5xl font-semibold text-stone-900 leading-[1.05] tracking-tight mb-4`}>
+                 O seu <span className="italic text-emerald-900">dossiê de saúde</span>.
+               </h1>
+               <p className="text-lg text-stone-500 font-light max-w-md mx-auto leading-relaxed">
+                 Acesse seus agendamentos e histórico médico utilizando o seu número de telefone.
+               </p>
             </div>
 
-            {otpError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2">
-                ⚠️ {otpError}
+            <form onSubmit={handleSendOTP} className="w-full max-w-md bg-white border border-stone-200 p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+              <div className="mb-8">
+                <label className="text-xs tracking-widest uppercase font-semibold text-stone-500 mb-3 block">
+                  Telefone ou WhatsApp
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <Phone className="h-4 w-4 text-stone-400" />
+                  </div>
+                  <input
+                    placeholder="(11) 99999-9999"
+                    className="w-full pl-12 pr-4 py-4 rounded-xl border border-stone-200 bg-[#FDFCF8] focus:ring-1 focus:ring-emerald-900 focus:border-emerald-900 outline-none transition-all text-stone-800 font-light placeholder-stone-400"
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={otpLoading || !telefone}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white py-5 rounded-xl font-extrabold text-lg shadow-xl shadow-slate-900/20 hover:-translate-y-0.5 transition-all disabled:opacity-60"
-            >
-              {otpLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Enviando...</> : <>Continuar <ChevronRight className="w-5 h-5" /></>}
-            </button>
-
-            <div className="flex items-center justify-center gap-2">
-              <Shield className="w-3.5 h-3.5 text-slate-300" />
-              <p className="text-[11px] sm:text-xs text-slate-400 font-medium">
-                Um código de verificação será enviado para seu WhatsApp
-              </p>
-            </div>
-
-            <div className="border-t border-slate-100 pt-5 text-center">
-              <p className="text-sm text-slate-500 font-medium">
-                Precisa agendar? <Link href="/agendamento" className="text-emerald-600 font-bold hover:underline">Ver médicos disponíveis →</Link>
-              </p>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* ===== STEP 2: OTP ===== */}
-      {step === "otp" && (
-        <div className="max-w-md mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16">
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-2xl shadow-slate-200/50 space-y-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-                <KeyRound className="w-8 h-8 text-emerald-600" />
-              </div>
-              <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Código de Verificação</h2>
-              <p className="text-sm text-slate-500 font-medium">
-                Enviado para <span className="font-bold text-slate-700">{telefone}</span>
-              </p>
-            </div>
-
-            {/* OTP Grid */}
-            <div className="flex justify-center gap-2 sm:gap-3" onPaste={handleOtpPaste}>
-              {otpCode.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { otpInputRefs.current[i] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-extrabold rounded-xl border-2 transition-all outline-none ${
-                    digit
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                      : "border-slate-200 bg-white text-slate-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Timer */}
-            <div className="text-center">
-              {otpTimer > 0 ? (
-                <p className="text-sm text-slate-400">Expira em <span className="font-bold text-slate-700 font-mono">{formatTimer(otpTimer)}</span></p>
-              ) : (
-                <p className="text-sm text-red-500 font-bold">Código expirado</p>
+              {otpError && (
+                <div className="bg-red-50 text-red-700 text-xs uppercase tracking-widest font-semibold p-4 rounded-xl mb-6 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" /> {otpError}
+                </div>
               )}
-            </div>
 
-            {otpError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 justify-center">
-                ⚠️ {otpError}
-              </div>
-            )}
-
-            <button
-              onClick={handleVerifyOTP}
-              disabled={otpLoading || otpCode.join("").length < 6}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 rounded-xl font-extrabold shadow-xl shadow-emerald-500/20 transition-all disabled:opacity-60"
-            >
-              {otpLoading ? <><Loader2 className="w-5 h-5 animate-spin" /> Verificando...</> : <><CheckCircle2 className="w-5 h-5" /> Verificar</>}
-            </button>
-
-            <div className="flex flex-col gap-2 items-center">
               <button
-                onClick={async () => {
-                  setOtpError("");
-                  setOtpLoading(true);
-                  const res = await fetch("/api/otp/generate", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ telefone }),
-                  });
-                  const result = await res.json();
-                  if (result.success && result._dev_code) alert(`🔐 Novo código: ${result._dev_code}`);
-                  setOtpCode(["","","","","",""]); startTimer();
-                  otpInputRefs.current[0]?.focus();
-                  setOtpLoading(false);
-                }}
-                disabled={otpLoading}
-                className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                type="submit"
+                disabled={otpLoading || !telefone}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-900 hover:bg-emerald-800 disabled:opacity-50 text-white py-4 rounded-xl font-medium tracking-wide transition-all shadow-lg hover:-translate-y-0.5"
               >
-                <RefreshCw className="w-4 h-4" /> Reenviar código
+                {otpLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Solicitar acesso"}
               </button>
-              <button onClick={() => { setStep("phone"); setOtpError(""); }} className="text-sm text-slate-400 hover:text-slate-700 transition-colors">
-                ← Alterar telefone
+
+              <div className="mt-8 pt-8 border-t border-stone-100 text-center">
+                 <Link href="/agendamento" className="text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors">
+                   Não tem consulta? Agende agora →
+                 </Link>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* STEP 2: OTP */}
+        {step === "otp" && (
+          <div className="w-full flex flex-col items-center">
+            <div className="text-center mb-12">
+               <h1 className={`${playfair.className} text-4xl font-semibold text-stone-900 leading-[1.05] tracking-tight mb-4`}>
+                 Confirme sua <span className="italic text-emerald-900">identidade</span>.
+               </h1>
+               <p className="text-stone-500 font-light max-w-sm mx-auto leading-relaxed">
+                 Insira o código enviado para <br/><span className="font-semibold text-stone-800">{telefone}</span>
+               </p>
+            </div>
+
+            <div className="w-full max-w-md bg-white border border-stone-200 p-10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+              <div className="flex justify-center gap-2 mb-8" onPaste={handleOtpPaste}>
+                {otpCode.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { otpInputRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-xl font-light rounded-xl border transition-all outline-none ${
+                      digit
+                        ? "border-emerald-900 bg-[#FDFCF8] text-emerald-900"
+                        : "border-stone-200 bg-white text-stone-900 focus:border-emerald-900"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <div className="text-center mb-8">
+                {otpTimer > 0 ? (
+                  <p className="text-xs uppercase tracking-widest text-stone-400 font-semibold">Expira em {formatTimer(otpTimer)}</p>
+                ) : (
+                  <p className="text-xs uppercase tracking-widest text-red-500 font-semibold">Código expirado</p>
+                )}
+              </div>
+
+              {otpError && (
+                <div className="bg-red-50 text-red-700 text-xs uppercase tracking-widest font-semibold p-4 rounded-xl mb-6 flex items-center gap-2 justify-center">
+                  <AlertCircle className="w-4 h-4" /> {otpError}
+                </div>
+              )}
+
+              <button
+                onClick={handleVerifyOTP}
+                disabled={otpLoading || otpCode.join("").length < 6}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-900 hover:bg-emerald-800 disabled:opacity-50 text-white py-4 rounded-xl font-medium tracking-wide transition-all shadow-lg hover:-translate-y-0.5"
+              >
+                {otpLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Validar código"}
               </button>
+
+              <div className="mt-8 pt-8 border-t border-stone-100 flex flex-col items-center gap-4">
+                <button
+                  onClick={async () => {
+                    setOtpError(""); setOtpLoading(true);
+                    const res = await fetch("/api/otp/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telefone }) });
+                    const result = await res.json();
+                    if (result.success && result._dev_code) alert(`🔐 Novo código: ${result._dev_code}`);
+                    setOtpCode(["","","","","",""]); startTimer(); otpInputRefs.current[0]?.focus(); setOtpLoading(false);
+                  }}
+                  disabled={otpLoading}
+                  className="text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors flex items-center gap-2"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Reenviar código
+                </button>
+                <button onClick={() => { setStep("phone"); setOtpError(""); }} className="text-xs tracking-widest uppercase font-semibold text-stone-400 hover:text-stone-600 transition-colors">
+                  Alterar telefone
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ===== STEP 3: DASHBOARD ===== */}
-      {step === "dashboard" && (
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-16">
-
-          {/* Welcome */}
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Minhas Consultas</h1>
-              <p className="text-slate-500 mt-1 font-medium text-sm">
-                Verificado via <span className="text-emerald-600 font-bold">{telefone}</span>
-              </p>
-            </div>
-            <Link
-              href="/agendamento"
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 sm:px-5 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-600/20 text-sm"
-            >
-              <Calendar className="w-4 h-4" /> <span className="hidden sm:inline">Nova Consulta</span><span className="sm:hidden">Agendar</span>
-            </Link>
-          </div>
-
-          {dashLoading ? (
-            <div className="flex justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-            </div>
-          ) : consultas.length === 0 ? (
-            <div className="bg-white border border-slate-200 border-dashed rounded-2xl p-12 text-center">
-              <Activity className="w-12 h-12 text-emerald-200 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-slate-700 mb-2">Nenhuma consulta encontrada</h2>
-              <p className="text-slate-500 mb-6">Não encontramos agendamentos vinculados a este telefone.</p>
+        {/* STEP 3: DASHBOARD */}
+        {step === "dashboard" && (
+          <div className="w-full">
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-16 gap-6">
+              <div>
+                <h1 className={`${playfair.className} text-4xl text-stone-900 mb-2`}>Seus Agendamentos</h1>
+                <p className="text-xs uppercase tracking-widest font-semibold text-stone-400">
+                  Acesso via {telefone}
+                </p>
+              </div>
               <Link
                 href="/agendamento"
-                className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold transition-all"
+                className="flex items-center gap-2 bg-[#FDFCF8] hover:bg-stone-50 text-stone-800 border border-stone-200 px-6 py-3 rounded-full font-medium transition-all text-sm uppercase tracking-widest"
               >
-                <Calendar className="w-4 h-4" /> Agendar agora
+                <Calendar className="w-4 h-4" /> Marcar nova
               </Link>
             </div>
-          ) : (
-            <div className="space-y-8">
 
-              {/* PRÓXIMAS */}
-              {proximas.length > 0 && (
-                <section>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calendar className="w-5 h-5 text-emerald-600" />
-                    <h2 className="text-xl font-bold text-slate-900">Próximas Consultas</h2>
-                    <span className="bg-emerald-100 text-emerald-700 text-xs font-black px-2 py-0.5 rounded-md">{proximas.length}</span>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    {proximas.map((c: any) => (
-                      <div key={c.id} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500 rounded-l"></div>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div>
-                            <span className={`text-[10px] uppercase font-black px-2.5 py-1 rounded-md tracking-wider ${
-                              c.status === "confirmado" ? "bg-emerald-100 text-emerald-700" :
-                              c.status === "presente" ? "bg-blue-100 text-blue-700" :
-                              "bg-yellow-100 text-yellow-700"
+            {dashLoading ? (
+              <div className="flex justify-center py-24">
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-900 stroke-[1.5px]" />
+              </div>
+            ) : consultas.length === 0 ? (
+              <div className="text-center py-24 bg-white border border-stone-200 rounded-2xl">
+                <div className={`${playfair.className} text-6xl italic text-stone-200 mb-6`}>?</div>
+                <h3 className={`${playfair.className} text-2xl text-stone-900 mb-4`}>Nenhum registro encontrado</h3>
+                <p className="text-stone-500 font-light mb-8 max-w-sm mx-auto">Você não possui agendamentos vinculados a este número.</p>
+                <Link
+                  href="/agendamento"
+                  className="inline-flex items-center gap-2 bg-emerald-900 text-white px-8 py-4 rounded-full font-medium transition-all hover:bg-emerald-800"
+                >
+                  Procurar especialistas
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-16">
+                
+                {/* PRÓXIMAS CONSULTAS */}
+                {proximas.length > 0 && (
+                  <section>
+                    <h2 className="text-xs tracking-widest uppercase font-semibold text-emerald-900 mb-6 border-b border-stone-200 pb-4 flex items-center justify-between">
+                      Consultas Vigentes
+                      <span className="bg-emerald-900/5 px-2 py-1 rounded text-emerald-900">{proximas.length}</span>
+                    </h2>
+                    
+                    <div className="grid gap-6">
+                      {proximas.map((c: any) => (
+                        <div key={c.id} className="bg-white border border-stone-200 p-8 rounded-2xl flex flex-col md:flex-row gap-8 justify-between items-start md:items-center hover:border-emerald-900/20 transition-all">
+                          
+                          <div className="flex-1">
+                            <span className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded tracking-widest inline-block mb-4 ${
+                              c.status === "confirmado" ? "bg-emerald-900/10 text-emerald-900" :
+                              c.status === "presente" ? "bg-stone-100 text-stone-600" :
+                              "bg-amber-100/50 text-amber-700"
                             }`}>
                               {c.status === "pendente" ? "Aguardando confirmação" : c.status}
                             </span>
-                            <h3 className="text-lg font-bold text-slate-900 mt-2 flex items-center gap-2">
-                              <Stethoscope className="w-4 h-4 text-emerald-500" />
+                            <h3 className={`${playfair.className} text-2xl text-stone-900 mb-1`}>
                               {getMedicoNome(c.user_id)}
                             </h3>
-                            <p className="text-slate-500 text-sm font-medium">{getMedicoEsp(c.user_id)}</p>
-                            
+                            <p className="text-stone-500 text-sm tracking-widest uppercase font-semibold mb-4">
+                              {getMedicoEsp(c.user_id)}
+                            </p>
+
                             {c.status === "pendente" && (
-                              <div className="mt-3 flex items-start gap-1.5 bg-amber-50/50 p-2.5 rounded-lg border border-amber-100/50 max-w-[280px]">
-                                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                                <p className="text-[11px] text-amber-700 font-medium leading-snug">
-                                  Você receberá uma mensagem para confirmar sua consulta.
-                                </p>
-                              </div>
+                              <p className="text-xs text-stone-500 font-light italic">
+                                Você receberá um WhatsApp para confirmar sua presença.
+                              </p>
                             )}
                           </div>
-                          <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl flex flex-col gap-3 min-w-[200px]">
-                            <div className="flex items-center gap-6 justify-between">
-                              <div>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Data</p>
-                                <p className="font-bold text-slate-800 text-sm">{c.data?.split("-").reverse().join("/")}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Hora</p>
-                                <p className="font-bold text-slate-800 text-sm">{c.hora}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <button
-                                 onClick={() => setCancelandoConsulta(c)}
-                                 className="w-full bg-white border border-red-100 text-red-500 hover:text-red-700 hover:border-red-200 hover:bg-red-50 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-                              >
-                                 <X className="w-3.5 h-3.5" /> Cancelar
-                              </button>
-                              <button
-                                 onClick={() => openRemarcar(c)}
-                                 className="w-full bg-white border border-slate-200 text-slate-600 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm"
-                              >
-                                 <Calendar className="w-3.5 h-3.5" /> Remarcar
-                              </button>
+
+                          <div className="flex flex-col gap-4 w-full md:w-auto">
+                            <div className="bg-[#FDFCF8] border border-stone-100 p-4 rounded-xl flex gap-8 items-center min-w-[220px] justify-center">
+                               <div className="text-center">
+                                  <span className="block text-[10px] tracking-widest uppercase font-bold text-stone-400 mb-1">Data</span>
+                                  <span className="font-medium text-stone-900">{c.data?.split("-").reverse().join("/")}</span>
+                               </div>
+                               <div className="w-px h-8 bg-stone-200"></div>
+                               <div className="text-center">
+                                  <span className="block text-[10px] tracking-widest uppercase font-bold text-stone-400 mb-1">Hora</span>
+                                  <span className="font-medium text-stone-900">{c.hora}</span>
+                               </div>
                             </div>
 
-                            {/* Botão de Anexos */}
-                            <div className="mt-1">
-                               <label className={`w-full py-2 rounded-lg text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer border ${
-                                 uploadingId === c.id 
-                                  ? 'bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed'
-                                  : c.anexo_path 
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                               }`}>
-                                  {uploadingId === c.id ? (
-                                    <><Loader2 className="w-3 h-3 animate-spin" /> Anexando...</>
-                                  ) : c.anexo_path ? (
-                                    <><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Exame anexado (Trocar)</>
-                                  ) : (
-                                    <><Upload className="w-3 h-3" /> Enviar Exame/Laudo</>
-                                  )}
-                                  <input 
-                                    type="file" 
-                                    className="hidden" 
-                                    accept="application/pdf,image/png,image/jpeg" 
-                                    onChange={(e) => handleUploadExame(e, c.id)}
-                                    disabled={uploadingId === c.id}
-                                  />
-                               </label>
+                            <div className="flex gap-2">
+                               <button onClick={() => setCancelandoConsulta(c)} className="flex-1 text-[11px] tracking-widest uppercase font-semibold text-stone-500 border border-stone-200 py-3 rounded-xl hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors">
+                                  Cancelar
+                               </button>
+                               <button onClick={() => openRemarcar(c)} className="flex-1 text-[11px] tracking-widest uppercase font-semibold text-emerald-900 border border-emerald-900/20 bg-emerald-900/5 py-3 rounded-xl hover:bg-emerald-900 hover:text-white transition-colors">
+                                  Remarcar
+                               </button>
                             </div>
+
+                            {/* Anexos */}
+                            <label className={`w-full text-center py-3 rounded-xl text-[11px] tracking-widest uppercase font-semibold transition-colors border cursor-pointer ${
+                              uploadingId === c.id ? 'bg-stone-100 text-stone-400 border-stone-200' :
+                              c.anexo_path ? 'bg-[#FDFCF8] text-emerald-900 border-emerald-900/20' : 'bg-white text-stone-500 border-stone-200 hover:bg-[#FDFCF8]'
+                            }`}>
+                               {uploadingId === c.id ? 'Enviando...' : c.anexo_path ? 'Exame Anexado (Trocar)' : 'Anexar Exame/Laudo'}
+                               <input type="file" className="hidden" accept="application/pdf,image/png,image/jpeg" onChange={(e) => handleUploadExame(e, c.id)} disabled={uploadingId === c.id} />
+                            </label>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
 
-              {/* HISTÓRICO */}
-              {historico.length > 0 && (
-                <section className="opacity-70">
-                  <h2 className="text-lg font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    <Clock className="w-4 h-4" /> Histórico
-                  </h2>
-                  <div className="flex flex-col gap-3">
-                    {historico.map((c: any) => (
-                      <div key={c.id} className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center">
-                        <div>
-                          <h3 className="font-semibold text-slate-700 text-sm">{getMedicoNome(c.user_id)}</h3>
-                          <p className="text-slate-400 text-xs mt-0.5">{c.data?.split("-").reverse().join("/")}</p>
                         </div>
-                        <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-md ${
-                          c.status === "cancelado" ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"
-                        }`}>
-                          {c.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* HISTÓRICO */}
+                {historico.length > 0 && (
+                  <section>
+                    <h2 className="text-xs tracking-widest uppercase font-semibold text-stone-400 mb-6 border-b border-stone-100 pb-4">
+                      Histórico
+                    </h2>
+                    <div className="grid gap-3 opacity-70">
+                      {historico.map((c: any) => (
+                        <div key={c.id} className="bg-transparent border border-stone-200 p-4 rounded-xl flex items-center justify-between hover:bg-white transition-colors">
+                          <div>
+                            <h3 className="font-medium text-stone-900 text-sm">{getMedicoNome(c.user_id)}</h3>
+                            <p className="text-stone-400 text-xs font-light mt-1">{c.data?.split("-").reverse().join("/")} • {c.hora}</p>
+                          </div>
+                          <span className="text-[10px] tracking-widest uppercase font-semibold text-stone-400 bg-stone-100 px-2 py-1 rounded">
+                            {c.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+              </div>
+            )}
+          </div>
+        )}
+
+      </main>
+
       {/* MODAL REMARCAR */}
       {remarcandoConsulta && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl p-6 sm:p-8 border border-slate-200 flex flex-col max-h-[90vh]">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-emerald-600" /> Remarcar
-              </h3>
-              <button 
-                onClick={() => setRemarcandoConsulta(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
-              >
-                <X className="w-4 h-4" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-stone-900/40 backdrop-blur-sm">
+          <div className="bg-[#FDFCF8] rounded-2xl w-full max-w-md shadow-2xl p-8 border border-stone-200 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className={`${playfair.className} text-2xl text-stone-900`}>Remarcar Consulta</h3>
+              <button onClick={() => setRemarcandoConsulta(null)} className="text-stone-400 hover:text-stone-900 transition-colors">
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-1 space-y-6">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-4">
-                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                    <Stethoscope className="w-5 h-5 text-emerald-500" />
-                 </div>
-                 <div>
-                    <p className="text-sm font-bold text-slate-800">{getMedicoNome(remarcandoConsulta.user_id)}</p>
-                    <p className="text-xs text-slate-500">Agendamento atual: {remarcandoConsulta.data?.split("-").reverse().join("/")} às {remarcandoConsulta.hora}</p>
-                 </div>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-6">
+              <div className="bg-white border border-stone-200 p-4 rounded-xl">
+                 <p className="text-sm font-semibold text-stone-900">{getMedicoNome(remarcandoConsulta.user_id)}</p>
+                 <p className="text-xs text-stone-500 font-light mt-1">Atual: {remarcandoConsulta.data?.split("-").reverse().join("/")} às {remarcandoConsulta.hora}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Selecione a nova data:</label>
+                <label className="text-xs tracking-widest uppercase font-semibold text-stone-500 mb-3 block">Nova Data</label>
                 <input 
                   type="date"
                   value={novaData}
-                  onChange={(e) => {
-                    setNovaData(e.target.value);
-                    setNovoHora("");
-                  }}
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 font-bold shadow-sm"
+                  onChange={(e) => { setNovaData(e.target.value); setNovoHora(""); }}
+                  className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white focus:ring-1 focus:ring-emerald-900 outline-none text-stone-800 font-light"
                 />
               </div>
 
               {novaData && (
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3">Horários disponíveis para {novaData.split("-").reverse().join("/")}:</label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  <label className="text-xs tracking-widest uppercase font-semibold text-stone-500 mb-3 block">Horários</label>
+                  <div className="grid grid-cols-4 gap-2">
                     {getDaySlots().map((slot: any) => (
                       <button
                         key={slot.time}
                         onClick={() => !slot.isOccupied && setNovoHora(slot.time)}
                         disabled={slot.isOccupied}
-                        className={`py-2 px-1 rounded-xl text-sm font-bold text-center transition-all border
-                          ${slot.isOccupied 
-                            ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed opacity-50" 
-                            : novoHora === slot.time
-                              ? "bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105"
-                              : "bg-white text-slate-700 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 cursor-pointer"
-                          }
-                        `}
+                        className={`py-2 rounded-lg text-sm transition-all border ${
+                          slot.isOccupied ? "bg-stone-100 text-stone-400 border-transparent cursor-not-allowed" :
+                          novoHora === slot.time ? "bg-emerald-900 text-white border-emerald-900 font-medium" :
+                          "bg-white text-stone-700 border-stone-200 hover:border-emerald-900/30"
+                        }`}
                       >
                         {slot.time}
                       </button>
@@ -737,55 +633,54 @@ export default function PacientePage() {
               )}
 
               {remarcarErro && (
-                <div className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-xl border border-red-200 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" /> {remarcarErro}
+                <div className="bg-red-50 text-red-700 text-xs tracking-widest uppercase font-semibold p-3 rounded-xl border border-red-100">
+                  {remarcarErro}
                 </div>
               )}
             </div>
 
-            <div className="pt-6 mt-4 border-t border-slate-100">
+            <div className="pt-6 mt-6 border-t border-stone-200">
                <button
                  onClick={handleConfirmRemarcar}
                  disabled={!novaData || !novoHora || remarcarLoading}
-                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 text-white py-4 rounded-xl font-extrabold shadow-lg shadow-emerald-500/20 transition-all disabled:shadow-none disabled:transform-none transform hover:-translate-y-0.5"
+                 className="w-full flex items-center justify-center bg-emerald-900 hover:bg-emerald-800 disabled:opacity-50 text-white py-4 rounded-xl font-medium transition-all"
                >
-                 {remarcarLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirmar remarcação"}
+                 {remarcarLoading ? "Processando..." : "Confirmar nova data"}
                </button>
             </div>
-
           </div>
         </div>
       )}
 
       {/* MODAL CANCELAR */}
       {cancelandoConsulta && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl p-6 sm:p-8 border border-slate-200 text-center relative overflow-hidden">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
-              <AlertCircle className="w-8 h-8 text-red-500" />
-            </div>
-            <h3 className="text-xl font-extrabold text-slate-900 mb-2">Cancelar Consulta?</h3>
-            <p className="text-sm text-slate-500 mb-6">Esta ação não poderá ser desfeita e liberará o horário de <span className="font-bold text-slate-700 whitespace-nowrap">{cancelandoConsulta.data?.split("-").reverse().join("/")}</span> com <span className="font-bold text-slate-700 whitespace-nowrap">{getMedicoNome(cancelandoConsulta.user_id)}</span>.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-stone-900/40 backdrop-blur-sm">
+          <div className="bg-[#FDFCF8] rounded-2xl w-full max-w-sm shadow-2xl p-8 border border-stone-200 text-center">
+            <h3 className={`${playfair.className} text-2xl text-stone-900 mb-4`}>Cancelar Consulta?</h3>
+            <p className="text-sm text-stone-500 font-light mb-8">
+              O horário de <span className="font-semibold text-stone-800">{cancelandoConsulta.data?.split("-").reverse().join("/")}</span> será liberado.
+            </p>
             
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setCancelandoConsulta(null)}
-                disabled={cancelarLoading}
-                className="flex-1 py-3.5 px-4 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
-              >
-                Voltar
-              </button>
+            <div className="flex flex-col gap-3">
               <button 
                 onClick={handleConfirmCancelar}
                 disabled={cancelarLoading}
-                className="flex-1 py-3.5 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors flex justify-center items-center gap-2 shadow-lg shadow-red-500/20 disabled:shadow-none disabled:opacity-70"
+                className="w-full py-4 rounded-xl font-medium text-white bg-red-700 hover:bg-red-800 transition-colors disabled:opacity-50"
               >
-                {cancelarLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sim, Cancelar"}
+                {cancelarLoading ? "Cancelando..." : "Confirmar cancelamento"}
+              </button>
+              <button 
+                onClick={() => setCancelandoConsulta(null)}
+                disabled={cancelarLoading}
+                className="w-full py-4 rounded-xl font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+              >
+                Manter consulta
               </button>
             </div>
           </div>
         </div>
       )}
+      
     </div>
   );
 }

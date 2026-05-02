@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
-import { MedsysLogo } from "@/components/Logo";
+import { ZyntraLogo } from "@/components/Logo";
 import { Loader2, LogOut, Calendar, Clock, Activity, FileText } from "lucide-react";
 
 export default function PortalLayout({
@@ -55,7 +55,7 @@ export default function PortalLayout({
       <nav className="w-full bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
            <Link href="/portal" className="font-extrabold text-xl tracking-tight text-slate-900 flex items-center gap-2">
-             <MedsysLogo className="h-7 w-auto text-emerald-600 drop-shadow-sm" /> Medsys <span className="text-emerald-600 font-medium ml-1">Portal</span>
+             <ZyntraLogo className="h-7 w-auto text-emerald-600 drop-shadow-sm" /> ZyntraMed <span className="text-emerald-600 font-medium ml-1">Portal</span>
            </Link>
            
            <div className="flex items-center gap-6">

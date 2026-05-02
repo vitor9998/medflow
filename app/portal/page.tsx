@@ -177,7 +177,7 @@ export default function PortalDashboardPage() {
                  <span className="text-xs font-bold uppercase tracking-wider">Aviso Legal</span>
                </div>
                <p className="text-[11px] text-slate-400 leading-relaxed">
-                 O Medsys prioriza sua privacidade. Todas as informações trafegadas aqui e o seu histórico estão criptografados de ponta-a-ponta e são visíveis apenas ao profissional designado.
+                 O ZyntraMed prioriza sua privacidade. Todas as informações trafegadas aqui e o seu histórico estão criptografados de ponta-a-ponta e são visíveis apenas ao profissional designado.
                </p>
             </div>
           </div>

@@ -354,7 +354,7 @@ async function findUpcomingAppointments(phone: string, pushNameFallback?: string
   const dateFilter = yesterdayDate.toISOString().split('T')[0];
   
   if (quotedText) {
-    // Tenta extrair data e hora do texto original da Medflow: "AMANHÃ (01/05/2026) às 12:30"
+    // Tenta extrair data e hora do texto original da ZyntraMed: "AMANHÃ (01/05/2026) às 12:30"
     const match = quotedText.match(/(\d{2}\/\d{2}\/\d{4}) às (\d{2}:\d{2})/);
     if (match) {
       const dateStr = match[1].split('/').reverse().join('-'); // YYYY-MM-DD

@@ -65,7 +65,7 @@ export async function GET(req: Request) {
         }
 
         // Construção da mensagem amigável
-        const message = `Olá ${appt.nome}, aqui é da Medflow! Passando para lembrar da sua consulta AMANHÃ (${tomorrow.toLocaleDateString('pt-BR')}) às ${appt.hora}. Podemos confirmar sua presença?`;
+        const message = `Olá ${appt.nome}, aqui é da ZyntraMed! Passando para lembrar da sua consulta AMANHÃ (${tomorrow.toLocaleDateString('pt-BR')}) às ${appt.hora}. Podemos confirmar sua presença?`;
         
         // Chave de idempotência para evitar envios duplicados em caso de retentativa do Cron
         const idempotencyKey = `reminder-auto-${appt.id}`;
