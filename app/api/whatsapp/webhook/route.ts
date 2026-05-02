@@ -88,8 +88,7 @@ export async function POST(req: Request) {
       .eq('phone', phone)
       .order('created_at', { ascending: false })
       .limit(5);
-
-    const lastBotMsg = lastMessagesForSelection?.find(m => m.message.includes(MULTIPLE_APPOINTMENTS_MSG))?.message;
+    const lastBotMsg = lastMessagesForSelection?.find((m: any) => m.message.includes(MULTIPLE_APPOINTMENTS_MSG))?.message;
 
     if (lastBotMsg) {
       const selectionIndex = parseSelection(text);
@@ -260,7 +259,7 @@ async function handleStatusUpdate(phone: string, newStatus: string, reply: strin
     return NextResponse.json({ success: true, status: 'no_appointment_found' });
   }
 
-  let appointment = specificId ? appointments.find(a => a.id === specificId) : null;
+  let appointment = specificId ? appointments.find((a: any) => a.id === specificId) : null;
 
   if (!appointment) {
     if (appointments.length > 1) {
@@ -305,7 +304,7 @@ async function handleReschedule(phone: string, newDate: string, newTime: string,
   
   if (appointments.length === 0) return NextResponse.json({ status: 'no_appt' });
 
-  let appointment = specificId ? appointments.find(a => a.id === specificId) : null;
+  let appointment = specificId ? appointments.find((a: any) => a.id === specificId) : null;
 
   if (!appointment) {
     if (appointments.length > 1) {
@@ -346,7 +345,7 @@ async function handleReschedule(phone: string, newDate: string, newTime: string,
   }
 }
 
-async function findUpcomingAppointments(phone: string, pushNameFallback?: string) {
+async function findUpcomingAppointments(phone: string, pushNameFallback?: string, quotedText?: string) {
   // Ajuste de data: Pegamos a data de "hoje" subtraindo 24h para garantir que consultas do dia atual 
   // (no fuso do Brasil) não sejam filtradas por causa do UTC do servidor.
   const yesterdayDate = new Date();
