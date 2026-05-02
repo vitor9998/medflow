@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Calendar, Sparkles, CheckCircle2, User, ChevronRight, Play, ShieldCheck, MapPin, Clock } from "lucide-react";
+import { ArrowRight, Calendar, Sparkles, CheckCircle2, User, ChevronRight, Play, ShieldCheck, MapPin, Clock, Menu, X } from "lucide-react";
 import { ZyntraLogo } from "@/components/Logo";
 import { useState, useEffect } from "react";
 import { Playfair_Display, Inter } from "next/font/google";
@@ -11,6 +11,7 @@ const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600"] }
 
 export default function HomeEditorial() {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,17 +38,46 @@ export default function HomeEditorial() {
              </Link>
            </div>
            
-           <div className="flex items-center gap-3 md:gap-6">
-             <Link href="/paciente" className="flex text-[10px] md:text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors items-center gap-1 md:gap-2">
-               Sou Paciente
-             </Link>
-             <div className="h-4 w-px bg-stone-200 block"></div>
-             <Link href="/login" className="flex text-[10px] md:text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors">
-               Acesso
-             </Link>
-             <Link href="/signup" className="text-[10px] md:text-xs tracking-widest uppercase font-semibold text-white bg-emerald-900 hover:bg-emerald-800 px-3 py-2 md:px-6 md:py-3 rounded-full transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+           <div className="flex items-center gap-4">
+             {/* DESKTOP LINKS */}
+             <div className="hidden md:flex items-center gap-6">
+               <Link href="/paciente" className="text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors items-center gap-2">
+                 Sou Paciente
+               </Link>
+               <div className="h-4 w-px bg-stone-200"></div>
+               <Link href="/login" className="text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors">
+                 Acesso
+               </Link>
+             </div>
+             
+             {/* INICIAR BUTTON & MOBILE MENU TOGGLE */}
+             <Link href="/signup" className="text-[10px] md:text-xs tracking-widest uppercase font-semibold text-white bg-emerald-900 hover:bg-emerald-800 px-5 py-2.5 md:px-6 md:py-3 rounded-full transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
                Iniciar
              </Link>
+             
+             <button className="md:hidden text-stone-800 p-1" onClick={() => setMenuOpen(true)}>
+               <Menu className="w-6 h-6" />
+             </button>
+           </div>
+        </div>
+
+        {/* MOBILE MENU OVERLAY */}
+        <div className={`fixed inset-0 bg-[#FDFCF8] z-[100] flex flex-col p-6 transition-transform duration-500 ${menuOpen ? "translate-x-0" : "translate-x-full"}`}>
+           <div className="flex items-center justify-between mb-16">
+             <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 font-semibold tracking-tight text-emerald-900">
+               <ZyntraLogo className="h-6 w-auto text-emerald-900" />
+             </Link>
+             <button onClick={() => setMenuOpen(false)} className="text-stone-800 p-2 bg-stone-100 rounded-full">
+               <X className="w-6 h-6" />
+             </button>
+           </div>
+           
+           <div className="flex flex-col gap-8 text-xl font-medium tracking-tight text-stone-900">
+             <a href="#solucoes" onClick={() => setMenuOpen(false)} className="border-b border-stone-100 pb-4">Soluções</a>
+             <a href="#como-funciona" onClick={() => setMenuOpen(false)} className="border-b border-stone-100 pb-4">Abordagem</a>
+             <Link href="/pricing" onClick={() => setMenuOpen(false)} className="border-b border-stone-100 pb-4">Investimento</Link>
+             <Link href="/paciente" onClick={() => setMenuOpen(false)} className="border-b border-stone-100 pb-4 text-emerald-900">Sou Paciente</Link>
+             <Link href="/login" onClick={() => setMenuOpen(false)} className="border-b border-stone-100 pb-4 text-emerald-900">Acesso (Médico)</Link>
            </div>
         </div>
       </nav>
