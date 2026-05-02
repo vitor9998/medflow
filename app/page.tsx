@@ -37,15 +37,15 @@ export default function HomeEditorial() {
              </Link>
            </div>
            
-           <div className="flex items-center gap-6">
-             <Link href="/paciente" className="hidden md:flex text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors items-center gap-2">
+           <div className="flex items-center gap-3 md:gap-6">
+             <Link href="/paciente" className="flex text-[10px] md:text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors items-center gap-1 md:gap-2">
                Sou Paciente
              </Link>
-             <div className="h-4 w-px bg-stone-200 hidden md:block"></div>
-             <Link href="/login" className="hidden md:flex text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors">
+             <div className="h-4 w-px bg-stone-200 block"></div>
+             <Link href="/login" className="flex text-[10px] md:text-xs tracking-widest uppercase font-semibold text-stone-500 hover:text-emerald-900 transition-colors">
                Acesso
              </Link>
-             <Link href="/signup" className="text-xs tracking-widest uppercase font-semibold text-white bg-emerald-900 hover:bg-emerald-800 px-6 py-3 rounded-full transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+             <Link href="/signup" className="text-[10px] md:text-xs tracking-widest uppercase font-semibold text-white bg-emerald-900 hover:bg-emerald-800 px-3 py-2 md:px-6 md:py-3 rounded-full transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
                Iniciar
              </Link>
            </div>
