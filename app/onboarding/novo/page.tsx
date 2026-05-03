@@ -28,16 +28,17 @@ export default function NovoCadastro() {
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error("Erro ao registrar");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Erro ao registrar");
+      }
 
       const data = await res.json();
       
-      // Redirect to a success page or the form directly for demonstration
-      // In a real scenario, they check their WhatsApp, but we can also just show a success message
       router.push(`/onboarding/sucesso?id=${data.id}`);
       
-    } catch (error) {
-      alert("Houve um erro ao processar seu cadastro. Tente novamente.");
+    } catch (error: any) {
+      alert("Houve um erro: " + error.message);
     } finally {
       setLoading(false);
     }

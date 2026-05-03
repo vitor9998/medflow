@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Database Error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Database error: " + JSON.stringify(error) }, { status: 500 });
     }
 
     // TODO: Send WhatsApp message
