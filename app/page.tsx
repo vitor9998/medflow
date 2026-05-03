@@ -14,6 +14,17 @@ export default function HomeEditorial() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
@@ -28,7 +39,7 @@ export default function HomeEditorial() {
       <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${scrolled ? "bg-[#FDFCF8]/90 backdrop-blur-md border-b border-stone-200/50 py-4" : "bg-transparent py-6"}`}>
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
            <Link href="/" className="flex items-center gap-3 font-semibold tracking-tight text-emerald-900 hover:opacity-70 transition-opacity">
-             <ZyntraLogo className="h-6 w-auto text-emerald-900" />
+             <ZyntraLogo className="h-6 w-auto" />
            </Link>
            <div className="hidden md:flex items-center gap-10 text-xs tracking-widest uppercase font-semibold text-stone-500">
              <a href="#solucoes" className="hover:text-emerald-900 transition-colors">Soluções</a>
@@ -61,11 +72,13 @@ export default function HomeEditorial() {
            </div>
         </div>
 
+      </nav>
+
         {/* MOBILE MENU OVERLAY */}
         <div className={`fixed inset-0 bg-[#FDFCF8] z-[100] flex flex-col p-6 transition-transform duration-500 ${menuOpen ? "translate-x-0" : "translate-x-full"}`}>
            <div className="flex items-center justify-between mb-16">
              <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 font-semibold tracking-tight text-emerald-900">
-               <ZyntraLogo className="h-6 w-auto text-emerald-900" />
+               <ZyntraLogo className="h-6 w-auto" />
              </Link>
              <button onClick={() => setMenuOpen(false)} className="text-stone-800 p-2 bg-stone-100 rounded-full">
                <X className="w-6 h-6" />
@@ -80,7 +93,6 @@ export default function HomeEditorial() {
              <Link href="/login" onClick={() => setMenuOpen(false)} className="border-b border-stone-100 pb-4 text-emerald-900">Acesso (Médico)</Link>
            </div>
         </div>
-      </nav>
 
       {/* EDITORIAL HERO */}
       <section className="pt-40 pb-20 md:pt-48 md:pb-32 px-6 w-full max-w-7xl mx-auto flex flex-col items-center text-center relative">

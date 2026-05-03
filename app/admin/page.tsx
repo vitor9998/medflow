@@ -368,8 +368,8 @@ export default function AdminDashboardPage() {
 
       {/* ALERTAS OPERACIONAIS */}
       {altoRiscoHoje > 0 && (
-        <div className="bg-amber-50/50 border border-amber-200/40 rounded-2xl p-5 flex items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-4">
+        <div className="bg-amber-50/50 border border-amber-200/40 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-start sm:items-center gap-4">
             <div className="bg-amber-100/50 p-2.5 rounded-xl">
               <AlertCircle className="w-5 h-5 text-amber-700" />
             </div>
@@ -399,7 +399,7 @@ export default function AdminDashboardPage() {
 
           {/* RESUMO EXECUTIVO (Sinalização Rápida) */}
           {resumoExibido.length > 0 && (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {resumoExibido.map((msg, idx) => (
                 <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-stone-200/60 shadow-sm animate-in fade-in zoom-in duration-700">
                   <msg.icon className={`w-3 h-3 ${msg.color}`} />
@@ -472,14 +472,12 @@ export default function AdminDashboardPage() {
            <h2 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Desempenho Geral</h2>
         </div>
 
-      {/* METRICS — borderless row, divide-x */}
-      <div className="grid grid-cols-2 md:grid-cols-4 bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+      {/* METRICS — gap-px for automatic inner borders */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 bg-stone-100 gap-px rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
         {metricas.map((m, i) => (
           <div
             key={m.label}
-            className={`flex items-center gap-4 p-6 ${
-              i < metricas.length - 1 ? "border-r border-stone-100" : ""
-            } ${i >= 2 ? "border-t border-stone-100 md:border-t-0" : ""}`}
+            className="flex items-center gap-4 p-6 bg-white"
           >
             <div className={`p-3 rounded-xl shrink-0 ${m.iconBg}`}>
               <m.icon className={`w-5 h-5 ${m.accent}`} />

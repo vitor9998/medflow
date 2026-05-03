@@ -74,7 +74,7 @@ export function Sidebar({ role }: { role?: string }) {
       {/* Mobile Topbar */}
       <div className="md:hidden flex items-center justify-between px-6 py-4 bg-[#FDFCF8] border-b border-stone-200/50 shrink-0">
         <div className="flex items-center gap-3 text-stone-900 font-semibold tracking-tight">
-          <ZyntraLogo className="h-5 w-auto text-emerald-900" />
+          <ZyntraLogo className="h-5 w-auto" />
         </div>
         <button 
           onClick={() => setIsOpen(!isOpen)} 
@@ -101,7 +101,7 @@ export function Sidebar({ role }: { role?: string }) {
       `}>
         {/* Logo */}
         <div className="hidden md:flex items-center gap-3 px-8 pt-8 pb-10">
-          <ZyntraLogo className="h-6 w-auto text-emerald-900" />
+          <ZyntraLogo className="h-6 w-auto" />
         </div>
 
         {/* Section label */}

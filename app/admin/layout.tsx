@@ -78,7 +78,7 @@ export default function AdminLayout({
   return (
     <div className={`flex flex-col md:flex-row min-h-screen bg-[#FDFCF8] text-stone-800 ${inter.className}`}>
       <Sidebar role={profile?.role} />
-      <main className="flex-1 flex flex-col min-h-0 h-screen overflow-hidden overflow-y-auto w-full">
+      <main className="flex-1 flex flex-col min-h-0 overflow-x-hidden overflow-y-auto w-full">
         {children}
       </main>
     </div>
