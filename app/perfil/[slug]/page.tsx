@@ -71,12 +71,12 @@ export default function PerfilMedicoEditorial() {
     <div className={`min-h-screen bg-[#FDFCF8] text-stone-900 ${inter.className} selection:bg-emerald-900 selection:text-emerald-50`}>
       
       {/* MINIMALIST HEADER */}
-      <header className="fixed top-0 w-full z-50 mix-blend-difference text-stone-100 px-6 py-6 transition-all">
+      <header className="fixed top-0 w-full z-50 bg-[#FDFCF8]/90 backdrop-blur-md border-b border-stone-200/50 text-stone-900 px-6 py-4 transition-all">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
            <Link href="/agendamento" className="group flex items-center gap-3 hover:opacity-70 transition-opacity">
-             <ZyntraLogo className="h-6 w-auto text-stone-100" /> 
+             <ZyntraLogo className="h-6 w-auto" /> 
            </Link>
-           <Link href="/agendamento" className="text-xs tracking-widest uppercase font-semibold flex items-center gap-2 hover:opacity-70 transition-opacity">
+           <Link href="/agendamento" className="text-xs tracking-widest uppercase font-semibold flex items-center gap-2 hover:text-emerald-900 transition-colors">
               <ChevronLeft className="w-4 h-4" /> Voltar
            </Link>
         </div>
@@ -103,7 +103,7 @@ export default function PerfilMedicoEditorial() {
               </h1>
               
               <p className="text-xl md:text-2xl text-stone-500 font-light max-w-xl leading-relaxed mb-12">
-                Uma abordagem <span className="italic text-emerald-900">exclusiva e humanizada</span> para a sua saúde, combinando anos de excelência médica com cuidado genuíno.
+                {medico.descricao_perfil || <><span className="italic text-emerald-900">Uma abordagem exclusiva e humanizada</span> para a sua saúde, combinando anos de excelência médica com cuidado genuíno.</>}
               </p>
 
               {/* Stats/Badges */}
@@ -122,6 +122,13 @@ export default function PerfilMedicoEditorial() {
                   <p className="text-xs uppercase tracking-widest text-stone-400 font-semibold mb-1">Avaliação</p>
                   <p className={`${playfair.className} text-xl text-stone-800 flex items-center gap-2`}>
                     4.9 <Sparkles className="w-4 h-4 text-emerald-700" />
+                  </p>
+                </div>
+                <div className="w-px bg-stone-200/60 hidden sm:block"></div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-stone-400 font-semibold mb-1">Contato</p>
+                  <p className={`${playfair.className} text-xl text-stone-800 flex items-center gap-2`}>
+                    {medico.telefone || "(11) 99999-9999"}
                   </p>
                 </div>
               </div>
@@ -168,11 +175,8 @@ export default function PerfilMedicoEditorial() {
               <h2 className={`${playfair.className} text-4xl lg:text-5xl font-light mb-8 leading-tight`}>
                 A Filosofia de <br/><span className="italic text-emerald-300">Cuidado e Atenção</span>
               </h2>
-              <p className="text-emerald-100/80 text-lg leading-relaxed font-light mb-6">
-                Acredito que a medicina verdadeira vai além do diagnóstico. É sobre entender o paciente em sua totalidade, respeitando sua história e buscando soluções que promovam longevidade e qualidade de vida.
-              </p>
-              <p className="text-emerald-100/80 text-lg leading-relaxed font-light">
-                Cada consulta é um momento dedicado a ouvir, analisar e construir, em conjunto, o melhor caminho para a sua saúde.
+              <p className="text-emerald-100/80 text-lg leading-relaxed font-light mb-6 whitespace-pre-wrap">
+                {medico.filosofia || "Acredito que a medicina verdadeira vai além do diagnóstico. É sobre entender o paciente em sua totalidade, respeitando sua história e buscando soluções que promovam longevidade e qualidade de vida."}
               </p>
             </div>
             

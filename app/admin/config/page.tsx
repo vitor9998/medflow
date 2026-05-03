@@ -14,7 +14,9 @@ export default function ConfigPage() {
     especialidade: "",
     telefone: "",
     email: "",
-    id: ""
+    id: "",
+    descricao_perfil: "",
+    filosofia: ""
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +46,9 @@ export default function ConfigPage() {
           nome: data?.nome || "",
           especialidade: data?.especialidade || "",
           telefone: data?.telefone || "",
-          email: user.email || ""
+          email: user.email || "",
+          descricao_perfil: data?.descricao_perfil || "",
+          filosofia: data?.filosofia || ""
         });
       }
       setIsLoading(false);
@@ -64,6 +68,8 @@ export default function ConfigPage() {
         nome: profile.nome,
         especialidade: profile.especialidade,
         telefone: profile.telefone,
+        descricao_perfil: profile.descricao_perfil,
+        filosofia: profile.filosofia
       })
       .eq("id", profile.id);
 
@@ -171,6 +177,36 @@ export default function ConfigPage() {
                   disabled
                   className="pl-10 w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-400 text-sm cursor-not-allowed"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* PERFIL EDITORIAL PUBLICO */}
+          <div className="pt-6 mt-2 border-t border-slate-100">
+            <h3 className="text-sm font-bold text-slate-800 mb-4">Apresentação Pública (Editorial)</h3>
+            <div className="space-y-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-500 ml-0.5">Descrição Curta (Hero)</label>
+                <textarea
+                  rows={2}
+                  value={profile.descricao_perfil}
+                  onChange={(e) => setProfile({ ...profile, descricao_perfil: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all resize-none"
+                  placeholder="Ex: Uma abordagem exclusiva e humanizada para a sua saúde..."
+                />
+                <p className="text-[10px] text-slate-400 ml-1">Fica em destaque na sua página de agendamento.</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-500 ml-0.5">Filosofia de Cuidado (Sessão sobre o Médico)</label>
+                <textarea
+                  rows={4}
+                  value={profile.filosofia}
+                  onChange={(e) => setProfile({ ...profile, filosofia: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all resize-none"
+                  placeholder="Ex: Acredito que a medicina verdadeira vai além do diagnóstico. É sobre entender o paciente em sua totalidade..."
+                />
+                <p className="text-[10px] text-slate-400 ml-1">Sua biografia e visão sobre o cuidado com os pacientes.</p>
               </div>
             </div>
           </div>
