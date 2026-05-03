@@ -16,11 +16,13 @@ export default function ConfigPage() {
     email: "",
     id: "",
     descricao_perfil: "",
-    filosofia: ""
+    filosofia: "",
+    foto_url: ""
   });
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
   useEffect(() => {
@@ -48,7 +50,8 @@ export default function ConfigPage() {
           telefone: data?.telefone || "",
           email: user.email || "",
           descricao_perfil: data?.descricao_perfil || "",
-          filosofia: data?.filosofia || ""
+          filosofia: data?.filosofia || "",
+          foto_url: data?.foto_url || ""
         });
       }
       setIsLoading(false);
@@ -56,6 +59,49 @@ export default function ConfigPage() {
 
     loadProfile();
   }, [router]);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    // Check size limit (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("A imagem deve ter no máximo 2MB.");
+      return;
+    }
+
+    setIsUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${profile.id}-${Math.random()}.${fileExt}`;
+    const filePath = `medicos/${fileName}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setProfile({ ...profile, foto_url: publicUrl });
+      
+      // Auto-save the profile after upload
+      await supabase
+        .from('profiles')
+        .update({ foto_url: publicUrl })
+        .eq('id', profile.id);
+        
+      setSuccessMsg("Foto atualizada com sucesso!");
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (error: any) {
+      alert("Erro ao enviar imagem: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -69,7 +115,8 @@ export default function ConfigPage() {
         especialidade: profile.especialidade,
         telefone: profile.telefone,
         descricao_perfil: profile.descricao_perfil,
-        filosofia: profile.filosofia
+        filosofia: profile.filosofia,
+        foto_url: profile.foto_url
       })
       .eq("id", profile.id);
 
@@ -104,13 +151,29 @@ export default function ConfigPage() {
           
           {/* Photo */}
           <div className="flex items-center gap-6 mb-2">
-            <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200">
-               <span className="text-2xl font-bold text-slate-400">{profile.nome?.substring(0, 1)?.toUpperCase() || "Dr"}</span>
+            <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center border-2 border-slate-200 overflow-hidden shrink-0 relative">
+               {profile.foto_url ? (
+                 <img src={profile.foto_url} alt="Foto de perfil" className="w-full h-full object-cover" />
+               ) : (
+                 <span className="text-2xl font-bold text-slate-400">{profile.nome?.substring(0, 1)?.toUpperCase() || "Dr"}</span>
+               )}
+               {isUploading && (
+                 <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center">
+                   <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                 </div>
+               )}
             </div>
             <div>
-               <button type="button" className="text-sm font-medium bg-white hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-lg transition-colors border border-slate-200">
-                 Alterar Foto
-               </button>
+               <label className="text-sm font-medium bg-white hover:bg-slate-50 text-slate-600 px-4 py-2 rounded-lg transition-colors border border-slate-200 cursor-pointer inline-flex items-center gap-2">
+                 {isUploading ? "Enviando..." : "Alterar Foto"}
+                 <input 
+                   type="file" 
+                   className="hidden" 
+                   accept="image/jpeg,image/png,image/gif"
+                   onChange={handleUpload}
+                   disabled={isUploading}
+                 />
+               </label>
                <p className="text-xs text-slate-400 mt-2 max-w-xs">JPG, GIF ou PNG. Tamanho maximo recomendado de 2MB.</p>
             </div>
           </div>

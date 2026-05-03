@@ -93,9 +93,16 @@ export default function PerfilMedicoEditorial() {
             
             {/* Left: Typography & Intro */}
             <div className="lg:col-span-7 relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-900/10 bg-emerald-900/5 text-emerald-900 text-xs font-semibold tracking-widest uppercase mb-8">
-                 <ShieldCheck className="w-3.5 h-3.5" />
-                 CRM Verificado
+              <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8">
+                {medico.foto_url && (
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-white shadow-xl shrink-0 bg-stone-100">
+                    <img src={medico.foto_url} alt={`Foto de ${nomeFormatado}`} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-900/10 bg-emerald-900/5 text-emerald-900 text-xs font-semibold tracking-widest uppercase w-fit">
+                   <ShieldCheck className="w-3.5 h-3.5" />
+                   CRM Verificado
+                </div>
               </div>
               
               <h1 className={`${playfair.className} text-6xl md:text-7xl lg:text-8xl font-semibold text-stone-900 leading-[1.05] tracking-tight mb-8`}>
